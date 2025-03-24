@@ -53,7 +53,7 @@ jobs:
     environment:
       name: pypi
       # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
-      url: https://pypi.org/project/rda_python_template/
+      url: https://pypi.org/project/rda_python_metrics/
 
     steps:
       - name: Retrieve release distributions
