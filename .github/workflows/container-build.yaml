@@ -1,0 +1,60 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# This workflow is using the SHA commit for the version
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+name: Container Build Pipeline
+
+# This workflow will run when the Dockerfile is changed on the main branch
+# In practice it should also be updated to run when changes are made to the
+# codebase included in the Dockerfile so direct changes to that create a new image
+on: 
+  push:
+    paths:
+      - Dockerfile
+    branches:
+      - main
+
+# This workflow only needs to read the repository contents
+# Explicitly state the read permissions to align with security best practices      
+permissions:
+  contents: read
+
+jobs:
+  container-build-push:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository contents
+      - name: Checkout the repo 
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      # Login to Docker Hub so the image can be pushed
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        # GitHub secrets are used to provide login information to Docker Hub
+        # Add DOCKERHUB_USERNAME & DOCKERHUB_TOKEN
+        # Actions secrets are managed under Secrets and variables in the repos Settings 
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN  }}
+      # A unique image tag is required. This example uses the date and time to provide a tag
+      # This can be updated to utilize a GitHub release version or something similar
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
+      # The last step builds the image with Docker, tags it with the desired name and date tag
+      # It utilizes the login step to then push the image to Docker Hub to the configured account
+      - name: Build and push image
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4
+        with:
+          # Provide the current directory as build context 
+          context: .
+          # Specify where the Dockerfile is located in relation to the repo base path
+          file: Dockerfile
+          # Enable the push to docker hub
+          push: true
+          # Provide the tags to apply to the image, this example uses the date tag 
+          tags: ncar-rda/container-dev:${{ steps.date.outputs.date }}
