@@ -137,7 +137,7 @@ def fill_cod_usages(option, inputs, datelimit):
             engine = ms.group(3)
             if not (aid in USERS or cache_users(aid)): continue
             ms = re.match(r'^([\d\.]+).+\[(\d+)/(\w+)/(\d+):([\d:]+)', line)
-            if not ms: conitnue
+            if not ms: continue
             ip = ms.group(1)
             ctime = ms.group(5)
             cdate = "{}-{:02}-{:02}".format(ms.group(4), PgUtil.get_month(ms.group(3)), int(ms.group(2)))
@@ -147,7 +147,7 @@ def fill_cod_usages(option, inputs, datelimit):
                   records = {}            
                pdate = cdate
          
-            if datelimit and date < datelimit: continue
+            if datelimit and cdate < datelimit: continue
 
             if aid in records:
                records[aid]['size'] += size

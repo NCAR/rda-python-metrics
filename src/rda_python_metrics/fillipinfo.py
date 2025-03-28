@@ -49,10 +49,8 @@ def main():
    for arg in argv:
       if arg == "-b":
          PgLOG.PGLOG['BCKGRND'] = 1
-      elif re.match(r'^-[cmNy]$', arg) and option == 0:
-         if arg == "-c":
-            option = NCNTS
-         elif arg == "-m":
+      elif re.match(r'^-[mNy]$', arg) and option == 0:
+         if arg == "-m":
             option = MONTH
          elif arg == "-y":
             option = YEARS

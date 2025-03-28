@@ -11,6 +11,8 @@
 
 import httplib2
 import json
+import sys
+from rda_python_common import PgLOG
 
 PERSON = [
    "upid",          # Unique person id

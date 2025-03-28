@@ -50,11 +50,11 @@ def main():
    PgDBI.dssdb_dbname()
    PgLOG.cmdlog("fillcountry {}".format(' '.join(argv)))
 
-   process_countries()
+   process_countries(table)
    
    sys.exit(0)
 
-def process_countries():
+def process_countries(table):
 
    pgrecs = PgDBI.pgmget(table, "email", "country IS NULL", PgLOG.LOGWRN)
 
@@ -68,7 +68,7 @@ def process_countries():
          PgLOG.pglog("{}/{} Records modified/processed".format(cntmod, i), PgLOG.WARNLG)
 
       email = pgrecs['email'][i]
-      record['country'] = PgDBI.email_to_country(email)
+      record = {'country' : PgDBI.email_to_country(email)}
       cntmod += PgDBI.pgupdt(table, record, "email = '{}' AND country IS NULL".format(email), PgLOG.LOGWRN)
 
    PgLOG.pglog("{} Record(s) modified in table '{}'".format(cntmod, table), PgLOG.LOGWRN)
