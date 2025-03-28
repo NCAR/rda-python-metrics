@@ -54,7 +54,7 @@ def main():
          RDADB['BCKGRND'] = " -b"
       elif arg == "-n":
          RDADB['DOMAIL'] = 0
-         PgLOG.PGLOG['LOGMASK'] &= ~(EMLALL)
+         PgLOG.PGLOG['LOGMASK'] &= ~(PgLOG.EMLALL)
       elif re.match(r'^-[cdmNy]$', arg) and not RDADB['OPTVAL']:
          RDADB['OPTVAL'] = arg
          if arg == "-c":
