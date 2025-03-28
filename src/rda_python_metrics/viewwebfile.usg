@@ -1,0 +1,212 @@
+
+ View information of WEB Online files stored on DSS Web Server. 
+
+ Usage: viewwebfile [-C] ColumnNames [-O OrderColumnNames] [-a] \
+                    [-A rowLimit] [-d DateWriteList] \
+                    [-D StartWriteDate [EndWriteDate]] \
+                    [-e EMailList] [-f FileNameList] \
+                    [-F MinFileName [MaxFileName]] [-g GroupIndices] \
+                    [-G GroupIDs] [-i FirstNamelist] [-j] [-J] [-l LastNameList] \
+                    [-m MonthWriteList] [-M MonthCreateList] [-n UserNumberList] \
+                    [-o FileStatus] [-p TypeList] \
+                    [-r MinGroupIndex [MaxGroupIndex]] \ 
+                    [-s MinFileSize [MaxFileSize]] [-t DatasetList] \
+                    [-T MinDataset [MaxDataset]] [-u UserNamelist] \
+                    [-v DivisionList] [-W DatasetTypes] [-y YearWriteList] \
+                    [-Y YearCreateList] [-z DateCreateList] \
+                    [-Z StartCreateDate [EndCreateDate]] \
+                    [-H Title] [-L Delimiter] [-U SizeUnit] [-w] \
+                    [> OutputFileName] [| lp -d PrinterName]
+
+      Specify [-C] ColumnNames, refer to Option -C section for detail
+      description, and choose at least one of the condition options, -a, -d, 
+      -D, -e, -f, -F, -g, -G, -i, -l, -m, -M, -o, -p, -r, -s -S, -t, -T, -u,
+      -v, -y, -Y, -z and -Z, to run this application. 
+
+      For all condition options, except option -a, an '!' sign can be added
+      between an option flag and its option values to get an excluding
+      condition.  For example, choose '-o ! OrganizationList' to gather WEB
+      file information last written by users from organizations other than
+      the ones given in OrganizationList. Refer to the example given at the
+      end of this help document for how to select excluding condition.
+
+      String condition options, -e, -f, -G, -i, -l, -o, -t, -u and -v, allow
+      wildcard inputs. '%' matches any number of characters and '_' matches
+      any one character.  Refer to the example given at the end of this help
+      document for how to use wildcard for string condition options.
+  
+      Output of this application is defaulted to page format with a page
+      header on each page. A page header includes main title, sub titles and
+      column titles according to which column names and options are selected,
+      as well as page number and report date. If the output is used directly
+      for input of other applications, add option -w to remove page header
+      and show only the column titles and the WEB file information.
+
+
+      Column Options:
+      - Option -C, the ColumnNames must be present to run this application.
+           The flag -C can be omitted if it is the first parameter option on
+           the command line. The ColumnNames is a string that includes column
+           names listed below:
+
+         COLUMN - COLUMN       - COLUMN
+           NAME - TITLE        - DESCRIPTION
+          GroupColumns:
+              A - CYEAR        - year, the WEB file created in
+              D - DATEWRITE    - date, the WEB file written on
+              E - EMAIL        - email address of file-written user
+              F - FILENAME     - WEB data file name
+              G - PRODUCT      - product (top group) information
+              H - CMONTH       - month, the WEB file created in
+              I - FIRSTNAME    - first name of file-written user
+              K - TIMEWRITE    - time, the WEB file written at
+              L - LASTNAME     - last name of file-written user
+              M - WMONTH       - month, the WEB file written in
+              N - USERNO       - account number of file-written user
+              O - STAT         - Web file status, Public or Internal
+              P - TYPE         - Web file types, Data, Software , and etc.
+              Q - TIMECREATE   - time, the WEB file created at
+              R*- DSTITLE      - dataset title
+              S - FILESIZE     - individual WEB file size (BYTES)
+              T - DATASET      - dataset name
+              U - USERNAME     - login name of file-written user
+              V - DIV.         - division of file-written user
+              W - DSTYPE       - flag, dataset type: P, H, I or W
+              Y - WYEAR        - year, the WEB file written in
+              Z - DATECREATE   - date, the WEB file created on
+          SummaryColumns:
+              B - MBYTESFILES  - data size (MB) written by given Group
+              C - #USER        - number of users in given Group
+              J - #FILE        - number of files written by given Group
+          IndexColumn:
+              X - INDEX        - index of line
+
+           The column names are used to build up string of ColumnNames, while
+           their associated column titles are shown in view/report output of
+           this application. The display order of the column titles is
+           determined by the order of the column names in the ColumnNames
+           string. The INDEX column should be always the first column in the
+           ColumnNames string.  At least one of the group and summary columns
+           must be selected, in the ColumnNames string, to generate WEB file
+           status view/report;
+
+           For example, choose '-C UMJ' to display column titles of USERNAME,
+           MONTH and #FILE, in the first, second and third columns respectively,
+           for numbers of WEB files last written by each user in each month.
+
+      - Option -O, sort WEB file information in ascending or descending order
+           based on column names specified in OrderColumnNames string. These
+           order column names must be in the selected [-C] ColumnNames string.
+           If an order column name is in upper case, its associated column is
+           sorted in ascending order, and a lower case means sorting in
+           descending order;
+
+
+      Condition Options:
+      - Option -a, for all WEB file information in table 'dssdb.wfile';
+
+      - Option -A, gives a row limit for querying; 
+
+      - Option -d, for files last written on given dates, in format YYYY-MM-DD;
+
+      - Option -D, for files last written between two given dates, each date
+           is in format YYYY-MM-DD. Omit EndWriteDate for no upper limit;
+
+      - Option -e, for files last written by users with given email addresses;
+
+      - Option -f, for WEB file information of given WEB file names;
+
+      - Option -F, for WEB files with names between MinFileName and
+        MaxFileName. Omit MaxFileName for no upper limit;
+
+      - Option -g, for WEB file information of given top group indices;
+
+      - Option -G, for WEB file information of given top group IDs;
+
+      - Option -i, for WEB files last written by users with given first names;
+
+      - Option -j, includes Group IDs in column PRODUCT;
+
+      - Option -J, includes Group Titles in column PRODUCT;
+
+      - Option -l, for WEB files last written by users with given last names;
+
+      - Option -m, for files last written in given months, in format YYYY-MM;
+
+      - Option -M, for files created in given months, in format YYYY-MM;
+
+      - Option -n, for files last written by given user numbers;
+
+      - Option -o, for WEB file status, P for public or I for internal;
+ 
+      - Option -p, for WEB files of given types; D - Data, I - Internal Data,
+        O - Document, S - Software;
+
+      - Option -r, for WEB files between two given group indices;
+
+      - Option -s, for WEB files with sizes, in unit of MByte, between
+           MinFileSize and MaxFileSize. Omit MaxFileSize for no upper limit;
+
+      - Option -t, for WEB files associated to given dataset names;
+
+      - Option -T, for WEB files associated to datasets between 
+           MinDataset and  MaxDataset. Omit MaxDataset for no upper limit.
+           For example, -T d540000 d550009, for datasets numbers d540000-d550009;
+
+      - Option -u, for WEB files last written by given user names;
+
+      - Option -v, for WEB files last written by users from given division;
+
+      - Option -W, for dataset type, P, H, I or W;
+ 
+      - Option -y, for WEB files last written in given years, in format YYYY;
+
+      - Option -Y, for WEB files created in given years, in format YYYY;
+
+      - Option -z, for files created on given dates, in format YYYY-MM-DD;
+
+      - Option -Z, for files created between two given dates, each date
+           is in format YYYY-MM-DD. Omit EndWriteDate for no upper limit;
+
+
+      Miscellaneous Options:
+      - Option -H, use given report title to replace the default one;
+
+      - Option -L, use given delimiter for output, instead of defaulted spaces;
+
+      - Option -U, show file or data sizes in given unit SizeUnit [BKMG].
+           B - Byte, K - KiloBytes, M  - MegaByte, and G - GigaByte;
+
+      - Option -w, view WEB file info in a simple format without totals;
+
+      - option > OutputFilename, redirect output into an output file,
+           for example, wfile.out, instead of viewing on screen directly;
+
+      - option | lp -d PrinterName, redirect output to printer of PrinterName.
+           Replace PrinterName with lj100 to print through DSS LaserJet printer.
+
+
+      For example:
+      To view information of files last written in years 2004 with columns,
+      INDEX(X), USERNAME(U), ORGTYPE(O), #FILE(J), and MBYTESFILES(B); ordered
+      by ORGTYPE as ascending and MBYTESFILES(B) as descending; the command 
+      line should be:
+
+         viewwebfile XUOJB -y 2004 -O Ob
+
+      For status of 'Y' series files only, out of the file status gathered
+      above, the command line should be:
+
+         viewwebfile XUOJB -y 2004 -f /DSS/Y% -O Ob
+
+      For files last written by users not in Organization 'DDS', out of 
+      the file status gathered above, the command line should be:
+
+         viewwebfile XUOJB -y 2004 -f /DSS/Y% -o ! DSS -O Ob
+
+      To redirect the previous output to a file named wfile.out:
+
+         viewwebfile XUOJB -y 2004 /DSS/Y% -o ! DSS -O Ob > wfile.out
+
+      Then you can view the file or print it as a report.
+

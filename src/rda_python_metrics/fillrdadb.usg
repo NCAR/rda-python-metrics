@@ -1,0 +1,32 @@
+
+ Collect MSS information from ORACLE server and online file information
+   from DSS Web Server logs, and fill tables in MySQL database 'RDADB'.
+
+ Backup the records in the tables and compress them, and archive the compressed
+   table files to MSS according to the options chosen on the command line.
+
+
+ Usage: fillrdadb [-b] [-c] [-d DateList] [-m MonthList]
+                  [-n] [-N NumberDay] [-S] [-y YearList]
+
+      Select options, -c, -d, -m, -N, or -y, to run this application. 
+
+      - Option -b, log process information into logfile only;
+
+      - Option -c, clean unused file names only;
+
+      - Option -d, get file info recorded on given dates. Date format is
+           YYYY-MM-DD, for example, 2004-01-01;
+
+      - Option -m, get file info recorded in given months. Month format is
+           YYYY-MM, for example, 2004-1;
+
+      - Option -n, do not send email notification after filling info
+
+      - Option -N, get file info recorded in recent NumberDay days;
+
+      - Option -y, get file info recorded in given years. Year format is YYYY,
+           for example, 2004;
+
+      This is a wrapping funtion. Internally it calls 'fillcodusage', 'fillawsusage',
+      and 'fillglobususage' with selected options.

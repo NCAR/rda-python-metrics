@@ -1,0 +1,16 @@
+
+ Retrieves user information from ORACLE SERVER and fill 
+ table 'user' in MySQL database 'dssdb'.
+
+ Usage: filluser [-b] [-i] [-n UserNumber] [-u UserLonginName]
+
+      select one of the options, -i, -n or -u each time to run this application. 
+
+      - Option -b, log process information into logfile only;
+
+      - Option -i, get users with incomplete information in 'dssdb.user';
+
+      - Option -n, get users by their user numbers on NCAR system;
+
+      - Option -u, get users by their login names on NCAR system;
+

@@ -1,0 +1,191 @@
+
+ View usage information of Thredds Data Services from information
+ stored in MySQL database 'RDADB'.
+
+ Usage: viewtdsusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
+                     [-A RowLimit] [-c CountryCodes] [-d DateList] \
+                     [-D StartDate [EndDate]] [-e EMailList] -h \
+                     [-E StartNoticeDate [EndNoticeDate]] \
+                     [-f EndTypeFlags] [-i IPAddresses]  \
+                     [-I EmailIDList] [-m MonthList] [-M AccessMethods]  \
+                     [-N MinNumberRead [MaxNumberRead]] \
+                     [-o OrganizationTypes] \
+                     [-q QuaterList] [-s MinSize [MaxSize]] \
+                     [-S SpecialistLoginNames] [-t DatasetList] \
+                     [-T MinDataset [MaxDataset]] [-y YearList] \
+                     [-H Title] [-L Delimiter] [-U SizeUnit] \
+                     [-w] [-z] [> OutputFileName] [| lp -d PrinterName] 
+
+      Specify [-C] ColumnNames, refer to Option -C section for detail
+      description, and choose at least one of the condition options, -a, -c,
+      -d, -D, -e, -E, -f, -i, -I, -m, -M, -N, -o, -q, -s, -S -t, -T, and -y, to
+      run this application.
+
+      For all condition options, except option -a, an '!' sign can be added
+      between an option flag and its option values to get an excluding
+      condition. For example, choose '-o ! OrganizationTypes' to gather order
+      data usage by users from organization types other than the ones given in
+      OrganizationTypes.  Refer to the example given at the end of this help
+      document for how to select excluding condition.
+
+      String condition options, -c, -e, -f, -g, -i, -M, -o, -S, and -t, allow wildcard
+      inputs. '%' matches any number of characters and '_' matches any one
+      character.  Refer to the example given at the end of this help document
+      for how to use wildcard for string condition options.
+
+      Output of this application is defaulted to page format with a page
+      header on each page. A page header includes main title, sub titles and
+      column titles according to which column names and options are selected,
+      as well as page number and report date. If the output is used directly
+      for input of other applications, add option -w to remove page header
+      and show only the column titles and the usage information.
+
+
+      Column Options:
+      - Option -C, the ColumnNames must be present to run this application.
+           The flag -C can be omitted if it is the first parameter option on
+           the command line. The ColumnNames is a string that includes column
+           names listed below:
+
+         COLUMN - COLUMN       - COLUMN
+           NAME - TITLE        - DESCRIPTION 
+          GroupColumns:
+              D*- DATE         - format as YYYY-MM-DD, for example 2004-04-25
+              E*- EMAIL        - user email address
+              F*- EF           - end type flag, Files or Aggrenations
+              I*- IP           - user IP address
+              M*- MONTH        - format as YYYY-MM, for example 2004-04
+              N*- COUNTRY      - country codes users from
+              O*- ORGTYPE      - organization types (DSS, NCAR, UNIV and OTHER)
+              P*- DSOWNER      - login names of specialists who own the datasets
+              Q*- QUARTER      - quarter of year, 1, 2, 3, or 4
+              R*- DSTITLE      - dataset titles
+              S - BSIZE        - size of data read each time, default to Bytes
+              T*- DATASET      - format as dsnnn.n, for example d540001
+              W*- METHOD       - access methods
+              Y*- YEAR         - format as YYYY, for example 2004
+
+                * - field names can processed with zero usages
+          SummaryColumns:
+              A - DSCOUNT      - number of datasets in given GroupColumns
+              B - MBREAD       - data sizes, default MB, read by given GroupColumns
+              C - #UNIQUSER    - number of unique users in in given GroupColumns
+              U - #UNIQIP      - number of unique users in in given GroupColumns
+              H - #READ        - number of reads by given GroupColumns
+ 
+          IndexColumn:
+              X - INDEX        - index of line, it should be the first column
+
+           The column names are used to build up string of ColumnNames, while
+           their associated column titles are shown in view/report output of
+           this application. The display order of the column titles is
+           determined by the order of the column names in the ColumnNames
+           string. At least one of the group and summary columns must be
+           selected, in the ColumnNames string, to generate all usage
+           view/report;
+
+           For example, choose '-C EMB' to display column titles of EMAIL,
+           MONTH and MBREAD, in the first, second and third columns
+           respectively, for numbers of MBytes of data read by each user
+           in each month;
+
+      - Option -O, sort data usage information in ascending or descending
+           order based on the column names specified in OrderColumnNames
+           string. These column names must be in the selected [-C]
+           ColumnNames string. If an column name is in upper case, its
+           associated column is sorted in ascending order, and a lower
+           case means sorting in descending order;
+
+
+      Condition Options:
+      - Option -a, for all usage in table 'tdsusage';
+
+      - Option -A, gives a row limit for querrying; 
+
+      - Option -c, for files read by users from given country codes;
+
+      - Option -d, for data read on given dates, in format YYYY-MM-DD;
+
+      - Option -D, for data read between two given dates, each date
+           is in format YYYY-MM-DD. Omit EndDate for no upper limit;
+
+      - Option -e, for data read by users with given email addresses;
+
+      - Option -E, for data read by users who have been notified 
+           data update of a specified dataset between two given dates,
+           each date is in format YYYY-MM-DD. Omit EndNoticeDate for
+           no upper limit;
+
+      - Option -f, for data read from flags of end point types, Files or
+        Aggrenations;
+
+      - Option -h, works with Option -e to include historical user emails
+           registered before;
+
+      - Option -i, for data read from machines with given IP addresses;
+ 
+      - Option -m, for data read in given months, in format YYYY-MM;
+
+      - Option -M, for data read via access methods;
+ 
+      - Option -N, for files for numbers of read by each group between
+           MinNumberRead and MaxNumberRead. Omit MaxNumberRead for no
+           upper limit;
+
+      - Option -o, for data read by users from given orgnization types.
+           It defaults to -o ! DSS to exclude usage from DSS specialists;
+           Set it to ALL to include all orgnization types;
+
+      - Option -q, for data read in given quarters;
+
+      - Option -s, for data sizes, unit of MByte, between MinSize and MaxSize.
+           Omit MaxSize for no upper limit;
+
+      - Option -S, for login names of specialsts who own the datasets;
+
+      - Option -t, for data associating to given dataset names;
+
+      - Option -T, for data associating to datasets between 
+           MinDataset and MaxDataset. Omit MaxDataset for no upper limit.
+           For example, -T d540000 d550009, for datasets numbers d540000-d550009;
+
+      - Option -y, for data read in given years in format YYYY;
+
+
+      Miscellaneous Options:
+      - Option -w, view data usage in simple format without totals;
+
+      - Option -z, include datasets without without usage
+
+      - Option -H, use given report title to replace the default one;
+
+      - Option -L, use given delimiter for output, instead of defaulted spaces;
+
+      - Option -U, show data sizes in given unit SizeUnit [BKMG].
+           B - Byte, K - KiloBytes, M  - MegaByte, and G - GigaByte;
+
+      - Option > OutputFilename, redirect output into an output file,
+           for example, ordusage.out, instead of viewing on screen directly;
+
+      - Option | lp -d PrinterName, redirect output to printer of PrinterName.
+           Replace PrinterName with lj100 to print through DSS LaserJet printer.
+
+
+      For example:
+      To view annual data usage in year 2005 with columns, INDEX(X),
+      EMAIL(E), ORGTYPE(O), #READ(H), and MBREAD(B); ordered by ORGTYPE as
+      ascending and MBREAD(B) as descending; the command line should be:
+
+         viewtdsusage XEOHB -y 2005 -O Ob
+
+      For usage by users not in Organization 'DDS', out of the file usage
+      gathered above, the command line should be:
+
+         viewtdsusage XEOHB -y 2005 -o ! DSS -O Ob
+
+      To redirect the previous output to a file named tdsusage.out:
+
+         viewtdsusage XEOHB -y 2005 ! DSS -O Ob > tdsusage.out
+
+      Then you can view the file or print it as a report.
+
