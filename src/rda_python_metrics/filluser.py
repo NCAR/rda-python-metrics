@@ -77,18 +77,18 @@ def fill_missed_users():
    s = 's' if cntall > 1 else ''
    PgLOG.pglog("{} record{} retrieved at {}".format(cntall, s, PgLOG.current_datetime()), PgLOG.LOGWRN)
    if not cntall: return
-   cntmod = 0
+   modcnt = 0
    for i in range(cntall):
       pgrec = PgUtil.onerecord(pgusers, i)
       record = PgDBI.ucar_user_info(pgrec['userno'], pgrec['logname'])
       if record:
-         cntmod += PgDBI.pgupdt(TBNAME, record, "uid = {}".format(pgrec['uid']), PgLOG.LOGWRN)
+         modcnt += PgDBI.pgupdt(TBNAME, record, "uid = {}".format(pgrec['uid']), PgLOG.LOGWRN)
       
       if (i%500) == 499:
-         PgLOG.pglog("{}/{} Records modifiled/processed".format(cntmod, (i+1)), PgLOG.WARNLG)
-   s = 's' if cntmod > 1 else ''
+         PgLOG.pglog("{}/{} Records modifiled/processed".format(modcnt, (i+1)), PgLOG.WARNLG)
+   s = 's' if modcnt > 1 else ''
    PgLOG.pglog("{} User Record{} modified".format(modcnt, s), PgLOG.LOGWRN)
-   return cntmod
+   return modcnt
 
 #
 # Fill one user for given condition userno or logname
@@ -99,7 +99,7 @@ def fill_one_user(userno, logname):
       msg = "User ID {}: ".format(userno)
    else:
       msg = "User Login Name {}: ".format(logname)
-   cntmod = cntadd = 0
+   modcnt = cntadd = 0
    newrec = PgDBI.ucar_user_info(userno, logname)
    if not newrec:
       PgLOG.pglog(msg + "No User info found from People DB", PgLOG.LOGWRN)
@@ -115,7 +115,7 @@ def fill_one_user(userno, logname):
       if pgrec:
          if PgDBI.pgupdt(TBNAME, record, "uid = {}".format(pgrec['uid']), PgLOG.LOGWRN):
             PgLOG.pglog(msg + "Existing User record Modified", PgLOG.LOGWRN)
-            cntmod += 1
+            modcnt += 1
       else:
          if PgDBI.pgadd(TBNAME, record, PgLOG.LGWNEX):
             PgLOG.pglog(msg + "New user record added", PgLOG.LOGWRN)
@@ -125,7 +125,7 @@ def fill_one_user(userno, logname):
       record['until_date'] = PgUtil.adddate(newrec['start_date'], 0, 0, -1)
       if PgDBI.pgupdt(TBNAME, record, "uid = {}".format(pgrec['uid']), PgLOG.LOGWRN):
          PgLOG.pglog(msg + "Existing User record Closed", PgLOG.LOGWRN)
-         cntmod += 1
+         modcnt += 1
 
       record = get_user_record(newrec)
       if record and PgDBI.pgadd(TBNAME, record, PgLOG.LGWNEX):

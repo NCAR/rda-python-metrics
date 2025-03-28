@@ -406,7 +406,7 @@ def expand_query(expid, records, params, expand, vusg = None, sns = None, flds =
    if expid == "TIME": return expand_time(exps, records, params, expand)
 
    # check and join tables
-   tables = ''
+   tables = joins = ''
    for opt in exps:
       fld = expand[opt]
       (tables, joins) = join_query_tables(fld[3], tables, joins)
