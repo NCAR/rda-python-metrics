@@ -316,7 +316,7 @@ def build_query_strings(usgtable):
    if groupnames and sfields: condition += " GROUP BY " + groupnames
    if having: condition += " HAVING " + having
 
-def expand_records():
+def expand_records(records):
 
    recs = PgView.expand_query("TIME", records, params, EXPAND)
 

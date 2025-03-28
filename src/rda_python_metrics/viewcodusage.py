@@ -296,7 +296,7 @@ def build_query_strings(usgtable):
       condition += PgView.notice_condition(params['E'], params['I'], params['t'][0])
    if groupnames and sfields: condition += " GROUP BY " + groupnames
 
-def expand_records():
+def expand_records(records):
 
    recs = PgView.expand_query("TIME", records, params, EXPAND)
 

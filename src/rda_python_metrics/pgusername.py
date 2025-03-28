@@ -12,6 +12,8 @@
 
 import httplib2
 import json
+import sys
+from rda_python_common import PgLOG
 
 url="https://people.api.ucar.edu/usernames/"
 

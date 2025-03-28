@@ -1,10 +1,9 @@
 
  Check data usage IP related information to fill in usage tables.
 
- Usage: fillipinfo [-b] -t TableName [-c RecordCount] [-N NumberDay]   \
-                   [-m YearMonths] [-y Years]
+ Usage: fillipinfo [-b] -t TableName [-N NumberDay] [-m YearMonths] [-y Years]
 
-      select option, -t and -c, -m, -N or -y to run this application.
+      select option, -t and -m, -N or -y to run this application.
 
       - Option -b, log process information into logfile only;
 

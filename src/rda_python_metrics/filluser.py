@@ -82,11 +82,11 @@ def fill_missed_users():
       pgrec = PgUtil.onerecord(pgusers, i)
       record = PgDBI.ucar_user_info(pgrec['userno'], pgrec['logname'])
       if record:
-         cntmod += PgDBI.pgupdt(TBNAME, record, "uid = {}".format(pgrec['uid']), PgLOG.LOGWRN,   __FILE__, __LINE__)
+         cntmod += PgDBI.pgupdt(TBNAME, record, "uid = {}".format(pgrec['uid']), PgLOG.LOGWRN)
       
       if (i%500) == 499:
-         PgLOG.pglog("{}/{} Records modifiled/processed".format(cntmod, (i+1)), WARNLG)
-   s = 's' if modcnt > 1 else ''
+         PgLOG.pglog("{}/{} Records modifiled/processed".format(cntmod, (i+1)), PgLOG.WARNLG)
+   s = 's' if cntmod > 1 else ''
    PgLOG.pglog("{} User Record{} modified".format(modcnt, s), PgLOG.LOGWRN)
    return cntmod
 

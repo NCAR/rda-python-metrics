@@ -203,7 +203,7 @@ def expand_time(exps, records, params, expand):
          (start, end) = PgUtil.daterange(cond[0], cond[1])
          if not (end and start):
             PgLOG.pglog("Must specify valid start and end dates", PgLOG.LGWNEX)
-         dy = dm = dd
+         dy = dm = dd = 0
          if get&1:
             dd = 1
          elif get&10:
@@ -406,6 +406,7 @@ def expand_query(expid, records, params, expand, vusg = None, sns = None, flds =
    if expid == "TIME": return expand_time(exps, records, params, expand)
 
    # check and join tables
+   tables = ''
    for opt in exps:
       fld = expand[opt]
       (tables, joins) = join_query_tables(fld[3], tables, joins)
@@ -513,7 +514,7 @@ def get_view_condition(opt, sn, fld, params, vusg, cond = ''):
                dates = evaluate_daterange([input, input], False, dt)
                vcond += "BETWEEN {} AND {}".format(dates[0], dates[1])
             else:
-               MyLOG.mylog("-{}: NOT evaluable condition option".format(opt), MyLOG.LGEREX)
+               PgLOG.pglog("-{}: NOT evaluable condition option".format(opt), PgLOG.LGEREX)
          elif 'SFLD' in vusg and vusg['SFLD'].find(sn) > -1 and re.search(r'[%_]', input):
             if negative: vcond += 'NOT '
             vcond += "LIKE " + input
@@ -667,7 +668,7 @@ def include_historic_emails(emails, opt):
             pgrecs = PgDBI.pgmget("user", "email", "userno = {} AND email <> '{}'".format(pgrec['userno'], email), PgLOG.LGEREX)
             if pgrecs:
                for em in pgrecs['email']:
-                  eliast[em] = 1
+                  elist[em] = 1
       if opt&2:
          pgrec = PgDBI.pgget("ruser", "id", "email = '{}'".format(email), PgLOG.LGEREX)
          if pgrec and pgrec['id']:
