@@ -1,0 +1,41 @@
+
+ Fill usage information for one special order in table 'ousage' in MySQL
+ database 'dssdb'.
+
+ Usage: filloneorder -e UserEmail -m DeliveryMethod -t DatasetID -v DataVolume \
+                     [-a CostAmount] [-b] [-c FileCount] [-d DateOrdered] \
+                     [-i InputDataVlolume] [-o OerderID] [-p PaymentMethod] \
+                     [-s SpecialistLoginName] [-x DateClosed -x TimeClosed]
+
+   select the Mandatory options, -e, -m, -t and -v, and any other Optional
+   options to run this application. 
+
+   - Option -b, log process information into logfile only;
+
+   - Option -a, the amount of dollars if the order is not free ;
+
+   - Option -c, the number of data files for the order;
+
+   - Option -d, date the order is opened;
+
+   - option -e, user email address who ordered the data;
+
+   - option -i, the data volume involved for processing the order;
+   
+   - Option -m, the delivery method for the ordered data;
+   
+   - option -o, order ID, up to 30 characters;
+   
+   - option -p, the payment method for the amount per option -a;
+
+   - option -s, the specialist who handle the order. The login name is used
+                if it is not specified, and the default dataset owner is 
+                used if given specialist is not a valid DSS specialist;
+
+   - option -t, dataset id the data ordered from;
+
+   - option -v, the final data volume for the order;
+
+   - Option -x, date the order is closed;
+
+   - Option -y, time the order is closed.

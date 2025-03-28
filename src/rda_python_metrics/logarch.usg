@@ -1,0 +1,27 @@
+
+ Archive RDA log files onto to DECSDATA area. This application can be run
+   at any time. It checks if the given log files are archived or not and will
+   ignore the ones that are backed up already.
+
+ Usage: logarch [-b] [-a] [-d] [-w] [-s] [-t] [-p LogPath]  \
+                [-m YearMonth] [-n]
+
+      - Option -b, do not display processing info on screen;
+
+      - Option -a, archive aws log files;
+
+      - Option -d, archive dssdb log files;
+      
+      - Option -p, provide a LogPath if not the fefault one;
+
+      - Option -s, append PBS sublog files to common log files;
+
+      - Option -t, archive tds log files;
+
+      - Option -w, archive web log files;
+
+      - Option -m, Provided a specified YearMonth (in form of YYYY-MM) to backup logs;
+
+      - Option -n, do not check if a log file is backed up already;
+
+      Set at least one of the options -a, -d, -s, -t and -w to run this application.

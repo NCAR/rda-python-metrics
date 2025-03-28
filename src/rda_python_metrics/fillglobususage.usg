@@ -1,0 +1,17 @@
+
+ Retrieves usage information from GLlobus Server logs under directory
+   /gpfs/fs1/collections/rda/work/logs/gridftp/ to fill table 'wusage' in
+   database 'dssdb'.
+
+ Usage: fillglobususage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
+
+      select option, -d, -N or -p to run this application.
+
+      - Option -b, log process information into logfile only;
+
+      - Option -d, retrieve usage info from given log file dates; 
+
+      - Option -N, retrieve usage info in recent NumberDay days;
+
+      - Option -p, retrieve usage info between given period. For missing EndDate,
+          it defaults to the current date.

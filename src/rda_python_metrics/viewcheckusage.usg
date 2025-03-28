@@ -1,0 +1,185 @@
+
+ View historical usage information of delayed mode command processes controlled by
+ 'dscheck'.
+
+ Usage: viewcheckusage [-C] ColumnNames [-O OrderColumnNames] [-a]  \
+                       [-A RowLimit] [-b BATCHIDs] [-B MinBATCHID [MaxBATCHID]]  \
+                       [-c CommandNames] [-d CheckDates]  \
+                       [-D StartCheckDate [EndcheckDate]]  [-h HostNames]  \
+                       [-i CheckIndices] [-m MonthList]  [-n ActionNames]  \
+                       [-q MinQueuedSeconds [MaxQueuedSeconds]] \
+                       [-r MinRunSeconds [MaxRunSeconds]] [-s CheckStatusList]  \
+                       [-S SpecialistLoginNames] [-t DatasetList]  \
+                       [-T MinDataset [MaxDataset]] [-y YearList]  \
+                       [-H Title] [-L Delimiter] [-U SizeUnit] [-w] [-z]  \
+                       [> OutputFileName] [| lp -d PrinterName] 
+
+      Specify [-C] ColumnNames, refer to Option -C section for detail
+      description, and choose at least one of the condition options, -a, -b, -B,
+      -c, -d, -D, -h, -i, -m, -n, -q, -e, -s, -S, -t, -T, and -y, to run this
+      application.
+
+      For all condition options, except option -a, an '!' sign can be added
+      between an option flag and its option values to get an excluding
+      condition. For example, choose '-c \! CommandNames' to gather check
+      usage for command names other than the ones given in CommandNames.
+      Refer to the example given at the end of this help document for how to
+      select excluding condition.
+
+      String condition options, -c, -n, -s, -S and -t, allow wildcard inputs.
+      '%' matches any number of characters and '_' matches any one character.
+      Refer to the example given at the end of this help document for how to
+      use wildcard for string condition options.
+
+      Output of this application is defaulted to page format with a page
+      header on each page. A page header includes main title, sub titles and
+      column titles according to which column names and options are selected,
+      as well as page number and report date. If the output is used directly
+      for input of other applications, add option -w to remove page header
+      and show only the column titles and the check usage information.
+
+
+      Column Options:
+      - Option -C, the ColumnNames must be present to run this application.
+           The flag -C can be omitted if it is the first parameter option on
+           the command line. The ColumnNames is a string that includes column
+           names listed below:
+
+         COLUMN - COLUMN       - COLUMN
+           NAME - TITLE        - DESCRIPTION 
+          GroupColumns:
+              A*- ARGV         - command argument variable string
+              C*- COMMNAD      - command name, such as 'dsarch'
+              D*- DATE         - check date, format as YYYY-MM-DD, for example 2004-04-25
+              E*- ERRMSG       - error message if a check was processed unsuccessfully 
+              G*- TRIED        - number of tries for command 'dsarch', 1 otherwise
+              H - HOSTNAME     - host name(s) the check can or cannot be processed on
+              I*- CHKIDX       - check index
+              K*- TiME         - check time, format as HH:MM:SS
+              L*- BATCHID      - batch id if a batch job 
+              M*- MONTH        - format as YYYY-MM, for example 2004-04
+              N*- AN           - action name for command, i.e. BR for dsrqst
+              P*- DATAPROC     - how much of data processed for the check
+              Q*- QUETIME      - number of seconds waited in queue if batch job
+              R - RUNTIME      - number of seconds total run time (queue time included)
+              S - SPECIALIST   - specialist name as owner of the check
+              T*- DATASET      - format as dsnnn.n, for example d540001
+              W*- STATUS       - check status, D-Done, F-Finished, E-Exit, I-Interrupted
+              Y*- YEAR         - format as YYYY, for example 2004
+
+              * - field names can processed with zero usages
+          SummaryColumns:
+              B - MBYTESDATA   - data sizes, in MB, by given GroupColumns
+              U - HREXEC       - hours for execution by given GroupColumns
+              V - HRQUEUE      - hours for queuing on batch nodes by given GroupColumns
+              J - #FILEPROC    - number of unique files requested by given GroupColumns
+              F - FILECOUNT    - number of files to be processed by given GroupColumns
+              Z - #CHECKS      - number of checks by given GroupColumns
+          IndexColumn:
+              X - INDEX        - index of line, it should be the first column
+
+           The column names are used to build up string of ColumnNames, while
+           their associated column titles are shown in view/report output of
+           this application. The display order of the column titles is
+           determined by the order of the column names in the ColumnNames
+           string. At least one of the group and summary columns must be
+           selected, in the ColumnNames string, to generate check usage
+           view/report;
+
+           For example, choose '-C CMB' to display column titles of COMMAND,
+           MONTH and MBYTEDATA, in the first, second and third columns
+           respectively, for numbers of MBytes of data processed for each
+           command in each month;
+
+      - Option -O, sort check usage information in ascending or descending
+           order based on the column names specified in OrderColumnNames
+           string. These order column names must be in the selected
+           [-C] ColumnNames string. If an order column name is in upper case,
+           its associated column is sorted in ascending order, and a lower
+           case means sorting in descending order;
+
+
+      Condition Options:
+      - Option -a, for all recorded check usage history;
+
+      - Option -A, gives a row limit for querying; 
+
+      - Option -b, batch IDs for checks are processed on batch nodes;
+
+      - Option -B, for checks processed on batch nodes between two
+                   given batch IDs;
+
+      - Option -c, for checks with given command names;
+
+      - Option -d, for checks generated on given dates, in format YYYY-MM-DD;
+
+      - Option -D, for checks generated between two given dates, each date
+           is in format YYYY-MM-DD. Omit EndDate for no upper limit;
+
+      - Option -h, for checks processed on given host names;
+
+      - Option -i, for checks specified by given check indices;
+
+      - Option -m, for checks generated in given months, in format YYYY-MM;
+
+      - Option -n, for checks generated for specified action names;
+
+      - Option -q, for checks queued for given times in seconds;
+
+      - Option -r, for checks run for given times in seconds (queue times included);
+
+      - Option -s, for checks end up with given status;
+
+      - Option -S, login names of specialists who own the checks;
+
+      - Option -t, for checks associating to given dataset names;
+
+      - Option -T, for data files associating to datasets between 
+           MinDataset and MaxDataset. Omit MaxDataset for no upper limit.
+           For example, -T d540000 d550009, for datasets numbers d540000-d550009;
+
+      - Option -y, for data files read in given years in format YYYY;
+
+
+      Miscellaneous Options:
+      - Option -w, view check usage info in simple format without totals
+
+      - Option -z, include zero usages for specified fields;
+
+      - Option -L, use given delimiter for output, instead of defaulted spaces;
+
+      - Option -U, show file or data sizes in given unit SizeUnit [BKMG].
+           B - Byte, K - KiloBytes, M  - MegaByte, and G - GigaByte;
+
+      - Option -H, use given report title to replace the default one;
+
+      - Option > OutputFilename, redirect output into an output file,
+           for example, rqstusage.out, instead of viewing on screen directly;
+
+      - Option | lp -d PrinterName, redirect output to printer of PrinterName.
+           Replace PrinterName with lj100 to print through DSS LaserJet printer.
+
+
+      For example:
+      To view monthly check usage for each checks generated in year 2012 with columns,
+      INDEX(X), COMMAND(C), MONTH(N), #CHECKS(Z), and MBYTEDATA(B); ordered by MONTH as
+      ascending and MBYTESDATA(B) as descending; the command line should be:
+
+         viewcheckusage XCMZB -y 2012 -O Mb
+
+      For usage of commands start with 'ds' only,  out of the check usage gathered 
+      above, the command line should be:
+
+         viewcheckusage XCMZB -y 2012 -c ds% -O Mb
+
+      For usage of commands other than 'dsarch', the command line should be:
+
+         viewcheckusage XCMZB -y 2012 -c ! dsarch -O Mb
+
+      To redirect the query output to a file named checkusage.out:
+
+         viewcheckusage XCMZB -y 2012 -O Mb > checkusage.out
+
+      Then you can view the file or print it as a report.
+
+

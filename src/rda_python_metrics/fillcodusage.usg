@@ -1,0 +1,21 @@
+
+ Retrieves usage information from RDA Web logs under /var/log to
+   fill table 'codusage' in MySQL database 'dssdb'.
+
+ Usage: fillcodusage [-a] [-b] [-f LogFileNames] [-m MonthList] [-N NumberDay] [-y YearList]
+
+      select one of the options, -a, -f, -m, -N or -y each time to run
+        this application. 
+
+      - Option -b, log process information into logfile only;
+
+      - Option -a, retrieve usages for all available logs;
+
+      - Option -f, retrieve usage info from given log file names; 
+
+      - Option -m, retrieve usage info in given months; 
+
+      - Option -N, retrieve usage info in recent NumberDay days;
+
+      - Option -y, retrieve usage info in given years. 
+

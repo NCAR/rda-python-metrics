@@ -1,0 +1,18 @@
+
+ Check data usage IP related information to fill in usage tables.
+
+ Usage: fillipinfo [-b] -t TableName [-N NumberDay] [-m YearMonths] [-y Years]
+
+      select option, -t and -m, -N or -y to run this application.
+
+      - Option -b, log process information into logfile only;
+
+      - Option -t, table name, ipinfo, allusage, globususage, or tdsusage,
+                   to fix IP related information, such organization names/types,
+                   emails and country names; 
+
+      - Option -N, fix usage info in recent NumberDay days;
+
+      - Option -m, fix usage info in given months;
+
+      - Option -y, fix usage info in given years.

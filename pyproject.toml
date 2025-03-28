@@ -6,11 +6,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rda_python_template"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   { name="Zaihua Ji", email="zji@ucar.edu" },
 ]
-description = "RDA Python code template to create new and modify existing other RDA python packages"
+description = "RDA Python Package to gather and view data usage metrics"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
@@ -21,6 +21,7 @@ classifiers = [
 ]
 dependencies = [
   "rda_python_common",
+  "rda_python_setuid",
 ]
 
 [tool.setuptools]
@@ -30,10 +31,35 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"rda_python_tmplate" = ["hello_world.usg"]
+"rda_python_metrics" = [
+"logarch.usg", "fillawsusage.usg", "fillcodusage.usg", "fillglobususage.usg",
+"fillipinfo.usg", "filloneorder.usg", "fillrdadb.usg", "filltdsusage.usg",
+"viewallusage.usg", "viewcheckusage.usg", "viewcodusage.usg", "viewordusage.usg",
+"viewrqstusage.usg", "viewtdsusage.usg", "viewwebfile.usg", "viewwebusage.usg"
+]
 
 [project.urls]
-"Homepage" = "https://github.com/NCAR/rda-python-template"
+"Homepage" = "https://github.com/NCAR/rda-python-metrics"
 
 [project.scripts]
-hello_world = "rda_python_template.hello_world:main"
+"logarch.py" = "rda_python_metrics.logarch:main"
+"fillawsusage" = "rda_python_metrics.fillaswusage:main"
+"fillcodusage" = "rda_python_metrics.fillcodusage:main"
+"fillcountry" = "rda_python_metrics.fillcountry:main"
+"fillendtime" = "rda_python_metrics.fillendtime:main"
+"fillglobususage" = "rda_python_metrics.fillglobususage:main"
+"fillipinfo" = "rda_python_metrics.fillipinfo:main"
+"filloneorder" = "rda_python_metrics.filloneorder:main"
+"fillrdadb" = "rda_python_metrics.fillrdadb:main"
+"filltdsusage" = "rda_python_metrics.tdsusage:main"
+"filluser" = "rda_python_metrics.filluser:main"
+"pgperson" = "rda_python_metrics.pgperson:main"
+"pgusername" = "rda_python_metrics.pgusername:main"
+"viewallusage" = "rda_python_metrics.viewallusage:main"
+"viewcheckusage" = "rda_python_metrics.viewcheckusage:main"
+"viewcodusage" = "rda_python_metrics.viewcodusage:main"
+"viewordusage" = "rda_python_metrics.viewordusage:main"
+"viewrqstusage" = "rda_python_metrics.viewrqstusage:main"
+"viewtdsusage" = "rda_python_metrics.viewtdsusage:main"
+"viewwebfile" = "rda_python_metrics.viewwebfile:main"
+"viewwebusage" = "rda_python_metrics.viewwebusage:main"

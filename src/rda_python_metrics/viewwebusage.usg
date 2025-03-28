@@ -1,0 +1,211 @@
+
+ View usage information of WEB data files on DSS Web Server from file reading
+ information stored in MySQL database 'RDADB'.
+
+ Usage: viewwebusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
+                     [-A RowLimit] [-c CountryCodes] [-d DataAccessDates] \
+                     [-D StartAccessDate [EndAccessDate]] [-e EmailList] -h \
+                     [-E StartNoticeDate [EndNoticeDate]] \
+                     [-f FileNameList] [-F MinFileName [MaxFileName]] \
+                     [-i FirstNamelist] [-I EmailIDList] \
+                     [-j] [-J] [-k OrganizationNames] [-l LastNameList] \
+                     [-m MonthList] [-M DownloadMethodList] \
+                     [-N MinNumberRead [MaxNumberRead]] \
+                     [-o OrganizationTypes] [-q QuaterList] \
+                     [-S SpecialistLoginNames] [-t DatasetList] \
+                     [-T MinDataset [MaxDataset]] [-y YearList] \
+                     [-v IPAddressList] [-V MinIPAddress [MaxIPAddress]] \
+                     [-H Title] [-L Delimiter] [-U SizeUnit] [-w] [-z] \
+                     [> OutputFileName] [| lp -d PrinterName] 
+
+      Specify [-C] ColumnNames, refer to Option -C section for detail
+      description, and choose at least one of the condition options, -a, -c,
+      -d, -D, -e, -E, -f, -F, -i, -i, -k -l, -m, -M, -N, -o, -q, -S, -t, -T,
+      -v, -V and -y, to run this application.
+
+      For all condition options, except option -a, an '!' sign can be added
+      between an option flag and its option values to get an excluding
+      condition. For example, choose '-o ! OrganizationList' to gather WEB
+      file usage by users from organizations other than the ones given in
+      OrganizationList.  Refer to the example given at the end of this help
+      document for how to select excluding condition.
+
+      String condition options, -c, -e, -f, -i, -k, -l, -o, -S, -t and -v,
+      allow wildcard inputs. '%' matches any number of characters and '_' matches
+      any one character.  Refer to the example given at the end of this help
+      document for how to use wildcard for string condition options.
+
+      Output of this application is defaulted to page format with a page
+      header on each page. A page header includes main title, sub titles and
+      column titles according to which column names and options are selected,
+      as well as page number and report date. If the output is used directly
+      for input of other applications, add option -w to remove page header
+      and show only the column titles and the WEB file usage information.
+
+
+      Column Options:
+      - Option -C, the ColumnNames must be present to run this application.
+           The flag -C can be omitted if it is the first parameter option on
+           the command line. The ColumnNames is a string that includes column
+           names listed below:
+
+         COLUMN - COLUMN       - COLUMN
+           NAME - TITLE        - DESCRIPTION 
+          GroupColumns:
+              D*- DATE         - format as YYYY-MM-DD, for example 2004-04-25
+              E*- EMAIL        - user email address
+              F*- FILENAME     - WEB file name accessed
+              G*- PRODUCT      - product (top group) information 
+              I*- FIRSTNAME    - user first name 
+              K*- ORGNAME      - organization name 
+              L*- LASTNAME     - user last name 
+              M*- MONTH        - format as YYYY-MM, for example 2004-04
+              N*- COUNTRY      - country codes users from
+              O*- ORGTYPE      - organization types (DSS, NCAR, UNIV and OTHER)
+              P*- DSOWNER      - login names of specialists who own the datasets
+              Q*- QUARTER      - quarter of year, 1, 2, 3, or 4
+              R*- DSTITLE      - dataset title
+              T*- DATASET      - format as dsnnn.n, for example d540001
+              V*- IPADDRESS    - format as n.n.n.n (n = 0 - 999)
+              W*- METHOD       - download method of the web data file
+              Y*- YEAR         - format as YYYY, for example 2004
+              Z - TIME         - time file read
+
+                * - field names can processed with zero usages
+          SummaryColumns:
+              A - DSCOUNT      - number of datasets in given GroupColumns
+              B - MBYTEREAD    - data sizes, in MB, read by given GroupColumns
+              C - #UNIQUSER    - number of users in given GroupColumns
+              J - #UNIQFILE    - number of files read by given GroupColumns
+              H - #READ        - number of readings by given GroupColumns
+              U - #UNIQIP      - number of unique IP addresses in in given GroupColumns
+
+          IndexColumn:
+              X - INDEX        - index of line, it should be the first column
+
+           The column names are used to build up string of ColumnNames, while
+           their associated column titles are shown in view/report output of
+           this application. The display order of the column titles is
+           determined by the order of the column names in the ColumnNames
+           string. At least one of the group and summary columns must be
+           selected, in the ColumnNames string, to generate WEB file usage
+           view/report;
+
+           For example, choose '-C EMB' to display column titles of EMAIL,
+           MONTH and MBYTEREAD, in the first, second and third columns
+           respectively, for numbers of MBytes of data read by each user
+           in each month;
+
+      - Option -O, sort WEB file usage information in ascending or descending
+           order based on the column names specified in OrderColumnNames
+           string. These order column names must be in the selected
+           [-C] ColumnNames string. If an order column name is in upper case,
+           its associated column is sorted in ascending order, and a lower
+           case means sorting in descending order;
+
+
+      Condition Options:
+      - Option -a, for all recorded WEB file usage since 2005-01-01;
+
+      - Option -A, gives a row limit for querying; 
+
+      - Option -c, for files read by users from given country codes;
+
+      - Option -d, for files read on given dates, in format YYYY-MM-DD;
+
+      - Option -D, for files read between two given dates, each date
+           is in format YYYY-MM-DD. Omit EndDate for no upper limit;
+
+      - Option -e, for WEB files read by users wth given email addresses;
+
+      - Option -E, for data read by users who have been notified 
+           data update of a specified dataset between two given dates,
+           each date is in format YYYY-MM-DD. Omit EndNoticeDate for
+           no upper limit;
+
+      - Option -f, for WEB files on given WEB file names;
+
+      - Option -F, for WEB files with names between MinFileName and
+           MaxFileName. Omit MaxFileName for no upper limit;
+
+      - Option -h, works with Option -e to include historical user emails
+           registered before;
+
+      - Option -i, for WEB files read by users with given first names;
+
+      - Option -I, for data read by users who have been notified 
+           data update of a specified dataset for given the email IDs;
+
+      - Option -j, includes Group IDs in column PRODUCT;
+
+      - Option -J, includes Group Titles in column PRODUCT;
+
+      - Option -k, for WEB files read by users from given organization names;
+
+      - Option -l, for WEB files read by users with given last names;
+
+      - Option -m, for files read in given months, in format YYYY-MM;
+
+      - Option -M, for files read via given download methods;
+
+      - Option -N, for files for numbers of read by each group between
+           MinNumberRead and MaxNumberRead. Omit MaxNumberRead for no
+           upper limit;
+
+      - Option -o, for WEB files read by users from given organization types.
+           It defaults to -o ! DSS to exclude usage from DSS specialists.
+           Set it to ALL to include all orgnization types;
+
+      - Option -q, for data read in given quarters;
+
+      - Option -S, for login names of specialists who own the datasets;
+
+      - Option -t, for WEB files associating to given dataset names;
+
+      - Option -T, for WEB files associating to datasets between 
+           MinDataset and MaxDataset. Omit MaxDataset for no upper limit.
+           For example, -T d540000 d550009, for datasets numbers d540000-d550009;
+
+      - Option -v, array of specified IP addresses;
+
+      - Option -V, IP address range;
+
+      - Option -y, for WEB files read in given years in format YYYY;
+
+      Miscellaneous Options:
+      - Option -w, view WEB usage info in simple format without the totals;
+
+      - Option -z, include zero usages for specified fields;
+
+      - Option -L, use given delimiter for output, instead of defaulted spaces;
+
+      - Option -U, show data sizes in given unit SizeUnit [BKMG].
+           B - Byte, K - KiloBytes, M  - MegaByte, and G - GigaByte;
+
+      - Option -H, use given report title to replace the default one;
+
+      - Option > OutputFilename, redirect output into an output file,
+           for example, webusage.out, instead of viewing on screen directly;
+
+      - Option | lp -d PrinterName, redirect output to printer of PrinterName.
+           Replace PrinterName with lj100 to print through DSS LaserJet printer.
+
+
+      For example:
+      To view annual WEB file usage in year 2005 with columns, INDEX(X),
+      EMAIL(E), ORGTYPE(O), #READ(H), and MBYTESREAD(B); ordered by ORGTYPE as
+      ascending and MBYTESREAD(B) as descending; the command line should be:
+
+         viewwebusage XEOHB -y 2005 -O Ob
+
+      For usage of 'Y' series files only,  out of the file usage gathered 
+      above, the command line should be:
+
+         viewwebusage XEOHB -y 2005 -f Y% -O Ob
+
+      To redirect the previous output to a file named webusage.out:
+
+         viewwebusage XEOHB -y 2005 -f Y% -o ! DSS -O Ob > webusage.out
+
+      Then you can view the file or print it as a report.
+

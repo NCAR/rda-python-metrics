@@ -1,1 +1,1 @@
-RDA python code template to create new and modify existing RDA python packages.
+RDA Python Package to gather and view data usage metrics.
