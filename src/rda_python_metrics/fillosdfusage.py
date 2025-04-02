@@ -2,12 +2,10 @@
 #
 ###############################################################################
 #
-#     Title : fillglobususage
+#     Title : fillosdfusage
 #    Author : Zaihua Ji,  zji@ucar.edu
-#      Date : 03/11/2022
-#             2025-03-26 transferred to package rda_python_metrics from
-#             https://github.com/NCAR/rda-database.git
-#   Purpose : python program to retrieve info from Globus logs 
+#      Date : 2025-04-01
+#   Purpose : python program to retrieve info from weekly OSDF logs 
 #             and fill table wusages in PgSQL database dssdb.
 # 
 #    Github : https://github.com/NCAR/rda-pythn-metrics.git
@@ -16,8 +14,6 @@
 #
 import sys
 import re
-import glob
-from os import path as op
 from rda_python_common import PgLOG
 from rda_python_common import PgUtil
 from rda_python_common import PgFile
@@ -26,9 +22,10 @@ from rda_python_common import PgSplit
 from . import PgIPInfo
 
 USAGE = {
-   'PGTBL'  : "wusage",
-   'GBSDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/logs/gridftp/",
-   'GBSLOG' : "access_log_gridftp0{}_{}",
+   'OSDFTBL'  : "wusage",
+   'OSDFDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/logs/gridftp/",
+   'OSDFGET' : 'wget -m -nH -np -nd https://pelicanplatform.org/pelican-access-logs/ncar-access-log/',
+   'OSDFLOG' : "{}.log",   # YYYY-MM-DD.log
 }
 
 #
@@ -59,15 +56,15 @@ def main():
       else:
          PgLOG.pglog(arg + ": Invalid Parameter", PgLOG.LGWNEX)
    
-   if not (option and params): PgLOG.show_usage('fillglobususage')
+   if not (option and params): PgLOG.show_usage('fillosdfusage')
 
    PgDBI.dssdb_dbname()
-   cmdstr = "fillglobususage {}".format(' '.join(argv))
+   cmdstr = "fillosdfusage {}".format(' '.join(argv))
    PgLOG.cmdlog(cmdstr)
-   PgFile.change_local_directory(USAGE['GBSDIR'])
+   PgFile.change_local_directory(USAGE['OSDFDIR'])
    filenames = get_log_file_names(option, params, datelimits)
    if filenames:
-      fill_globus_usages(filenames, datelimits)
+      fill_osdf_usages(filenames, datelimits)
    else:
       PgLOG.pglog("No log file found for given command: " + cmdstr, PgLOG.LOGWRN)
 
@@ -82,10 +79,11 @@ def get_log_file_names(option, params, datelimits):
    filenames = []
    if option == 'd':
       for pdate in params:
-         fdate = PgUtil.format_date(pdate, 'MMDDYYYY')
-         fname = USAGE['GBSLOG'].format('?', fdate)
-         fnames = glob.glob(fname)
-         if fnames: filenames.extend(sorted(fnames))
+         pdays = PgUtil.get_weekday(pdate)
+         if pdays > 0:
+            PgLOG.pglog(pdate + ": Skip a Non-Sunday date", PgLOG.LOGWRN)
+            continue
+         filenames.append(USAGE['OSDFLOG'].format(pdate))
    else:
       if option == 'N':
          edate = PgUtil.curdate()
@@ -96,95 +94,75 @@ def get_log_file_names(option, params, datelimits):
             edate = datelimits[1] = params[1]
          else:
             edate = PgUtil.curdate()
+      pdays = PgUtil.get_weekday(pdate)
+      if pdays > 0: pdate = PgUtil.adddate(edate, 0, 0, 7-pdays)
       while pdate <= edate:
-         fdate = PgUtil.format_date(pdate, 'MMDDYYYY')
-         fname = USAGE['GBSLOG'].format('?', fdate)
-         fnames = glob.glob(fname)
-         if fnames: filenames.extend(sorted(fnames))
-         pdate = PgUtil.adddate(pdate, 0, 0, 1)
+         filenames.append(USAGE['OSDFLOG'].format(pdate))
+         pdate = PgUtil.adddate(pdate, 0, 0, 7)
 
    return filenames
 
 #
-# Fill Globus usages into table dssdb.globususage of DSS PgSQL database from globus access logs
+# Fill OSDF usages into table dssdb.osdfusage of DSS PgSQL database from osdf access logs
 #
-def fill_globus_usages(fnames, datelimits):
+def fill_osdf_usages(fnames, datelimits):
 
    cntall = addall = 0
 
    fcnt = len(fnames)
    for logfile in fnames:
-      if not op.isfile(logfile):
-         PgLOG.pglog("{}: Not exists for Gathering Globus usage".format(logfile), PgLOG.LOGWRN)
+      PgLOG.pgsystem(USAGE['OSDFGET'] + logfile, 5, PgLOG.LOGWRN)
+      linfo = PgFile.check_local_file(logfile)
+      if not linfo:
+         PgLOG.pglog("{}: Not exists for Gathering OSDF usage".format(logfile), PgLOG.LOGWRN)
+         continue
+      if linfo['data_size'] == 0:
+         PgLOG.pglog("{}: Empty log for Gathering OSDF usage".format(logfile), PgLOG.LOGWRN)
          continue
       PgLOG.pglog("Gathering usage info from {} at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
-      globus = PgFile.open_local_file(logfile)
-      if not globus: continue
-      ptime = ''
-      record = {}
+      osdf = PgFile.open_local_file(logfile)
+      if not osdf: continue
       cntadd = entcnt = 0
       pkey = None
       while True:
-         line = globus.readline()
+         line = osdf.readline()
          if not line: break
          entcnt += 1
          if entcnt%10000 == 0:
-            PgLOG.pglog("{}: {}/{} Globus log entries processed/records added".format(logfile, entcnt, cntadd), PgLOG.WARNLG)
+            PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, cntadd), PgLOG.WARNLG)
 
-         ms = re.match(r'^([\d\.]+)\s.*\s+\[(\S+).*"GET\s+/(ds\d\d\d\.\d|[a-z]\d{6})/(\S+)\s.*\s(200|206)\s+(\d+)\s+"(\S+)"\s+"(.+)"$', line)
+         ms = re.match(r'^\[(\S+)\] \[Objectname:(\/ncar\/rda\/([a-z]\d{6})\/(\S+)\] \[Host:(\S+)\] \[server:(\S+)\] \[Read:(\d+)\]', line)
          if not ms: continue
          size = int(ms.group(6))
          if size < 100: continue  # ignore small files
-         ip = ms.group(1)
-         dsid = PgUtil.format_dataset_id(ms.group(3))
-         wfile = ms.group(4)
-         stat = ms.group(5)
-         sline = ms.group(7)
-         engine = ms.group(8)
-         (year, quarter, date, time) = get_record_date_time(ms.group(2))
+         ip = ms.group(4)
+         dsid = PgUtil.format_dataset_id(ms.group(2))
+         wfile = ms.group(3)
+         engine = ms.group(5)
+         
+         (year, quarter, date, time) = get_record_date_time(ms.group(1))
          if datelimits[0] and date < datelimits[0]: continue
          if datelimits[1] and date > datelimits[1]: continue
-         locflag = 'O' if re.match(r'^https://stratus\.', sline) else 'G'
-         idx = wfile.find('?')
-         if idx > -1: wfile = wfile[:idx]
+         locflag = 'C'
+         method = "OSDF"
 
-         if re.match(r'^curl', engine, re.I):
-            method = "CURL"
-         elif re.match(r'^wget', engine, re.I):
-            method = "WGET"
-         elif re.match(r'^python', engine, re.I):
-            method = "PYTHN"
-         else:
-            method = "WEB"
-
-         key = "{}:{}:{}".format(ip, dsid, wfile) if stat == '206' else None
-
-         if record:
-            if key == pkey:
-               record['size'] += size
-               continue
-            cntadd += add_file_usage(year, record)
          record = {'ip' : ip, 'dsid' : dsid, 'wfile' : wfile, 'date' : date,
                    'time' : time, 'quarter' : quarter, 'size' : size,
                    'locflag' : locflag, 'method' : method}
-         pkey = key
-         if not pkey:
-            cntadd += add_file_usage(year, record)
-            record = None
-      if record: cntadd += add_file_usage(year, record)
-      globus.close()
+         cntadd += add_file_usage(year, record)
+      osdf.close()
       cntall += entcnt
       addall += cntadd
-      PgLOG.pglog("{} Globus usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
+      PgLOG.pglog("{} OSDF usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
 
 def get_record_date_time(ctime):
-   
-   ms = re.search(r'^(\d+)/(\w+)/(\d+):(\d+:\d+:\d+)$', ctime)
+
+   ms = re.search(r'^(\d+)-(\d+)-(\d+)T([\d:]+)\.', ctime)
    if ms:
-      d = int(ms.group(1))
-      m = PgUtil.get_month(ms.group(2))
-      y = ms.group(3)
+      y = ms.group(1)
+      m = int(ms.group(2))
+      d = int(ms.group(3))
       t = ms.group(4)
       q = 1 + int((m-1)/3)
       return (y, q, "{}-{:02}-{:02}".format(y, m, d), t)
@@ -199,7 +177,7 @@ def add_file_usage(year, logrec):
    pgrec = get_wfile_wid(logrec['dsid'], logrec['wfile'])
    if not pgrec: return 0
 
-   table = "{}_{}".format(USAGE['PGTBL'], year)
+   table = "{}_{}".format(USAGE['OSDFTBL'], year)
    cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
    if PgDBI.pgget(table, "", cond, PgLOG.LOGWRN): return 0
 

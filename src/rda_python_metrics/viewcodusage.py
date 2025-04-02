@@ -243,7 +243,7 @@ def check_enough_options():
 def build_query_strings(usgtable):
 
    # initialize query strings
-   global condition, fieldnames, tablenames, gfields, sfields
+   global condition, fieldnames, tablenames
    joins = having = groupnames = ''
    tablenames = usgtable
    cols = params['C'][0]
