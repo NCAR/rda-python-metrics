@@ -131,7 +131,7 @@ def fill_osdf_usages(fnames, datelimits):
          if entcnt%10000 == 0:
             PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, cntadd), PgLOG.WARNLG)
 
-         ms = re.match(r'^\[(\S+)\] \[Objectname:(\/ncar\/rda\/([a-z]\d{6})\/(\S+)\] \[Host:(\S+)\] \[server:(\S+)\] \[Read:(\d+)\]', line)
+         ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/(\S+)\] \[Host:(\S+)\] \[Server:(\S+)\] \[Read:(\d+)\]', line)
          if not ms: continue
          size = int(ms.group(6))
          if size < 100: continue  # ignore small files
