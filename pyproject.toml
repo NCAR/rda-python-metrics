@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rda_python_metrics"
-version = "1.0.4"
+version = "1.0.5"
 authors = [
   { name="Zaihua Ji", email="zji@ucar.edu" },
 ]
@@ -33,9 +33,10 @@ where = ["src"]
 [tool.setuptools.package-data]
 "rda_python_metrics" = [
 "logarch.usg", "fillawsusage.usg", "fillcodusage.usg", "fillglobususage.usg",
-"fillipinfo.usg", "filloneorder.usg", "fillrdadb.usg", "filltdsusage.usg",
-"viewallusage.usg", "viewcheckusage.usg", "viewcodusage.usg", "viewordusage.usg",
-"viewrqstusage.usg", "viewtdsusage.usg", "viewwebfile.usg", "viewwebusage.usg"
+"fillipinfo.usg", "filloneorder.usg", "fillosdfusage.usg", "fillrdadb.usg",
+"filltdsusage.usg", "viewallusage.usg", "viewcheckusage.usg", "viewcodusage.usg",
+"viewordusage.usg", "viewrqstusage.usg", "viewtdsusage.usg", "viewwebfile.usg",
+"viewwebusage.usg"
 ]
 
 [project.urls]
@@ -50,8 +51,9 @@ where = ["src"]
 "fillglobususage" = "rda_python_metrics.fillglobususage:main"
 "fillipinfo" = "rda_python_metrics.fillipinfo:main"
 "filloneorder" = "rda_python_metrics.filloneorder:main"
+"fillosdfusage" = "rda_python_metrics.fillosdfusage:main"
 "fillrdadb" = "rda_python_metrics.fillrdadb:main"
-"filltdsusage" = "rda_python_metrics.tdsusage:main"
+"filltdsusage" = "rda_python_metrics.filltdsusage:main"
 "filluser" = "rda_python_metrics.filluser:main"
 "pgperson" = "rda_python_metrics.pgperson:main"
 "pgusername" = "rda_python_metrics.pgusername:main"

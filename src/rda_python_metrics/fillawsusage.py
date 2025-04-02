@@ -184,7 +184,7 @@ def get_record_date_time(ctime):
       m = PgUtil.get_month(ms.group(2))
       y = ms.group(3)
       t = ms.group(4)
-      q = 1 + (m-1)/3
+      q = 1 + int((m-1)/3)
       return (y, q, "{}-{:02}-{:02}".format(y, m, d), t)
    else:
       PgLOG.pglog(ctime + ": Invalid date/time format", PgLOG.LGEREX)

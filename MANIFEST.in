@@ -3,6 +3,7 @@ include src/rda_python_metrics/fillcodusage.usg
 include src/rda_python_metrics/fillglobususage.usg
 include src/rda_python_metrics/fillipinfo.usg
 include src/rda_python_metrics/filloneorder.usg
+include src/rda_python_metrics/fillosdfusage.usg
 include src/rda_python_metrics/fillrdadb.usg
 include src/rda_python_metrics/filltdsusage.usg
 include src/rda_python_metrics/filluser.usg
