@@ -101,6 +101,8 @@ def fill_rdadb(option, params):
    PgLOG.pgsystem("fillglobususage {} {}".format(RDADB['BCKGRND'], filecond), PgLOG.LGWNEM, 5)
    # fill available AWS web data usages
    PgLOG.pgsystem("fillawsusage {} {}".format(RDADB['BCKGRND'], filecond), PgLOG.LGWNEM, 5)
+   # fill available OSDF web data usages
+   PgLOG.pgsystem("fillosdfusage {} {}".format(RDADB['BCKGRND'], filecond), PgLOG.LGWNEM, 5)
 
    if RDADB['DOMAIL']: send_email_notice()
    PgLOG.pglog("End Filling RDADB info at {}".format(PgLOG.current_datetime()), PgLOG.LGWNEM)

@@ -3,7 +3,7 @@
    at any time. It checks if the given log files are archived or not and will
    ignore the ones that are backed up already.
 
- Usage: logarch [-b] [-a] [-d] [-w] [-s] [-t] [-p LogPath]  \
+ Usage: logarch [-b] [-a] [-d] [-o] [-w] [-s] [-t] [-p LogPath]  \
                 [-m YearMonth] [-n]
 
       - Option -b, do not display processing info on screen;
@@ -12,6 +12,8 @@
 
       - Option -d, archive dssdb log files;
       
+      - Option -o, archive OSDF log files;
+
       - Option -p, provide a LogPath if not the fefault one;
 
       - Option -s, append PBS sublog files to common log files;

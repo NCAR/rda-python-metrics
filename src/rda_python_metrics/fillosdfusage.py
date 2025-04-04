@@ -23,7 +23,7 @@ from . import PgIPInfo
 
 USAGE = {
    'OSDFTBL'  : "wusage",
-   'OSDFDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/logs/gridftp/",
+   'OSDFDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/zji/osdflogs/",
    'OSDFGET' : 'wget -m -nH -np -nd https://pelicanplatform.org/pelican-access-logs/ncar-access-log/',
    'OSDFLOG' : "{}.log",   # YYYY-MM-DD.log
 }
@@ -95,7 +95,7 @@ def get_log_file_names(option, params, datelimits):
          else:
             edate = PgUtil.curdate()
       pdays = PgUtil.get_weekday(pdate)
-      if pdays > 0: pdate = PgUtil.adddate(edate, 0, 0, 7-pdays)
+      if pdays > 0: pdate = PgUtil.adddate(pdate, 0, 0, 7-pdays)
       while pdate <= edate:
          filenames.append(USAGE['OSDFLOG'].format(pdate))
          pdate = PgUtil.adddate(pdate, 0, 0, 7)

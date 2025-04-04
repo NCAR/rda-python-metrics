@@ -28,11 +28,13 @@ TLOG = 0x02  # archive tds log
 DLOG = 0x04  # archive dssdb logs
 SLOG = 0x08  # append dssdb sub batch logs
 ALOG = 0x10  # archive AWS web log
+OLOG = 0x20  # archive OSDF web log
 
 LOGS = {
    'OPTION' : 0,
    'AWSLOG' : PgLOG.PGLOG["TRANSFER"] + "/AWSera5log",
    'WEBLOG' : PgLOG.PGLOG["DSSDATA"] + "/work/logs/gridftp",
+   'OSDFLOG' : PgLOG.PGLOG["DSSDATA"] + "/zji/osdflogs",
    'MGTLOG' : "/data/logs",
    'TDSLOG' : "/data/logs/nginx",
    'RDALOG' : PgLOG.PGLOG['LOGPATH'],
@@ -70,6 +72,8 @@ def main():
             LOGS['OPTION'] |= WLOG
          elif option == "a":
             LOGS['OPTION'] |= ALOG
+         elif option == "o":
+            LOGS['OPTION'] |= OLOG
          elif option == "s":
             LOGS['OPTION'] |= SLOG
          elif option == "t":
@@ -91,6 +95,7 @@ def main():
    if LOGS['OPTION']&SLOG: append_dssdb_sublog()
    if LOGS['OPTION']&DLOG: archive_dssdb_log()
    if LOGS['OPTION']&WLOG: archive_web_log(smonth)
+   if LOGS['OPTION']&OLOG: archive_osdf_log(smonth)
    if LOGS['OPTION']&ALOG: archive_aws_log(smonth)
    if LOGS['OPTION']&TLOG: archive_tds_log(smonth)
 
@@ -134,6 +139,38 @@ def archive_web_log(smonth):
       tcnt += PgLOG.pgsystem(tcmd, PgLOG.LGWNEM, 5)
       topt = '-uvf'
 
+   
+   if tcnt > 0:
+      PgLOG.pgsystem("gzip " + afile, PgLOG.LGWNEM, 5)
+      afile += '.gz'
+      PgFile.move_local_file(dfile, afile, PgLOG.LGWNEM)
+      s = 's' if tcnt > 1 else ''
+      PgLOG.pglog("{}: {} globus log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
+
+#
+# Archive OSDF web log files to LOGS['DECSLOGS']
+#
+def archive_osdf_log(smonth):
+
+   (yr, mn) = get_year_month(smonth)
+   PgFile.change_local_directory(LOGS['DECSLOGS'], PgLOG.LGEREM)
+   logpath = LOGS['LOGPATH'] if LOGS['LOGPATH'] else LOGS['OSDFLOG']
+   afile = "osdfweb{}-{}.log.tar".format(yr, mn)
+   dfile = "./OSDFLOG/{}.gz".format(afile)
+   if op.exists(dfile):
+      PgLOG.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, LOGS['DECSLOGS']), PgLOG.LGWNEM)
+      return
+
+   if op.exists(afile): PgFile.delete_local_file(afile)
+
+   logfiles = sorted(glob.glob("{}/{}-{}-??.log".format(logpath, yr, mn)))
+   topt = '-cvf'
+   tcnt = 0
+   for logfile in logfiles:
+      lfile = op.basename(logfile)
+      tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
+      tcnt += PgLOG.pgsystem(tcmd, PgLOG.LGWNEM, 5)
+      topt = '-uvf'
    
    if tcnt > 0:
       PgLOG.pgsystem("gzip " + afile, PgLOG.LGWNEM, 5)
