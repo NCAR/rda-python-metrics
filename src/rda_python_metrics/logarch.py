@@ -23,7 +23,7 @@ from rda_python_common import PgFile
 from rda_python_common import PgSIG
 
 # the defined options for archiving different logs
-WLOG = 0x01  # archive web log
+WLOG = 0x21  # archive web log
 TLOG = 0x02  # archive tds log
 DLOG = 0x04  # archive dssdb logs
 SLOG = 0x08  # append dssdb sub batch logs
