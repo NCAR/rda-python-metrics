@@ -17,12 +17,11 @@ import sys
 import re
 from rda_python_common import PgLOG
 from rda_python_common import PgDBI
-from rda_python_common import PgIMMA
 from rda_python_common import PgUtil
 
 # -t dsid, -e email, -v request data volume, -i data input volume,
 # -m delivery method, -a amount charged, -p pay method, -d request date, -x close date,
-# -y close time, -c file count, -s specialist login name, -o order id, 
+# -y close time, -c file count, -s specialist login name, -o order id,
 # mandatory options: -t, -e, -v, and -m
 
 #
@@ -63,7 +62,7 @@ def add_one_order(params):
 
    year = None
    record = {}
-   
+
    record['dsid'] = params['t']
    record['wuid_request'] = params['u']
    record['dss_uname'] = params['s']
@@ -100,7 +99,7 @@ def add_to_allusage(record, year, ctime):
       pgrec['method'] = record['method']
       pgrec['source'] = 'O'
       return PgDBI.add_yearly_allusage(year, pgrec)
-      
+
    return 0
 
 #
