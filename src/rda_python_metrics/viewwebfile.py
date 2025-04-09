@@ -16,9 +16,9 @@
 import os
 import re
 import sys
-import PgLOG
-import PgUtil
-import PgDBI
+from rda_python_common import PgLOG
+from rda_python_common import PgUtil
+from rda_python_common import PgDBI
 from . import PgView
 
 FILE = {
@@ -38,9 +38,9 @@ FILE = {
 # column 0   - column title showing in mss file view
 # column 1   - field name in format as shown in select clauses
 # column 2   - field name shown in where condition query string
-# column 3   - table name that the field belongs to 
+# column 3   - table name that the field belongs to
 # column 4   - output field length, the longer one of data size and comlun title, determine
-#              dynamically if it is 0. Negative values indicate right justification 
+#              dynamically if it is 0. Negative values indicate right justification
 # column 5   - precision for floating point value if positive and show total value if not zero
 # column 6   - field flag to indicate it is a group, distinct or sum field
 FLDS = {
@@ -77,7 +77,7 @@ FLDS = {
 #   a -- 1 to view all usage info available
 #   A -- number or records to return
 #   C -- a string of short field names for viewing usages
-#   d -- array of specified dates of file last written 
+#   d -- array of specified dates of file last written
 #   D -- last written dates range, array of 1 or 2 dates in format of YYYY-MM-DD
 #   e -- array of specified email addresses
 #   f -- array of specified online file names
@@ -90,16 +90,16 @@ FLDS = {
 #   J -- 1 to include group title for GROUP
 #   l -- array of specified last names
 #   L -- column delimiter for output
-#   m -- array of specified months of file last written 
-#   M -- array of specified months of file created 
-#   n -- array of specified user numbers 
+#   m -- array of specified months of file last written
+#   M -- array of specified months of file created
+#   n -- array of specified user numbers
 #   D -- dates range, datasets created between, array of 1 or 2 dates in format of YYYY-MM-DD
 #   o -- array of specified file status
 #   O -- a string of short field names for sorting on
 #   p -- array of web file types, Data, Document, and etc.
 #   r -- group index range, array of 1 or 2 group indices
 #   s -- file size range, arrage of 1 or 2 sizes in unit of MByte
-#   S -- specialist lognames who handle the datasets 
+#   S -- specialist lognames who handle the datasets
 #   t -- array of specified dataset names
 #   T -- dataset range, array of 1 or 2 dataset names
 #   u -- array of specified specialist user names
@@ -113,7 +113,7 @@ FLDS = {
 params = {}
 
 # relationship between parameter options and short field names, A option is not
-# related to a field name if it is not in keys %SNS 
+# related to a field name if it is not in keys %SNS
 SNS = {
    'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'F' : 'F', 'g' : 'G', 'i' : 'I',
    'l' : 'L', 'm' : 'M', 'M' : 'H', 'N' : 'N', 'o' : 'O', 'p' : 'P', 'r' : 'G',
@@ -174,7 +174,7 @@ def main():
       params[option] = 1
    elif inputs:
       params[option] = inputs   # record input array
-   
+
    if not params:
       PgLOG.show_usage(pgname)
    else:
@@ -196,7 +196,7 @@ def main():
    PgView.simple_output(params, FLDS, records, totals)
 
    PgLOG.pgexit(0)
-   
+
 #
 # cehck if enough information entered on command line for generate view/report, exit if not
 #
@@ -209,7 +209,7 @@ def check_enough_options():
       if sn == 'X': continue  # do not process INDEX field
       if FILE['SNMS'].find(sn) < 0:
          PgLOG.pglog("{}: Field {} must be in field names '{}X'".format(pgname, sn, FILE['SNMS']), PgLOG.LGWNEX)
-   
+
    if 'g' in params or 'G' in params:
       if 't' not in params:
          PgLOG.pglog("Miss dataset condition via Option -t for processing Group", PgLOG.LGWNEX)
