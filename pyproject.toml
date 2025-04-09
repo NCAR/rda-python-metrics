@@ -23,7 +23,8 @@ dependencies = [
   "rda_python_common",
   "rda_python_setuid",
   "geoip2",
-  "ipinfo"
+  "ipinfo",
+  "httplib2"
 ]
 
 [tool.setuptools]
