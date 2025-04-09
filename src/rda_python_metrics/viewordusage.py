@@ -14,7 +14,7 @@
 import os
 import re
 import sys
-import pgsyspath
+from . import pgsyspath
 import PgLOG
 import PgUtil
 import PgView
@@ -38,7 +38,7 @@ VUSG = {
 # column 0   - column title showing in usage view
 # column 1   - field name in format as shown in select clauses
 # column 2   - field name shown in where condition query string
-# column 3   - table name that the field belongs to 
+# column 3   - table name that the field belongs to
 # column 4   - output field length, the longer one of data size and comlun title, determine
 #              dynamically if it is 0. Negative values indicate right justification
 # column 5   - precision for floating point value if positive and show total value if not zero
@@ -76,7 +76,7 @@ FLDS = {
 # column 0   - expand ID for group of fields
 # column 1   - field name shown in where condition query string
 # column 2   - field name in format as shown in select clauses
-# column 3   - table name that the field belongs to 
+# column 3   - table name that the field belongs to
 EXPAND = {
 # SHRTNM EXPID     CNDSTR    FIELDNAME       TBLNAM
    'D' : ["TIME",   "dDmy"],
@@ -105,7 +105,7 @@ EXPAND = {
 #   A -- number or records to return
 #   c -- array of specified country codes
 #   C -- a string of short field names for viewing usages
-#   d -- array of specified dates 
+#   d -- array of specified dates
 #   D -- dates range, array of 1 or 2 dates in format of YYYY-MM-DD
 #   e -- array of specified email addresses
 #   E -- use given date or date range for email notice of data update
@@ -116,13 +116,13 @@ EXPAND = {
 #   j -- array of specified projects
 #   l -- array of specified last names
 #   L -- column delimiter for output
-#   m -- array of specified months 
-#   M -- array of specified download methods 
-#   n -- array of specified order numbers 
+#   m -- array of specified months
+#   M -- array of specified download methods
+#   n -- array of specified order numbers
 #   N -- number request range, arrage of 1 or 2 integers
 #   o -- array of specified orginization types
 #   O -- a string of short field names for sorting on
-#   p -- array of specified payment methods 
+#   p -- array of specified payment methods
 #   s -- output data size range, arrage of 1 or 2 sizes in unit of MByte
 #   S -- array of login names of specialists who processed the orders
 #   t -- array of specified dataset names
@@ -130,12 +130,12 @@ EXPAND = {
 #   U -- use given unit for file or data sizes
 #   v -- aray of specified roder numbers
 #   w -- generate view without totals
-#   y -- array of specified years 
+#   y -- array of specified years
 #   z -- generate view including entries without usage
 params = {}
 
 # relationship between parameter options and short field names, A option is not
-# related to a field name if it is not in keys %SNS 
+# related to a field name if it is not in keys %SNS
 SNS = {
    'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'g' : 'G', 'i' : 'I', 'j' : 'J',
    'l' : 'L', 'm' : 'M', 'M' : 'W', 'n' : 'V', 'N' : 'H', 'o' : 'O', 'p' : 'K',
@@ -194,18 +194,18 @@ def main():
       params[option] = 1
    elif inputs:
       params[option] = inputs   # record input array
-   
+
    if not params:
       PgLOG.show_usage(pgname)
    else:
       check_enough_options()
-   
+
    if 'o' not in params:
       if 'e' not in params:
          params['o'] = ['!', "'DSS'"]   # default to exclude 'DSS' for organization
    elif params['o'][0] == "'ALL'":
       del params['o']
-   
+
    usgtable = "ousage"
    build_query_strings(usgtable)  # build tablenames, fieldnames, and conditions
    records = PgDBI.pgmget(tablenames, fieldnames, condition, PgLOG.UCLWEX)
