@@ -15,10 +15,10 @@ import os
 import re
 import sys
 from . import pgsyspath
-import PgLOG
-import PgUtil
-import PgView
-import PgDBI
+from rda_python_common import PgLOG
+from rda_python_common import PgUtil
+from rda_python_common import PgView
+from rda_python_common import PgDBI
 
 VUSG = {
    'SNMS' : "ABCDEFGHIJKLMNOPQRSTVWYZ",          # all available short field names in FLDS
