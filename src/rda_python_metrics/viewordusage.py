@@ -15,9 +15,9 @@ import os
 import re
 import sys
 from . import pgsyspath
+from . import PgView
 from rda_python_common import PgLOG
 from rda_python_common import PgUtil
-from rda_python_common import PgView
 from rda_python_common import PgDBI
 
 VUSG = {
