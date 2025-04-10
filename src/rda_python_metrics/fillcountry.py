@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3/
 #
 ###############################################################################
 #
@@ -17,7 +17,6 @@
 import sys
 import re
 from rda_python_common import PgLOG
-from rda_python_common import PgIMMA
 from rda_python_common import PgUtil
 from rda_python_common import PgDBI
 
@@ -29,7 +28,7 @@ def main():
    argv = sys.argv[1:]
    tables = ['allusage', 'user', 'wuser']
    table = None
-   
+
    # check command line
    for arg in argv:
       if arg == "-b":
@@ -40,7 +39,7 @@ def main():
          table = arg
       else:
          PgLOG.pglog(arg + ": one table name at a time", PgLOG.LGEREX)
-   
+
    if not table:
       print("Usage: fillcountry TableName\n")
       sys.exit(0)
@@ -51,7 +50,7 @@ def main():
    PgLOG.cmdlog("fillcountry {}".format(' '.join(argv)))
 
    process_countries(table)
-   
+
    sys.exit(0)
 
 def process_countries(table):
