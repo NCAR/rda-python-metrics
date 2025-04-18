@@ -54,6 +54,10 @@ DSIDS = {
    'ucar.cgd.ccsm4.pliomip2' : ['d651037']
 }
 
+ALLIDS = list(DSIDS.keys())
+
+WFILES = {}
+WUSERS = {}
 
 #
 # main function to run this program
@@ -86,13 +90,9 @@ def main():
       
    
    PgLOG.cmdlog("fillcdgusage {}".format(' '.join(argv)))
+   dranges = get_date_ranges(params)
    dsids = get_dataset_ids(params['s'])
-   if dsids:
-      del params['s']
-      for o in params:
-         dranges = get_date_ranges(o, params[o])
-         fill_cdg_usages(dsids, dranges)
-
+   if dranges and dsids: fill_cdg_usages(dsids, dranges)
    PgLOG.pglog(None, PgLOG.LOGWRN|PgLOG.SNDEML)  # send email out if any
 
    sys.exit(0)
@@ -112,6 +112,7 @@ def get_dataset_ids(dsnames):
    dsids = []
    tbname = 'metadata.dataset'
    for dsname in dsnames:
+      if re.match(r'^all$', dsname, re.I): return ALLIDS
       if dsname not in DSIDS:
          PgLOG.pglog(dsname + ": Unknown CDG dataset short name", PgLOG.LOGWRN)
          continue
@@ -144,23 +145,24 @@ def recursive_dataset_ids(pdsid, rdaid, dsids):
 #
 # get the date ranges for given condition
 #
-def get_date_ranges(option, inputs):
+def get_date_ranges(inputs):
 
    dranges = []
-   for input in inputs:
-      # get date range
-      dates = []
-      if option == 'N':
-         dates[1] = USAGE['CDATE']
-         dates[0] = PgUtil.adddate(USAGE['CDATE'], 0, 0, -int(input))  
-      elif option == 'm':
-         tms = input.split('-')
-         dates[0] = PgUtil.fmtdate(int(tms[0]), int(tms[1]), 1)
-         dates[1] = PgUtil.enddate(dates[0])
-      else:
-         dates[0] = input + "-01-01"
-         dates[1] = input + "-12-31"
-      dranges.append(dates)
+   for opt in inputs:
+      for input in inputs[opt]:
+         # get date range
+         dates = []
+         if opt == 'N':
+            dates.append(PgUtil.adddate(USAGE['CDATE'], 0, 0, -int(input)))
+            dates.append(USAGE['CDATE'])
+         elif opt == 'm':
+            tms = input.split('-')
+            dates.append(PgUtil.fmtdate(int(tms[0]), int(tms[1]), 1))
+            dates.append(PgUtil.enddate(dates[0], 0, 'M'))
+         elif opt == 'Y':
+            dates.append(input + "-01-01")
+            dates.append(input + "-12-31")
+         dranges.append(dates)
 
    return dranges
 
@@ -174,6 +176,7 @@ def get_dsid_records(dsid, dates):
    fields = ('date_completed, remote_address, logical_file_size, logical_file_name, file_access_point_uri, user_agent_name, bytes_sent, '
              'subset_file_size, range_request, dataset_file_size, dataset_file_name, dataset_file_file_access_point_uri')
    cond = "dataset_id = '{}' AND completed = True AND date_completed BETWEEN '{}' AND '{}' ORDER BY date_completed".format(dsid, dates[0], dates[1])
+   PgLOG.pglog("{}: Query CDG usage between {} and {} at {}".format(dsid, dates[0], dates[1], PgLOG.current_datetime()), PgLOG.LOGWRN)
    pgrecs = PgDBI.pgmget(tbname, fields, cond)
    PgDBI.dssdb_dbname()
 
@@ -184,17 +187,19 @@ def get_dsid_records(dsid, dates):
 #
 def fill_cdg_usages(dsids, dranges):
 
-   allcnt = awcnt = atcnt = 0
-   for dsid in dsids:
-      cdgid = dsid[0]
-      rdaid = dsid[1]
-      for dates in dranges:
+   allcnt = awcnt = atcnt = lcnt = 0
+   for dates in dranges:
+      for dsid in dsids:
+         lcnt += 1
+         cdgid = dsid[0]
+         rdaid = dsid[1]
+         srdaid = '|'.join(rdaid)
          pgrecs = get_dsid_records(cdgid, dates)
          pgcnt = len(pgrecs['dataset_file_name']) if pgrecs else 0
          if pgcnt == 0:
-            PgLOG.pglog("{}: No record found to gather CDG usage between {} and {}".format(rdaid, dates[0], dates[1]), PgLOG.LOGWRN)
+            PgLOG.pglog("{}: No record found to gather CDG usage between {} and {}".format(srdaid, dates[0], dates[1]), PgLOG.LOGWRN)
             continue
-         PgLOG.pglog("{}: gather {} records for CDG usage between {} and {}".format(rdaid, pgcnt, dates[0], dates[1]), PgLOG.LOGWRN)
+         PgLOG.pglog("{}: Process {} records for CDG usage at {}".format(srdaid, pgcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
          tcnt = wcnt = 0
          pwkey = wrec = cdate = None
          trecs = {}
@@ -210,6 +215,10 @@ def fill_cdg_usages(dsids, dranges):
             if not url: url = pgrec['file_access_point_uri']
             ip = pgrec['remote_address']
             engine = pgrec['user_agent_name']
+            wfile = pgrec['dataset_file_name']
+            if not wfile: wfile = pgrec['logic_file_name']
+            wfrec = get_wfile_record(rdaid, wfile)
+            if not wfrec: continue
             ms = re.search(r'^https://tds.ucar.edu/thredds/(\w+)/', url)
             if ms:
                # tds usage
@@ -231,12 +240,14 @@ def fill_cdg_usages(dsids, dranges):
                   trecs[tkey]['size'] += dsize
                   trecs[tkey]['fcount'] += 1
                else:
-                  trecs[tkey] = {'ip' : ip, 'dsid' : rdaid, 'date' : cdate, 'time' : time, 'size' : dsize,
-                                 'fcount' : 1, 'method' : method, 'etype' : etype, 'engine' : engine}
+                  wurec =  get_wuser_record(ip, cdate, skipwuid = True)
+                  if not wurec: return 0
+                  trecs[tkey] = {'ip' : ip, 'dsid' : wfrec['dsid'], 'date' : cdate, 'time' : time, 'size' : dsize,
+                                 'fcount' : 1, 'method' : method, 'etype' : etype, 'engine' : engine,
+                                 'org_type' : wurec['org_type'], 'country' : wurec['country'],
+                                 'email' : wurec['email']}
             else:
                # web usage
-               wfile = pgrec['dataset_file_name']
-               if not wfile: wfile = pgrec['logic_file_name']
                fsize = pgrec['dataset_file_size']
                if not fsize: fsize = pgrec['logic_file_size']
                method = 'CDP'
@@ -250,7 +261,9 @@ def fill_cdg_usages(dsids, dranges):
                      wrec['size'] += dsize
                      continue
                   wcnt += add_webfile_usage(year, wrec)
-               wrec = {'ip' : ip, 'dsid' : rdaid, 'wfile' : wfile, 'date' : date,
+               wurec =  get_wuser_record(ip, cdate, skipwuid = False)
+               if not wurec: return 0
+               wrec = {'ip' : ip, 'dsid' : wfrec['dsid'], 'wid' : wfrec['wid'], 'date' : date,
                        'time' : time, 'quarter' : quarter, 'size' : dsize,
                        'locflag' : 'C', 'method' : method}
                pwkey = wkey
@@ -263,8 +276,9 @@ def fill_cdg_usages(dsids, dranges):
          atcnt += tcnt
          awcnt += wcnt
          allcnt += pgcnt
+         PgLOG.pglog("{}/{} TDS/WEB usage records added for {} CDG entries at {}".format(atcnt, awcnt, allcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
-   PgLOG.pglog("{}/{} TDS/WEB usage records added for {} CDG entries at {}".format(atcnt, awcnt, allcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
+   if lcnt > 1: PgLOG.pglog("{}/{} TDS/WEB usage records added for {} CDG entries at {}".format(atcnt, awcnt, allcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
 
 def get_record_date_time(ctime):
@@ -287,12 +301,6 @@ def add_tdsusage_records(year, records, date):
       record = records[key]
       cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(date, record['time'], record['ip'])
       if PgDBI.pgget(USAGE['TDSTBL'], '', cond, PgLOG.LGEREX): continue
-      record['org_type'] = record['country'] = '-'
-      ipinfo = PgIPInfo.set_ipinfo(record['ip'])
-      if ipinfo:
-         record['org_type'] = ipinfo['org_type']
-         record['country'] = ipinfo['country']
-         record['email'] = 'unknown@' + ipinfo['hostname']
 
       if add_tds_allusage(year, record):
          cnt += PgDBI.pgadd(USAGE['TDSTBL'], record, PgLOG.LOGWRN)
@@ -300,7 +308,6 @@ def add_tdsusage_records(year, records, date):
    PgLOG.pglog("{}: {} TDS usage records added at {}".format(date, cnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
    return cnt
-
 
 def add_tds_allusage(year, pgrec):
 
@@ -315,18 +322,13 @@ def add_tds_allusage(year, pgrec):
 #
 # Fill usage of a single online data file into table dssdb.wusage of DSS PgSQL database
 #
-def add_webfile_usage(year, logrec):
-
-   pgrec = get_wfile_wid(logrec['dsid'], logrec['wfile'])
-   if not pgrec: return 0
+def add_webfile_usage(year, logrec, wurec):
 
    table = "{}_{}".format(USAGE['WEBTBL'], year)
-   cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
+   cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(logrec['wid'], logrec['method'], logrec['date'], logrec['time'])
    if PgDBI.pgget(table, "", cond, PgLOG.LOGWRN): return 0
 
-   wurec =  get_wuser_record(logrec['ip'], logrec['date'])
-   if not wurec: return 0
-   record = {'wid' : pgrec['wid'], 'dsid' : pgrec['dsid']}
+   record = {'wid' : logrec['wid'], 'dsid' : logrec['dsid']}
    record['wuid_read'] = wurec['wuid']
    record['date_read'] = logrec['date']
    record['time_read'] = logrec['time']
@@ -357,30 +359,47 @@ def add_web_allusage(year, logrec, wurec):
 #
 # return wfile.wid upon success, 0 otherwise
 #
-def get_wfile_wid(dsid, wfile):
+def get_wfile_record(dsids, wfile):
 
-   wfcond = "wfile = '{}'".format(wfile) 
-   pgrec = PgSplit.pgget_wfile(dsid, "*", wfcond)
-   if pgrec:
-      pgrec['dsid'] = dsid
-   else:
-      pgrec = PgDBI.pgget("wfile_delete", "*", "{} AND dsid = '{}'".format(wfcond, dsid))
+   for dsid in dsids:
+      wkey = "{}{}".format(dsid, wfile)
+      if wkey in WFILES: return WFILES[wkey]
+   wfcond = "wfile like '%{}'".format(wfile)
+   pgrec = None
+   for dsid in dsids:
+      pgrec = PgSplit.pgget_wfile(dsid, "wid", wfcond)
+      if pgrec:
+         pgrec['dsid'] = dsid
+         wkey = "{}{}".format(dsid, wfile)
+         WFILES[wkey] = pgrec
+         return pgrec
+
+   for dsid in dsids:
+      pgrec = PgDBI.pgget("wfile_delete", "wid, dsid", "{} AND dsid = '{}'".format(wfcond, dsid))
       if not pgrec:
-         pgrec = PgDBI.pgget("wmove", "wid, dsid", wfcond)
-         if pgrec:
-            pgrec = PgSplit.pgget_wfile(pgrec['dsid'], "*", "wid = {}".format(pgrec['wid']))
-            if pgrec: pgrec['dsid'] = dsid
+         mvrec = PgDBI.pgget("wmove", "wid, dsid", wfcond)
+         if mvrec:
+            pgrec = PgSplit.pgget_wfile(mvrec['dsid'], "wid", "wid = {}".format(pgrec['wid']))
+            if pgrec: pgrec['dsid'] = mvrec['dsid']
 
+   if pgrec: WFILES[wkey] = pgrec
    return pgrec
 
 # return wuser record upon success, None otherwise
-def get_wuser_record(ip, date):
+def get_wuser_record(ip, date, skipwuid = True):
+
+   if ip in WUSERS: return WUSERD[ip]
 
    ipinfo = PgIPInfo.set_ipinfo(ip)
    if not ipinfo: return None
 
    record = {'org_type' : ipinfo['org_type'], 'country' : ipinfo['country']}
    email = 'unknown@' + ipinfo['hostname']
+   if skipwuid:
+      record['email'] = email
+      WUSERS[ip] = record
+      return record
+
    emcond = "email = '{}'".format(email)
    flds = 'wuid, email, org_type, country, start_date'   
    pgrec = PgDBI.pgget("wuser", flds, emcond, PgLOG.LOGERR)
@@ -388,6 +407,7 @@ def get_wuser_record(ip, date):
       if PgUtil.diffdate(pgrec['start_date'], date) > 0:
          pgrec['start_date'] = record['start_date'] = date
          PgDBI.pgupdt('wuser', record, emcond)
+      WUSESR[ip] = pgrec
       return pgrec
 
    # now add one in
@@ -398,6 +418,7 @@ def get_wuser_record(ip, date):
    if wuid:
       record['wuid'] = wuid
       PgLOG.pglog("{} Added as wuid({})".format(email, wuid), PgLOG.LGWNEM)
+      WUSERS[ip] = record
       return record
 
    return None
