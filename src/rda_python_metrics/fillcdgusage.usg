@@ -1,0 +1,18 @@
+
+ Retrieves CDG usage information from GDEX metrics database to
+   fill table 'tdsusage' and 'webusage' in PostgreSQL database 'rdadb'.
+
+ Usage: fillcdgusage [-b] -s DatasetShortNames [-m MonthList] [-N NumberDays] [-y YearList]
+
+      select option -s and one of the options, -m, -N or -y each time to run
+        this application. 
+
+      - Option -b, log process information into logfile only;
+
+      - Option -s, retrieve usage info for given dataset short names; 
+
+      - Option -m, retrieve usage info in given months (YYYY-MM); 
+
+      - Option -N, retrieve usage info in recent Number of days;
+
+      - Option -y, retrieve usage info in given years (YYYY). 

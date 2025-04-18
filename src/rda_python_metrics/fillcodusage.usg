@@ -1,6 +1,6 @@
 
  Retrieves usage information from RDA Web logs under /var/log to
-   fill table 'codusage' in MySQL database 'dssdb'.
+   fill table 'codusage' in database 'rdadb'.
 
  Usage: fillcodusage [-a] [-b] [-f LogFileNames] [-m MonthList] [-N NumberDay] [-y YearList]
 
