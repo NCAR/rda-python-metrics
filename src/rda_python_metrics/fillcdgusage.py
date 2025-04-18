@@ -20,6 +20,7 @@ from rda_python_common import PgLOG
 from rda_python_common import PgUtil
 from rda_python_common import PgFile
 from rda_python_common import PgDBI
+from rda_python_common import PgSplit
 from . import PgIPInfo
 
 USAGE = {
@@ -118,7 +119,7 @@ def get_dataset_ids(dsnames):
       pgrec = PgDBI.pgget(tbname, 'id', "short_name = '{}'".format(dsname))
       if not (pgrec and pgrec['id']): continue
       dsid = pgrec['id']
-      if dsid in dsids: conitnue
+      if dsid in dsids: continue
       dsids.append([dsid, rdaid])
       recursive_dataset_ids(dsid, rdaid, dsids)
 
@@ -136,7 +137,7 @@ def recursive_dataset_ids(pdsid, rdaid, dsids):
    if not pgrecs: return
 
    for dsid in pgrecs['id']:
-      if dsid in dsids: conitnue
+      if dsid in dsids: continue
       dsids.append([dsid, rdaid])
       recursive_dataset_ids(dsid, rdaid, dsids)
 
@@ -172,7 +173,7 @@ def get_dsid_records(dsid, dates):
    tbname = 'metrics.file_download'
    fields = ('date_completed, remote_address, logical_file_size, logical_file_name, file_access_point_uri, user_agent_name, bytes_sent, '
              'subset_file_size, range_request, dataset_file_size, dataset_file_name, dataset_file_file_access_point_uri')
-   cond = "dataset_id = '{}' AND completed = True AND date_completed BETWEEN '{}' AND '{}' ORDER BY {}".format(dsid, dates[0], dates[1], date_completed)
+   cond = "dataset_id = '{}' AND completed = True AND date_completed BETWEEN '{}' AND '{}' ORDER BY date_completed".format(dsid, dates[0], dates[1])
    pgrecs = PgDBI.pgmget(tbname, fields, cond)
    PgDBI.dssdb_dbname()
 
@@ -195,15 +196,15 @@ def fill_cdg_usages(dsids, dranges):
             continue
          PgLOG.pglog("{}: gather {} records for CDG usage between {} and {}".format(rdaid, pgcnt, dates[0], dates[1]), PgLOG.LOGWRN)
          tcnt = wcnt = 0
-         wrec = cdate = None
+         pwkey = wrec = cdate = None
          trecs = {}
          for i in range(pgcnt):
             if (i+1)%20000 == 0:
                PgLOG.pglog("{}/{}/{} CDG/TDS/WEB records processed to add".format(i, tcnt, wcnt), PgLOG.WARNLG)
 
+            pgrec = PgUtil.onerecord(i, pgrecs)
             dsize = pgrec['bytes_sent']
             if not dsize: continue
-            pgrec = PgUtil.onerecord(i, pgrecs)
             (year, quarter, date, time) = get_record_date_time(pgrec['date_completed'])
             url = pgrec['dataset_file_file_access_point_uri']
             if not url: url = pgrec['file_access_point_uri']
@@ -219,7 +220,7 @@ def fill_cdg_usages(dsids, dranges):
                   etype = 'R'
                else:
                   etype = 'F'
-               
+
                if date != cdate:
                   if trecs:
                      tcnt += add_tdsusage_records(year, trecs, cdate)
