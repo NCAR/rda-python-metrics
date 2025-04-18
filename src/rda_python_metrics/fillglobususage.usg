@@ -1,7 +1,7 @@
 
  Retrieves usage information from GLlobus Server logs under directory
    /gpfs/fs1/collections/rda/work/logs/gridftp/ to fill table 'wusage' in
-   database 'dssdb'.
+   database 'rdadb'.
 
  Usage: fillglobususage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
 

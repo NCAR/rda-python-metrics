@@ -1,7 +1,6 @@
 
  Retrieves usage information from AWS Server logs under directory
-   /gpfs/fs1/collections/rda/transer/AWSera5log/ to fill table 'wusage' in
-   database 'dssdb'.
+   ../rda/transer/AWSera5log/ to fill table 'wusage' in database 'rdadb'.
 
  Usage: fillawsusage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
 
