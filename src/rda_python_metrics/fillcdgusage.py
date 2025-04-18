@@ -388,7 +388,7 @@ def get_wfile_record(dsids, wfile):
 # return wuser record upon success, None otherwise
 def get_wuser_record(ip, date, skipwuid = True):
 
-   if ip in WUSERS: return WUSERD[ip]
+   if ip in WUSERS: return WUSERS[ip]
 
    ipinfo = PgIPInfo.set_ipinfo(ip)
    if not ipinfo: return None
@@ -407,7 +407,7 @@ def get_wuser_record(ip, date, skipwuid = True):
       if PgUtil.diffdate(pgrec['start_date'], date) > 0:
          pgrec['start_date'] = record['start_date'] = date
          PgDBI.pgupdt('wuser', record, emcond)
-      WUSESR[ip] = pgrec
+      WUSERS[ip] = pgrec
       return pgrec
 
    # now add one in
