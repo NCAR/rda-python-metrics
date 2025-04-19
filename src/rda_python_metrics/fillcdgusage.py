@@ -16,6 +16,7 @@ import sys
 import re
 import glob
 from os import path as op
+from time import time as tm
 from rda_python_common import PgLOG
 from rda_python_common import PgUtil
 from rda_python_common import PgFile
@@ -116,13 +117,18 @@ def get_dataset_ids(dsnames):
       if dsname not in DSIDS:
          PgLOG.pglog(dsname + ": Unknown CDG dataset short name", PgLOG.LOGWRN)
          continue
+      bt = tm()
       pgrec = PgDBI.pgget(tbname, 'id', "short_name = '{}'".format(dsname))
       if not (pgrec and pgrec['id']): continue
       rdaids = DSIDS[dsname]
+      strids = "{}-{}".format(dsname, rdaids)
       cdgid = pgrec['id']
       cdgids = [cdgid]
-      recursive_dataset_ids(cdgid, cdgids)
-      dsids.append([dsname, rdaids, cdgids])
+      ccnt = 1
+      ccnt += recursive_dataset_ids(cdgid, cdgids)
+      dsids.append([dsname, rdaids, cdgids, strids])
+      rmsg = PgLOG.seconds_to_string_time(tm() - bt)
+      PgLOG.pglog("{}: Found {} CDG dsid/subdsids in {} at {}".format(strids, ccnt, rmsg, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
    if not dsids: PgLOG.pglog("No Dataset Id identified to gather CDG metrics", PgLOG.LOGWRN)
 
@@ -135,12 +141,16 @@ def recursive_dataset_ids(pcdgid, cdgids):
 
    tbname = 'metadata.dataset'
    pgrecs = PgDBI.pgmget(tbname, 'id', "parent_dataset_id = '{}'".format(pcdgid))
-   if not pgrecs: return
+   if not pgrecs: return 0
 
+   ccnt = 0
    for cdgid in pgrecs['id']:
       if cdgid in cdgids: continue
       cdgids.append(cdgid)
-      recursive_dataset_ids(cdgid, cdgids)
+      ccnt += 1
+      ccnt += recursive_dataset_ids(cdgid, cdgids)
+
+   return ccnt
 
 #
 # get the date ranges for given condition
@@ -159,17 +169,17 @@ def get_date_ranges(inputs):
             tms = input.split('-')
             dates.append(PgUtil.fmtdate(int(tms[0]), int(tms[1]), 1))
             dates.append(PgUtil.enddate(dates[0], 0, 'M'))
-         elif opt == 'Y':
+         elif opt == 'y':
             dates.append(input + "-01-01")
             dates.append(input + "-12-31")
-         dranges.append(dates)
+         if dates: dranges.append(dates)
 
    return dranges
 
 #
 # get file download records for given dsid
 #
-def get_dsid_records(cdgids, dates, srdaid):
+def get_dsid_records(cdgids, dates, strids):
 
    gdex_dbname()
    tbname = 'metrics.file_download'
@@ -183,7 +193,7 @@ def get_dsid_records(cdgids, dates, srdaid):
       dscnd += "IN ('" + "','".join(cdgids) + "')"
    dtcnd = "date_completed BETWEEN '{}' AND '{}'".format(dates[0], dates[1])
    cond = "{} AND completed = True AND {} ORDER BY date_completed".format(dscnd, dtcnd)
-   PgLOG.pglog("{}: CDG query for {} at {}".format(srdaid, cond, PgLOG.current_datetime()), PgLOG.LOGWRN)
+   PgLOG.pglog("{}: Query for {} CDG dsid/subdsids and {} at {}".format(strids, dscnt, dtcnd, PgLOG.current_datetime()), PgLOG.LOGWRN)
    pgrecs = PgDBI.pgmget(tbname, fields, cond)
    PgDBI.dssdb_dbname()
 
@@ -201,21 +211,24 @@ def fill_cdg_usages(dsids, dranges):
          dsname = dsid[0]
          rdaids = dsid[1]
          cdgids = dsid[2]
-         srdaid = '|'.join(rdaids)
-         pgrecs = get_dsid_records(cdgids, dates, srdaid)
+         strids = dsid[3]
+         bt = tm()
+         pgrecs = get_dsid_records(cdgids, dates, strids)
          pgcnt = len(pgrecs['dataset_file_name']) if pgrecs else 0
          if pgcnt == 0:
-            PgLOG.pglog("{}: No record found to gather CDG usage between {} and {}".format(srdaid, dates[0], dates[1]), PgLOG.LOGWRN)
+            PgLOG.pglog("{}: No record found to gather CDG usage between {} and {}".format(strids, dates[0], dates[1]), PgLOG.LOGWRN)
             continue
-         PgLOG.pglog("{}: Process {} records for CDG usage at {}".format(srdaid, pgcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
+         rmsg = PgLOG.seconds_to_string_time(tm() - bt)
+         PgLOG.pglog("{}: Got {} records in {} for processing CDG usage at {}".format(strids, pgcnt, rmsg, PgLOG.current_datetime()), PgLOG.LOGWRN)
          tcnt = wcnt = 0
          pwkey = wrec = cdate = None
          trecs = {}
+         bt = tm()
          for i in range(pgcnt):
             if (i+1)%20000 == 0:
                PgLOG.pglog("{}/{}/{} CDG/TDS/WEB records processed to add".format(i, tcnt, wcnt), PgLOG.WARNLG)
 
-            pgrec = PgUtil.onerecord(i, pgrecs)
+            pgrec = PgUtil.onerecord(pgrecs, i)
             dsize = pgrec['bytes_sent']
             if not dsize: continue
             (year, quarter, date, time) = get_record_date_time(pgrec['date_completed'])
@@ -283,7 +296,8 @@ def fill_cdg_usages(dsids, dranges):
          atcnt += tcnt
          awcnt += wcnt
          allcnt += pgcnt
-         PgLOG.pglog("{}/{} TDS/WEB usage records added for {} CDG entries at {}".format(atcnt, awcnt, allcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
+         rmsg = PgLOG.seconds_to_string_time(tm() - bt)
+         PgLOG.pglog("{}: {}/{} TDS/WEB usage records added for {} CDG entries in {}".format(strids, atcnt, awcnt, allcnt, rmsg), PgLOG.LOGWRN)
 
 def get_record_date_time(ctime):
 
