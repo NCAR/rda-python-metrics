@@ -120,7 +120,6 @@ def get_dataset_ids(dsnames):
       if not (pgrec and pgrec['id']): continue
       rdaids = DSIDS[dsname]
       cdgid = pgrec['id']
-      if cdgid in cdgids: continue
       cdgids = [cdgid]
       recursive_dataset_ids(cdgid, cdgids)
       dsids.append([dsname, rdaids, cdgids])
@@ -228,6 +227,7 @@ def fill_cdg_usages(dsids, dranges):
             if not wfile: wfile = pgrec['logic_file_name']
             wfrec = get_wfile_record(rdaids, wfile)
             if not wfrec: continue
+            dsid = wfrec['dsid']
             ms = re.search(r'^https://tds.ucar.edu/thredds/(\w+)/', url)
             if ms:
                # tds usage
@@ -244,14 +244,14 @@ def fill_cdg_usages(dsids, dranges):
                      tcnt += add_tdsusage_records(year, trecs, cdate)
                      trecs = {}
                   cdate = date
-               tkey = "{}:{}:{}:{}".format(ip, rdaid, method, etype)
+               tkey = "{}:{}:{}:{}".format(ip, dsid, method, etype)
                if tkey in trecs:
                   trecs[tkey]['size'] += dsize
                   trecs[tkey]['fcount'] += 1
                else:
                   wurec =  get_wuser_record(ip)
                   if not wurec: return 0
-                  trecs[tkey] = {'ip' : ip, 'dsid' : wfrec['dsid'], 'date' : cdate, 'time' : time, 'size' : dsize,
+                  trecs[tkey] = {'ip' : ip, 'dsid' : dsid, 'date' : cdate, 'time' : time, 'size' : dsize,
                                  'fcount' : 1, 'method' : method, 'etype' : etype, 'engine' : engine,
                                  'org_type' : wurec['org_type'], 'country' : wurec['country'],
                                  'email' : wurec['email']}
@@ -261,7 +261,7 @@ def fill_cdg_usages(dsids, dranges):
                if not fsize: fsize = pgrec['logic_file_size']
                method = 'CDP'
                if pgrec['subset_file_size'] or pgrec['range_request'] or dsize < fsize:
-                  wkey = "{}:{}:{}".format(ip, rdaid, wfile)
+                  wkey = "{}:{}:{}".format(ip, dsid, wfile)
                else:
                   wkey = None
       
@@ -270,7 +270,7 @@ def fill_cdg_usages(dsids, dranges):
                      wrec['size'] += dsize
                      continue
                   wcnt += add_webfile_usage(year, wrec)
-               wrec = {'ip' : ip, 'dsid' : wfrec['dsid'], 'wid' : wfrec['wid'], 'date' : date,
+               wrec = {'ip' : ip, 'dsid' : dsid, 'wid' : wfrec['wid'], 'date' : date,
                        'time' : time, 'quarter' : quarter, 'size' : dsize,
                        'locflag' : 'C', 'method' : method}
                pwkey = wkey
