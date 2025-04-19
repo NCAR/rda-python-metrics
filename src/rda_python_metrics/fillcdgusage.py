@@ -191,9 +191,9 @@ def get_dsid_records(cdgids, dates, strids):
       dscnd += "= '{}'".format(cdgids[0])
    else:
       dscnd += "IN ('" + "','".join(cdgids) + "')"
-   dtcnd = "date_completed BETWEEN '{}' AND '{}'".format(dates[0], dates[1])
+   dtcnd = "date_completed BETWEEN '{} 00:00:00' AND '{} 23:59:59'".format(dates[0], dates[1])
    cond = "{} AND completed = True AND {} ORDER BY date_completed".format(dscnd, dtcnd)
-   PgLOG.pglog("{}: Query for {} CDG dsid/subdsids and {} at {}".format(strids, dscnt, dtcnd, PgLOG.current_datetime()), PgLOG.LOGWRN)
+   PgLOG.pglog("{}: Query for {} CDG dsid/subdsids Completed between {} and {} at {}".format(strids, dscnt, dates[0], dates[1], PgLOG.current_datetime()), PgLOG.LOGWRN)
    pgrecs = PgDBI.pgmget(tbname, fields, cond)
    PgDBI.dssdb_dbname()
 
