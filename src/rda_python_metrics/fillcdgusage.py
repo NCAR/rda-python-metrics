@@ -125,10 +125,10 @@ def get_dataset_ids(dsnames):
       cdgid = pgrec['id']
       cdgids = [cdgid]
       ccnt = 1
-      cccnt += recursive_dataset_ids(cdgid, cdgids)
+      ccnt += recursive_dataset_ids(cdgid, cdgids)
       dsids.append([dsname, rdaids, cdgids, strids])
       rmsg = PgLOG.seconds_to_string_time(tm() - bt)
-      PgLOG.pglog("{}: Found {} CDG dsid/subdsids in {} at {}".format(stridss, ccnt, rmsg, PgLOG.current_datetime()), PgLOG.LOGWRN)
+      PgLOG.pglog("{}: Found {} CDG dsid/subdsids in {} at {}".format(strids, ccnt, rmsg, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
    if not dsids: PgLOG.pglog("No Dataset Id identified to gather CDG metrics", PgLOG.LOGWRN)
 
