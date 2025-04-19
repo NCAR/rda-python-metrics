@@ -191,9 +191,9 @@ def get_dsid_records(cdgids, dates, strids):
       dscnd += "= '{}'".format(cdgids[0])
    else:
       dscnd += "IN ('" + "','".join(cdgids) + "')"
-   dtcnd = "date_completed BETWEEN '{}' AND '{}'".format(dates[0], dates[1])
+   dtcnd = "date_completed BETWEEN '{} 00:00:00' AND '{} 23:59:59'".format(dates[0], dates[1])
    cond = "{} AND completed = True AND {} ORDER BY date_completed".format(dscnd, dtcnd)
-   PgLOG.pglog("{}: Query for {} CDG dsid/subdsids and {} at {}".format(strids, dscnt, dtcnd, PgLOG.current_datetime()), PgLOG.LOGWRN)
+   PgLOG.pglog("{}: Query for {} CDG dsid/subdsids Completed between {} and {} at {}".format(strids, dscnt, dates[0], dates[1], PgLOG.current_datetime()), PgLOG.LOGWRN)
    pgrecs = PgDBI.pgmget(tbname, fields, cond)
    PgDBI.dssdb_dbname()
 
@@ -301,16 +301,16 @@ def fill_cdg_usages(dsids, dranges):
 
 def get_record_date_time(ctime):
 
-   ms = re.search(r'^(\d+)/(\w+)/(\d+) (\d+:\d+:\d+)(\.|$)', str(ctime))
+   ms = re.search(r'^(\d+)-(\d+)-(\d+) (\d\d:\d\d:\d\d)', str(ctime))
    if ms:
-      d = int(ms.group(1))
-      m = PgUtil.get_month(ms.group(2))
+      y = ms.group(1)
+      m = int(ms.group(2))
+      d = ms.group(3)
       q = 1 + int((m-1)/3)
-      y = ms.group(3)
       t = ms.group(4)
-      return (y, q, "{}-{:02}-{:02}".format(y, m, d), t)
+      return (y, q, "{}-{:02}-{}".format(y, m, d), t)
    else:
-      PgLOG.pglog("time: Invalid date format", PgLOG.LGEREX)
+      PgLOG.pglog(str(ctime) + ": Invalid time format", PgLOG.LGEREX)
 
 def add_tdsusage_records(year, records, date):
 
