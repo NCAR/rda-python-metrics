@@ -192,8 +192,8 @@ def get_dsid_records(cdgids, dates, strids):
    else:
       dscnd += "IN ('" + "','".join(cdgids) + "')"
    dtcnd = "date_completed BETWEEN '{} 00:00:00' AND '{} 23:59:59'".format(dates[0], dates[1])
-   cond = "{} AND completed = True AND {} ORDER BY date_completed".format(dscnd, dtcnd)
-   PgLOG.pglog("{}: Query for {} CDG dsid/subdsids Completed between {} and {} at {}".format(strids, dscnt, dates[0], dates[1], PgLOG.current_datetime()), PgLOG.LOGWRN)
+   cond = "{} AND {} ORDER BY date_completed".format(dscnd, dtcnd)
+   PgLOG.pglog("{}: Query for {} CDG dsid/subdsids between {} and {} at {}".format(strids, dscnt, dates[0], dates[1], PgLOG.current_datetime()), PgLOG.LOGWRN)
    pgrecs = PgDBI.pgmget(tbname, fields, cond)
    PgDBI.dssdb_dbname()
 
@@ -241,7 +241,7 @@ def fill_cdg_usages(dsids, dranges):
             wfrec = get_wfile_record(rdaids, wfile)
             if not wfrec: continue
             dsid = wfrec['dsid']
-            ms = re.search(r'^https://tds.ucar.edu/thredds/(\w+)/', url)
+            ms = re.search(r'^https*://tds.ucar.edu/thredds/(\w+)/', url)
             if ms:
                # tds usage
                method = ms.group(1)
@@ -272,7 +272,7 @@ def fill_cdg_usages(dsids, dranges):
                # web usage
                fsize = pgrec['dataset_file_size']
                if not fsize: fsize = pgrec['logic_file_size']
-               method = 'CDP'
+               method = 'CDG'
                if pgrec['subset_file_size'] or pgrec['range_request'] or dsize < fsize:
                   wkey = "{}:{}:{}".format(ip, dsid, wfile)
                else:
@@ -329,7 +329,7 @@ def add_tdsusage_records(year, records, date):
 
 def add_tds_allusage(year, logrec):
 
-   pgrec = {'method' : 'CDP', 'source' : 'C'}
+   pgrec = {'method' : 'CDG', 'source' : 'C'}
    pgrec['email'] = logrec['email']
    pgrec['org_type'] = logrec['org_type']
    pgrec['country'] = logrec['country']
