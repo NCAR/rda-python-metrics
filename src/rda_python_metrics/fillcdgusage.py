@@ -263,10 +263,10 @@ def fill_cdg_usages(dsids, dranges):
                   trecs[tkey]['fcount'] += 1
                else:
                   wurec =  get_wuser_record(ip)
-                  if not wurec: return 0
-                  trecs[tkey] = {'ip' : ip, 'dsid' : dsid, 'date' : cdate, 'time' : time, 'size' : dsize,
-                                 'fcount' : 1, 'method' : method, 'etype' : etype, 'engine' : engine,
-                                 'org_type' : wurec['org_type'], 'country' : wurec['country'],
+                  if not wurec: continue
+                  trecs[tkey] = {'ip' : ip, 'dsid' : dsid, 'date' : cdate, 'time' : time, 'quarter' : quarter,
+                                 'size' : dsize, 'fcount' : 1, 'method' : method, 'etype' : etype,
+                                 'engine' : engine, 'org_type' : wurec['org_type'], 'country' : wurec['country'],
                                  'email' : wurec['email']}
             else:
                # web usage
