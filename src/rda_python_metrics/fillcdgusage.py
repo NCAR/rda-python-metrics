@@ -425,6 +425,7 @@ def get_wuser_record(ip, date = None):
    ipinfo = PgIPInfo.set_ipinfo(ip)
    if not ipinfo: return None
 
+   record = {'org_type' : ipinfo['org_type'], 'country' : ipinfo['country']}
    email = 'unknown@' + ipinfo['hostname']
    emcond = "email = '{}'".format(email)
    flds = 'wuid, email, org_type, country, start_date'   
@@ -437,7 +438,6 @@ def get_wuser_record(ip, date = None):
       return pgrec
 
    # now add one in
-   record = {'org_type' : ipinfo['org_type'], 'country' : ipinfo['country']}
    record['email'] = email
    record['stat_flag'] = 'A'
    record['start_date'] = date
