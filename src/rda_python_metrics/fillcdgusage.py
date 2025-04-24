@@ -262,7 +262,7 @@ def fill_cdg_usages(dsids, dranges):
                   trecs[tkey]['size'] += dsize
                   trecs[tkey]['fcount'] += 1
                else:
-                  wurec =  get_wuser_record(ip)
+                  wurec =  get_wuser_record(ip, cdate)
                   if not wurec: continue
                   trecs[tkey] = {'ip' : ip, 'dsid' : dsid, 'date' : cdate, 'time' : time, 'quarter' : quarter,
                                  'size' : dsize, 'fcount' : 1, 'method' : method, 'etype' : etype,
@@ -353,7 +353,7 @@ def add_webfile_usage(year, logrec):
    cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(logrec['wid'], logrec['method'], cdate, logrec['time'])
    if PgDBI.pgget(table, "", cond, PgLOG.LOGWRN): return 0
 
-   wurec =  get_wuser_record(ip, cdate, False)
+   wurec =  get_wuser_record(ip, cdate)
    if not wurec: return 0
 
    record = {'wid' : logrec['wid'], 'dsid' : logrec['dsid']}
@@ -418,31 +418,26 @@ def get_wfile_record(dsids, wfile):
    return pgrec
 
 # return wuser record upon success, None otherwise
-def get_wuser_record(ip, date = None, skipwuid = True):
+def get_wuser_record(ip, date = None):
 
    if ip in WUSERS: return WUSERS[ip]
 
    ipinfo = PgIPInfo.set_ipinfo(ip)
    if not ipinfo: return None
 
-   record = {'org_type' : ipinfo['org_type'], 'country' : ipinfo['country']}
    email = 'unknown@' + ipinfo['hostname']
-   if skipwuid:
-      record['email'] = email
-      WUSERS[ip] = record
-      return record
-
    emcond = "email = '{}'".format(email)
    flds = 'wuid, email, org_type, country, start_date'   
    pgrec = PgDBI.pgget("wuser", flds, emcond, PgLOG.LOGERR)
    if pgrec:
-      if PgUtil.diffdate(pgrec['start_date'], date) > 0:
+      if date and PgUtil.diffdate(pgrec['start_date'], date) > 0:
          pgrec['start_date'] = record['start_date'] = date
          PgDBI.pgupdt('wuser', record, emcond)
       WUSERS[ip] = pgrec
       return pgrec
 
    # now add one in
+   record = {'org_type' : ipinfo['org_type'], 'country' : ipinfo['country']}
    record['email'] = email
    record['stat_flag'] = 'A'
    record['start_date'] = date
