@@ -185,7 +185,7 @@ def fix_wuser_records(date):
       ip = pgrecs['ip'][i]
       email = pgrecs['email'][i]
       if not ip:
-         if email and '@' in email: ip = PgIpinfo.dns_to_ip(email.split('@')[1])
+         if email and '@' in email: ip = PgIPInfo.dns_to_ip(email.split('@')[1])
          if not ip: continue
       record = get_missing_info(ip, email)
       if record:

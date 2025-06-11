@@ -101,7 +101,7 @@ def domain_ipinfo_record(dmname):
 
    ips = dns_to_ip(dmname)
    
-   if ips: return get_ipinfo(ips[0])
+   if ips: return set_ipinfo(ips[0])
 
    return None
 
