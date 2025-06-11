@@ -22,16 +22,16 @@ from rda_python_common import PgDBI
 from . import PgView
 
 VUSG = {
-   'SNMS' : "ABCDEFHIMNOPQRSTUWY",           # all available short field names in %FLDS
-   'OPTS' : 'AabcCdDeEfhHiLmMnoOqsStTUwyz',  # all available options, used for %params
-   'NOPT' : 'abhnwz',                        # stand alone option without inputs
-   'ACND' : 'cdefiImMoqSty',                 # available array condition options
-   'RCND' : 'DEsT',                          # available range condition options
-   'CNDS' : 'acdDeEfiImMnoqsStTy',           # condition options, ACND, RCND and 'a'
-   'ECND' : 'my',                            # condition options need evaluating
-   'SFLD' : 'DEFINOTUW',                     # string fields, to be quoted in condition
-   'UFLD' : 'FNO',                           # string fields must be in upper case
-   'LFLD' : 'EMPT'                           # string fields must be in lower case
+   'SNMS' : "ABCDEFHIKMNOPQRSTUWY",           # all available short field names in %FLDS
+   'OPTS' : 'AabcCdDeEfhHikLmMnoOqsStTUwyz',  # all available options, used for %params
+   'NOPT' : 'abhnwz',                         # stand alone option without inputs
+   'ACND' : 'cdefiIkmMoqSty',                 # available array condition options
+   'RCND' : 'DEsT',                           # available range condition options
+   'CNDS' : 'acdDeEfiIkmMnoqsStTy',           # condition options, ACND, RCND and 'a'
+   'ECND' : 'my',                             # condition options need evaluating
+   'SFLD' : 'DEFIKNOTUW',                     # string fields, to be quoted in condition
+   'UFLD' : 'FNO',                            # string fields must be in upper case
+   'LFLD' : 'EMPT'                            # string fields must be in lower case
 }
 
 # keys %FLDS - short field names
@@ -51,6 +51,7 @@ FLDS = {
    'I' : ['IP',        "ip",                             'ip',         'tdsusage',   0,   0,  'G'],
    'M' : ['MONTH',     PgDBI.fmtym("date"),              'date',       'tdsusage',   7,   0,  'G'],
    'N' : ['COUNTRY',   "country",                        'country',    'tdsusage',   0,   0,  'G'],
+   'K' : ['REGION',    "region",                         'region',     'tdsusage',   0,   0,  'G'],
    'O' : ['ORGTYPE',   "org_type",                       'org_type',   'tdsusage',   7,   0,  'G'],
    'P' : ['DSOWNER',   "specialist",                     'specialist', 'dsowner',    8,   0,  'G'],
    'Q' : ['QUARTER',   "quarter",                        'quarter',    'tdsusage',   7,   0,  'G'],
@@ -79,9 +80,10 @@ EXPAND = {
    'Q' : ["TIME",   "dDmy"],
    'Y' : ["TIME",   "dDmy"],
 
-   'E' : ["USER",   "eco",  "email",        "wuser",  "user"],
-   'O' : ["USER",   "eco",  "org_type",     "wuser",  "user"],
-   'N' : ["USER",   "eco",  "country",      "wuser",  "user"],
+   'E' : ["USER",   "ecko",  "email",        "wuser",  "user"],
+   'O' : ["USER",   "ecko",  "org_type",     "wuser",  "user"],
+   'N' : ["USER",   "ecko",  "country",      "wuser",  "user"],
+   'K' : ["USER",   "ecko",  "region",       "wuser",  "user"],
 
    'R' : ["DSID",   "fFsStT", "search.datasets.title", "search.datasets"],
    'T' : ["DSID",   "fFsStT", "dataset.dsid",   "dataset"],
@@ -105,6 +107,7 @@ EXPAND = {
 #   H -- a string of report title to replace the default one
 #   i -- array of specified IP addresses
 #   I -- use given email IDs for email notice of data update
+#   k -- array of specified region names
 #   L -- column delimiter for output
 #   m -- array of specified months 
 #   M -- array of specified download methods 
@@ -125,7 +128,7 @@ params = {}
 # relationship between parameter options and short field names, A option is not
 # related to a field name if it is not in keys %SNS 
 SNS = {
-   'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'i' : 'I', 'm' : 'M',
+   'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'i' : 'I', 'k' : 'K', 'm' : 'M',
    'M' : 'W', 'o' : 'O', 'q' : 'Q', 's' : 'S', 'S' : 'P', 't' : 'T', 'T' : 'T', 'y' : 'Y'
 }
 

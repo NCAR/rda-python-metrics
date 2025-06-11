@@ -6,8 +6,8 @@
                      [-A RowLimit] [-c CountryCodes] [-d DateList] \
                      [-D StartDate [EndDate]] [-e EMailList] -h \
                      [-E StartNoticeDate [EndNoticeDate]] \
-                     [-f EndTypeFlags] [-i IPAddresses]  \
-                     [-I EmailIDList] [-m MonthList] [-M AccessMethods]  \
+                     [-f EndTypeFlags] [-i IPAddresses] [-I EmailIDList] \
+                     [-RegionNamess] [-m MonthList] [-M AccessMethods]  \
                      [-N MinNumberRead [MaxNumberRead]] \
                      [-o OrganizationTypes] \
                      [-q QuaterList] [-s MinSize [MaxSize]] \
@@ -18,8 +18,8 @@
 
       Specify [-C] ColumnNames, refer to Option -C section for detail
       description, and choose at least one of the condition options, -a, -c,
-      -d, -D, -e, -E, -f, -i, -I, -m, -M, -N, -o, -q, -s, -S -t, -T, and -y, to
-      run this application.
+      -d, -D, -e, -E, -f, -i, -I, -k, -m, -M, -N, -o, -q, -s, -S -t, -T, and -y,
+      to run this application.
 
       For all condition options, except option -a, an '!' sign can be added
       between an option flag and its option values to get an excluding
@@ -28,8 +28,8 @@
       OrganizationTypes.  Refer to the example given at the end of this help
       document for how to select excluding condition.
 
-      String condition options, -c, -e, -f, -g, -i, -M, -o, -S, and -t, allow wildcard
-      inputs. '%' matches any number of characters and '_' matches any one
+      String condition options, -c, -e, -f, -g, -i, -k, -M, -o, -S, and -t, allow
+      wildcard inputs. '%' matches any number of characters and '_' matches any one
       character.  Refer to the example given at the end of this help document
       for how to use wildcard for string condition options.
 
@@ -56,6 +56,7 @@
               I*- IP           - user IP address
               M*- MONTH        - format as YYYY-MM, for example 2004-04
               N*- COUNTRY      - country codes users from
+              K*- REGION       - region names users from
               O*- ORGTYPE      - organization types (DSS, NCAR, UNIV and OTHER)
               P*- DSOWNER      - login names of specialists who own the datasets
               Q*- QUARTER      - quarter of year, 1, 2, 3, or 4
@@ -124,6 +125,8 @@
 
       - Option -i, for data read from machines with given IP addresses;
  
+      - Option -k, for files read by users from given region names;
+
       - Option -m, for data read in given months, in format YYYY-MM;
 
       - Option -M, for data read via access methods;

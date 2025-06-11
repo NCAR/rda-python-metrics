@@ -22,18 +22,18 @@ from rda_python_common import PgDBI
 from . import PgView
 
 VUSG = {
-   'SNMS' : "ABCDEFGHMNOPQRSTUVWY",            # all available short field names in FLDS
-   'OPTS' : 'AabcCdDeEfghHImnLMNoOqsStTUvVwyz', # all available options, used for params
-   'NOPT' : 'abhwz',                           # stand alone option without inputs
-   'ACND' : 'cdefgmMoqStvy',                   # available array condition options
-   'RCND' : 'DsNT',                            # available range condition options
-   'CNDS' : 'acdDeEfgmMnNoqsStTvVy',           # condition options, ACND, RCND and 'a'
-   'HCND' : 'N',                               # condition options for having clause
-   'ECND' : 'my',                              # condition options need evaluating
-   'TCND' : 'dDmy',                            # temporal condition options
-   'SFLD' : 'DEFGNOPTVW',                      # string fields, to be quoted in condition
-   'UFLD' : 'GNOVW',                           # string fields must be in upper case
-   'LFLD' : 'EPT'                              # string fields must be in lower case
+   'SNMS' : "ABCDEFGHKMNOPQRSTUVWY",            # all available short field names in FLDS
+   'OPTS' : 'AabcCdDeEfghHIkmnLMNoOqsStTUvVwyz', # all available options, used for params
+   'NOPT' : 'abhwz',                            # stand alone option without inputs
+   'ACND' : 'cdefgkmMoqStvy',                   # available array condition options
+   'RCND' : 'DsNT',                             # available range condition options
+   'CNDS' : 'acdDeEfgkmMnNoqsStTvVy',           # condition options, ACND, RCND and 'a'
+   'HCND' : 'N',                                # condition options for having clause
+   'ECND' : 'my',                               # condition options need evaluating
+   'TCND' : 'dDmy',                             # temporal condition options
+   'SFLD' : 'DEFGKNOPTVW',                      # string fields, to be quoted in condition
+   'UFLD' : 'GNOVW',                            # string fields must be in upper case
+   'LFLD' : 'EPT'                               # string fields must be in lower case
 }
 
 # keys FLDS - short field names
@@ -52,6 +52,7 @@ FLDS = {
    'F' : ['FORMAT',    "data_format",                    'data_format', 'dataset',   0,   0,  'G'],
    'M' : ['MONTH',     PgDBI.fmtym("date"),              'date',       'allusage',   7,   0,  'G'],
    'N' : ['COUNTRY',   "country",                        'country',    'allusage',   0,   0,  'G'],
+   'K' : ['REGION',    "region",                         'region',     'allusage',   0,   0,  'G'],
    'G' : ['GROUP',     "source",                         'source',     'allusage',   0,   0,  'G'],
    'O' : ['ORGTYPE',   "org_type",                       'org_type',   'allusage',   7,   0,  'G'],
    'P' : ['DSOWNER',   "specialist",                     'specialist', 'dsowner',    8,   0,  'G'],
@@ -82,10 +83,10 @@ EXPAND = {
    'Q' : ["TIME",   "dDmy"],
    'Y' : ["TIME",   "dDmy"],
 
-   'E' : ["USER",   "ecgo",  "email",     "wuser",  "user"],
-   'O' : ["USER",   "ecgo",  "org_type",  "wuser",  "user"],
-   'N' : ["USER",   "ecgo",  "country",   "wuser",  "user"],
-   'G' : ["USER",   "ecgo",  "region",    "wuser",  "user"],
+   'E' : ["USER",   "ecko",  "email",     "wuser",  "user"],
+   'O' : ["USER",   "ecko",  "org_type",  "wuser",  "user"],
+   'N' : ["USER",   "ecko",  "country",   "wuser",  "user"],
+   'K' : ["USER",   "ecko",  "region",    "wuser",  "user"],
 
    'R' : ["DSID",   "fFsStT", "search.datasets.title", "search.datasets"],
    'T' : ["DSID",   "fFsStT", "dataset.dsid",   "dataset"],
@@ -109,6 +110,7 @@ EXPAND = {
 #   h -- for give emails, include their histical emails registered before
 #   H -- a string of report title to replace the default one
 #   I -- use given email IDs for email notice of data update
+#   k -- array of specified region names
 #   L -- column delimiter for output
 #   m -- array of specified months 
 #   M -- array of specified download methods
@@ -131,8 +133,9 @@ params = {}
 # relationship between parameter options and short field names, A option is not
 # related to a field name if it is not in keys SNS 
 SNS = {
-   'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'g' : 'G', 'm' : 'M', 'M' : 'W', 'N' : 'H',
-   'o' : 'O', 'q' : 'Q', 's' : 'S', 'S' : 'P', 't' : 'T', 'T' : 'T', 'u' : 'U', 'v' : 'V', 'V' : 'V', 'y' : 'Y'
+   'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'g' : 'G', 'm' : 'M',
+   'M' : 'W', 'N' : 'H', 'k' : 'K', 'o' : 'O', 'q' : 'Q', 's' : 'S', 'S' : 'P',
+   't' : 'T', 'T' : 'T', 'u' : 'U', 'v' : 'V', 'V' : 'V', 'y' : 'Y'
 }
 
 tablenames = fieldnames = condition = ''

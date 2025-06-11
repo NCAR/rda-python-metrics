@@ -182,14 +182,20 @@ def add_usage_records(records, date):
       if PgDBI.pgget(USAGE['PGTBL'], '', "aid = '{}' AND date = '{}'".format(aid, date), PgLOG.LGEREX): continue
       record = records[aid]
       if record['email'] == '-':
-         record['org_type'] = record['country'] = '-'
+         wurec = PgIPInfo.get_wuser_record(record['ip'], date)
+         if not wurec: continue
+         record['org_type'] = wurec['org_type']
+         record['country'] = wurec['country']
+         record['region'] = wurec['region']
+         record['email'] = 'unknown@' + wurec['hostname']
       else:
          wuid = PgDBI.check_wuser_wuid(record['email'], date)
-         if not wuid: next
-         pgrec = PgDBI.pgget("wuser",  "org_type, country", "wuid = {}".format(wuid), PgLOG.LGWNEX)
+         if not wuid: continue
+         pgrec = PgDBI.pgget("wuser",  "org_type, country, region", "wuid = {}".format(wuid), PgLOG.LGWNEX)
          if not pgrec: continue
          record['org_type'] = pgrec['org_type']
          record['country'] = pgrec['country']
+         record['region'] = pgrec['region']
    
       record['date'] = date
       record['time'] = USERS[aid]['btime']

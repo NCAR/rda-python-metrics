@@ -6,10 +6,9 @@
                      [-A RowLimit] [-c CountryCodes] [-d DateList] \
                      [-D StartDate [EndDate]] [-e EMailList] -h \
                      [-E StartNoticeDate [EndNoticeDate]] [-f DataFormats] \
-                     [-g SourceGroups] [-I EmailIDList] [-m MonthList] \
-                     [-M MethodList] [-N MinNumberRead [MaxNumberRead]] \
-                     [-o OrganizationTypes] \
-                     [-q QuaterList] [-s MinSize [MaxSize]] \
+                     [-g SourceGroups] [-I EmailIDList] [-k RegionLost] \
+                     [-m MonthList] [-M MethodList] [-N MinNumberRead [MaxNumberRead]] \
+                     [-o OrganizationTypes] [-q QuaterList] [-s MinSize [MaxSize]] \
                      [-S SpecialistLoginNames] [-t DatasetList] \
                      [-T MinDataset [MaxDataset]] [-y YearList] \
                      [-v IPAddressList] [-V MinIPAddress [MaxIPAddress]] \
@@ -18,7 +17,7 @@
 
       Specify [-C] ColumnNames, refer to Option -C section for detail
       description, and choose at least one of the condition options, -a, -c,
-      -d, -D, -e, -E, -f, -g, -I, -m, -M, -N, -o, -q, -s, -S -t, -T, -v, -V
+      -d, -D, -e, -E, -f, -g, -I, -k, -m, -M, -N, -o, -q, -s, -S -t, -T, -v, -V
       and -y, to run this application.
 
       For all condition options, except option -a, an '!' sign can be added
@@ -28,10 +27,10 @@
       OrganizationTypes.  Refer to the example given at the end of this help
       document for how to select excluding condition.
 
-      String condition options, -c, -e, -f, -g, -M, -o, -S, -t and -v, allow wildcard
-      inputs. '%' matches any number of characters and '_' matches any one
-      character.  Refer to the example given at the end of this help document
-      for how to use wildcard for string condition options.
+      String condition options, -c, -e, -f, -g, -k, -M, -o, -S, -t and -v, allow
+      wildcard inputs. '%' matches any number of characters and '_' matches
+      any one character.  Refer to the example given at the end of this help
+      document for how to use wildcard for string condition options.
 
       Output of this application is defaulted to page format with a page
       header on each page. A page header includes main title, sub titles and
@@ -55,6 +54,7 @@
               F*- FORMAT       - dataset default data format
               G*- GROUP        - data usage source group: W - Web log, G - Globus,
                                  T - Thredds, O - Order, and A - AWS log
+              K*- REGION       - Region Name users from
               M*- MONTH        - format as YYYY-MM, for example 2004-04
               N*- COUNTRY      - country codes users from
               O*- ORGTYPE      - organization types (DSS, NCAR, UNIV and OTHER)
@@ -64,7 +64,20 @@
               S - BSIZE        - size of data read each time, default to Bytes
               T*- DATASET      - format as dsnnn.n, for example d540001
               V*- IPADDRESS    - format as n.n.n.n (n = 0 - 999)
-              W*- METHOD       - method of data transfer (FTP, Tape, etc.)
+              W*- METHOD       - method of data transfer:
+                                 AIOBT - aiobotocore on AWS
+                                 CDG - CDG data metrics gathered from GDEX
+                                 CURL - curl
+                                 GLOB - Globus
+                                 OSDF - OSDF downloads
+                                 PYTHON - python
+                                 R-C - Customized requests
+                                 RCLON - rclone on AWS
+                                 R-S - Subset Requests
+                                 R-T - Subset+Format Conversion requests
+                                 TDS - RDA THREDDS server
+                                 WEB - General Web downloads
+                                 WGET - wget
               Y*- YEAR         - format as YYYY, for example 2004
 
                 * - field names can processed with zero usages
@@ -126,6 +139,8 @@
 
       - Option -h, works with Option -e to include historical user emails
            registered before;
+
+      - Option -k, for data read by users from given region names;
 
       - Option -m, for data read in given months, in format YYYY-MM;
 
