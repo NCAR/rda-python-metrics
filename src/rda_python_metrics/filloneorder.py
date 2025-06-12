@@ -87,7 +87,7 @@ def add_one_order(params):
 
 def add_to_allusage(record, year, ctime):
 
-   pgrec = PgDBI.pgget("wuser",  "email, org_type, country",
+   pgrec = PgDBI.pgget("wuser",  "email, org_type, country, region",
                        "wuid = {}".format(record['wuid_request']), PgLOG.LGWNEX)
    if pgrec:
       pgrec['dsid'] = record['dsid']

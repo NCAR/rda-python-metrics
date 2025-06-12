@@ -8,7 +8,7 @@
                      [-E StartNoticeDate [EndNoticeDate]] \
                      [-f FileNameList] [-F MinFileName [MaxFileName]] \
                      [-i FirstNamelist] [-I EmailIDList] \
-                     [-j] [-J] [-k OrganizationNames] [-l LastNameList] \
+                     [-j] [-J] [-k RegionNames] [-l LastNameList] \
                      [-m MonthList] [-M DownloadMethodList] \
                      [-N MinNumberRead [MaxNumberRead]] \
                      [-o OrganizationTypes] [-q QuaterList] \
@@ -57,10 +57,10 @@
               F*- FILENAME     - WEB file name accessed
               G*- PRODUCT      - product (top group) information 
               I*- FIRSTNAME    - user first name 
-              K*- ORGNAME      - organization name 
               L*- LASTNAME     - user last name 
               M*- MONTH        - format as YYYY-MM, for example 2004-04
               N*- COUNTRY      - country codes users from
+              K*- REGION       - region names users from 
               O*- ORGTYPE      - organization types (DSS, NCAR, UNIV and OTHER)
               P*- DSOWNER      - login names of specialists who own the datasets
               Q*- QUARTER      - quarter of year, 1, 2, 3, or 4
@@ -140,7 +140,7 @@
 
       - Option -J, includes Group Titles in column PRODUCT;
 
-      - Option -k, for WEB files read by users from given organization names;
+      - Option -k, for files read by users from given region names;
 
       - Option -l, for WEB files read by users with given last names;
 

@@ -22,14 +22,14 @@ from rda_python_common import PgDBI
 
 VUSG = {
    'SNMS' : "ABCDEFGHIJKLMNOPQRSTVWYZ",          # all available short field names in FLDS
-   'OPTS' : 'AabcCdDeEghHijlLmMnNoOpqsStTUvwyz', # all available options, used for %params
+   'OPTS' : 'AabcCdDeEghHijklLmMnNoOqsStTUvwyz', # all available options, used for %params
    'NOPT' : 'abhwz',                             # stand alone option without inputs
-   'ACND' : 'cdegijlmMnopqStvy',                 # available array condition options
+   'ACND' : 'cdegijlkmMnoqStvy',                 # available array condition options
    'RCND' : 'DsNT',                              # available range condition options
-   'CNDS' : 'acdDegijlmMnNopqsStTvy',            # condition options, ACND, RCND and 'a'
+   'CNDS' : 'acdDegijlkmMnNoqsStTvy',            # condition options, ACND, RCND and 'a'
    'HCND' : 'N',                                 # condition options for having clause
    'ECND' : 'my',                                # condition options need evaluating
-   'SFLD' : 'DEGIJLNOPTVW',                      # string fields, to be quoted in condition
+   'SFLD' : 'DEGIJKLNOPTVW',                     # string fields, to be quoted in condition
    'UFLD' : 'ILNOW',                             # string fields must be in upper case
    'LFLD' : 'ETP'                                # string fields must be in lower case
 }
@@ -50,10 +50,10 @@ FLDS = {
    'G' : ['ORGNAME',      "org_name",                            'org_name',    'wuser',    0,  0,  'G'],
    'I' : ['FIRSTNAME',    "fstname",                             'fstname',     'wuser',    0,  0,  'G'],
    'J' : ['PROJECT',      "project",                             'project',     'ousage',   7,  0,  'G'],
-   'K' : ['PAYMENT',      "pay_method",                          'pay_method',  'ousage',   0,  0,  'G'],
    'L' : ['LASTNAME',     "lstname",                             'lstname',     'wuser',    0,  0,  'G'],
    'M' : ['MONTH',        PgDBI.fmtym("date_request"),           'date_request','ousage',   7,  0,  'G'],
    'N' : ['COUNTRY',      "country",                             'country',     'wuser',    0,  0,  'G'],
+   'K' : ['REGION',       "region",                              'region',      'wuser',    0,  0,  'G'],
    'O' : ['ORGTYPE',      "org_type",                            'org_type',    'wuser',    5,  0,  'G'],
    'P' : ['PROCESSBY',    "dss_uname",                           'dss_uname',   'ousage',   9,  0,  'G'],
    'Q' : ['QUARTER',      "quarter",                             'quarter',     'ousage',   7,  0,  'G'],
@@ -90,6 +90,7 @@ EXPAND = {
    'G' : ["USER",   "eilgco",  "org_name",     "wuser"],
    'O' : ["USER",   "eilgco",  "org_type",     "wuser"],
    'N' : ["USER",   "eilgco",  "country",      "wuser"],
+   'K' : ["USER",   "eilgcko", "region",       "wuser"],
 
    'T' : ["DSID",   "fFsStT", "dataset.dsid",   "dataset"],
    'R' : ["DSID",   "fFsStT", "search.datasets.title", "search.datasets"],
@@ -114,6 +115,7 @@ EXPAND = {
 #   H -- a string of report title to replace the default one
 #   i -- array of specified first names
 #   j -- array of specified projects
+#   k -- array of specified regions
 #   l -- array of specified last names
 #   L -- column delimiter for output
 #   m -- array of specified months
@@ -122,7 +124,6 @@ EXPAND = {
 #   N -- number request range, arrage of 1 or 2 integers
 #   o -- array of specified orginization types
 #   O -- a string of short field names for sorting on
-#   p -- array of specified payment methods
 #   s -- output data size range, arrage of 1 or 2 sizes in unit of MByte
 #   S -- array of login names of specialists who processed the orders
 #   t -- array of specified dataset names
@@ -138,7 +139,7 @@ params = {}
 # related to a field name if it is not in keys %SNS
 SNS = {
    'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'g' : 'G', 'i' : 'I', 'j' : 'J',
-   'l' : 'L', 'm' : 'M', 'M' : 'W', 'n' : 'V', 'N' : 'H', 'o' : 'O', 'p' : 'K',
+   'k' : 'K', 'l' : 'L', 'm' : 'M', 'M' : 'W', 'n' : 'V', 'N' : 'H', 'o' : 'O',
    'q' : 'Q', 's' : 'S', 'S' : 'P', 't' : 'T', 'T' : 'T', 'y' : 'Y'
 }
 

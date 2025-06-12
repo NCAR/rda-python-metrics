@@ -7,7 +7,7 @@
 
       - Option -b, log process information into logfile only;
 
-      - Option -t, table name, ipinfo, allusage, globususage, or tdsusage,
+      - Option -t, table name, ipinfo, wuser, allusage, codusage or tdsusage,
                    to fix IP related information, such organization names/types,
                    emails and country names; 
 

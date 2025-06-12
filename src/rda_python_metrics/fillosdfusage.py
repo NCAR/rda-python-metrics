@@ -181,7 +181,7 @@ def add_file_usage(year, logrec):
    cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
    if PgDBI.pgget(table, "", cond, PgLOG.LOGWRN): return 0
 
-   wurec =  get_wuser_record(logrec['ip'], logrec['date'])
+   wurec =  PgIPInfo.get_wuser_record(logrec['ip'], logrec['date'])
    if not wurec: return 0
    record = {'wid' : pgrec['wid'], 'dsid' : pgrec['dsid']}
    record['wuid_read'] = wurec['wuid']
@@ -200,7 +200,8 @@ def add_file_usage(year, logrec):
 
 def add_to_allusage(year, logrec, wurec):
 
-   pgrec = {'email' : wurec['email'], 'org_type' : wurec['org_type'], 'country' : wurec['country']}
+   pgrec = {'email' : wurec['email'], 'org_type' : wurec['org_type'],
+            'country' : wurec['country'], 'region' : wurec['region']}
    pgrec['dsid'] = logrec['dsid']
    pgrec['date'] = logrec['date']
    pgrec['quarter'] = logrec['quarter']
@@ -229,35 +230,6 @@ def get_wfile_wid(dsid, wfile):
             if pgrec: pgrec['dsid'] = dsid
 
    return pgrec
-
-# return wuser record upon success, None otherwise
-def get_wuser_record(ip, date):
-
-   ipinfo = PgIPInfo.set_ipinfo(ip)
-   if not ipinfo: return None
-
-   record = {'org_type' : ipinfo['org_type'], 'country' : ipinfo['country']}
-   email = 'unknown@' + ipinfo['hostname']
-   emcond = "email = '{}'".format(email)
-   flds = 'wuid, email, org_type, country, start_date'   
-   pgrec = PgDBI.pgget("wuser", flds, emcond, PgLOG.LOGERR)
-   if pgrec:
-      if PgUtil.diffdate(pgrec['start_date'], date) > 0:
-         pgrec['start_date'] = record['start_date'] = date
-         PgDBI.pgupdt('wuser', record, emcond)
-      return pgrec
-
-   # now add one in
-   record['email'] = email
-   record['stat_flag'] = 'A'
-   record['start_date'] = date
-   wuid = PgDBI.pgadd("wuser", record, PgLOG.LOGERR|PgLOG.AUTOID)
-   if wuid:
-      record['wuid'] = wuid
-      PgLOG.pglog("{} Added as wuid({})".format(email, wuid), PgLOG.LGWNEM)
-      return record
-
-   return None
 
 #
 # call main() to start program

@@ -7,7 +7,7 @@
                      [-D StartDate [EndDate]] [-e EMailList] -h \
                      [-E StartNoticeDate [EndNoticeDate]] \
                      [-g AggregationIDs] [-i IPAddresses] \
-                     [-I EmailIDList] [-m MonthList] \
+                     [-I EmailIDList] [-k RegionNames] [-m MonthList] \
                      [-N MinNumberRead [MaxNumberRead]] \
                      [-o OrganizationTypes] [-q QuaterList] \
                      [-S SpecialistLoginNames] [-t DatasetList] \
@@ -17,7 +17,7 @@
 
       Specify [-C] ColumnNames, refer to Option -C section for detail
       description, and choose at least one of the condition options, -a, -c,
-      -d, -D, -e, -E, -g, -i, -I, -m, -N, -o, -q, -S -t, -T, and -y, to
+      -d, -D, -e, -E, -g, -i, -I, -k, -m, -N, -o, -q, -S -t, -T, and -y, to
       run this application.
 
       For all condition options, except option -a, an '!' sign can be added
@@ -27,7 +27,7 @@
       OrganizationTypes.  Refer to the example given at the end of this help
       document for how to select excluding condition.
 
-      String condition options, -c, -e, -g, -i, -o, -S, and -t, allow wildcard
+      String condition options, -c, -e, -g, -i, -k, -o, -S, and -t, allow wildcard
       inputs. '%' matches any number of characters and '_' matches any one
       character.  Refer to the example given at the end of this help document
       for how to use wildcard for string condition options.
@@ -55,6 +55,7 @@
               I*- IP           - user IP address
               M*- MONTH        - format as YYYY-MM, for example 2004-04
               N*- COUNTRY      - country codes users from
+              K*- REGION       - region names users from
               O*- ORGTYPE      - organization types (DSS, NCAR, UNIV and OTHER)
               P*- DSOWNER      - login names of specialists who own the datasets
               Q*- QUARTER      - quarter of year, 1, 2, 3, or 4
@@ -122,6 +123,8 @@
 
       - Option -i, for data read from machines with given IP addresses;
  
+      - Option -k, for files read by users from given region names;
+
       - Option -m, for data read in given months, in format YYYY-MM;
  
       - Option -N, for files for numbers of read by each group between

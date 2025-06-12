@@ -52,7 +52,21 @@ DSIDS = {
    'ucar.cgd.ccsm4.SD-WACCM-X_v2.1' : ['d651034'],
    'ucar.cgd.ccsm4.amv_lens' : ['d651035'],
    'ucar.cgd.cesm2.cism_ismip6' : ['d651036'],
-   'ucar.cgd.ccsm4.pliomip2' : ['d651037']
+   'ucar.cgd.ccsm4.pliomip2' : ['d651037'],
+   # new added
+   'ucar.cgd.cesm2-waccm.s2s_hindcasts': ['d651040'],
+   'ucar.cgd.CESM1.3_SH_storm_tracks': ['d651044'],
+   'ucar.cgd.cesm2.waccm6.ssp245': ['d651045'],
+   'ucar.cgd.cesm2.CESM21-CISM2-JG-BG': ['d651046'],
+   'ucar.cgd.ccsm4.TC-CESM': ['d651047'],
+   'ucar.cgd.cesm2.ISSI_OSSE': ['d651048'],
+   'ucar.cgd.ccsm4.SOcean_Eddies_mclong': ['d651049'],
+   'trace': ['d651050'],
+   'ucar.cgd.cesm2.waccm.solar': ['d651051'],
+   'ucar.cgd.ccsm4.CESM1-CCSM4_mid-Pliocene' : ['d651042'],
+   'ucar.cgd.ccsm4.PaleoIF' : ['d651052'],
+   'ucar.cgd.ccsm4.b.e11.B20LE_fixedO3' : ['d651053'],
+   'ucar.cgd.cesm2.single.forcing.large.ensemble' : ['d651055']
 }
 
 ALLIDS = list(DSIDS.keys())

@@ -32,7 +32,7 @@ MULTI = (MONTH|YEARS)
 SINGL = (NDAYS)
 
 IPINFO = {
-   'USGTBL'  : ['ipinfo', 'allusage', 'tdsusage'],
+   'USGTBL'  : ['ipinfo', 'wuser', 'allusage', 'codusage', 'tdsusage'],
    'CDATE' : PgUtil.curdate(),
 }
 
@@ -120,20 +120,14 @@ def fix_allusage_records(date):
    ms = re.match(r'^(\d+)-', date)
    year = ms.group(1)
    table = 'allusage_' + year
-   cond = "date = '{}' and org_type = '-'".format(date)
+   cond = "date = '{}' AND region IS NULL".format(date)
    pgrecs = PgDBI.pgmget(table, 'aidx, email, ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
    mcnt = 0
    for i in range(cnt):
-      ip = pgrecs['ip'][i]
-      email = pgrecs['email'][i]
-      ipinfo = PgIPInfo.set_ipinfo(ip)
-      if ipinfo:
-         record = {'org_type' : ipinfo['org_type'],
-                   'country' : ipinfo['country']}
-         if not email or re.search(r'-$', email):
-            record['email'] =  'unknown@' + ipinfo['hostname']
+      record = get_missing_info(pgrecs['ip'][i], pgrecs['email'][i])
+      if record:
          mcnt += PgDBI.pgupdt(table, record, "aidx = '{}'".format(pgrecs['aidx'][i]))
 
    s = 's' if cnt > 1 else ''
@@ -144,18 +138,58 @@ def fix_allusage_records(date):
 def fix_tdsusage_records(date):
 
    table = 'tdsusage'
-   cond = "date = '{}' and org_type = '-'".format(date)
-   pgrecs = PgDBI.pgmget(table, 'time, ip', cond, PgLOG.LGEREX)
+   cond = "date = '{}' AND region IS NULL".format(date)
+   pgrecs = PgDBI.pgmget(table, 'time, email, ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
    mcnt = 0
    for i in range(cnt):
-      ipinfo = PgIPInfo.set_ipinfo(pgrecs['ip'][i])
-      if ipinfo:
-         record = {'org_type' : ipinfo['org_type'],
-                   'country' : ipinfo['country']}
-         cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(date, pgrecs['time'][i], pgrecs['ip'][i])
+      ip = pgrecs['ip'][i]
+      record = get_missing_info(ip, pgrecs['email'][i])
+      if record:
+         cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(date, pgrecs['time'][i], ip)
          mcnt += PgDBI.pgupdt(table, record, cond)
+
+   s = 's' if cnt > 1 else ''
+   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
+
+   return mcnt
+
+def fix_codusage_records(date):
+
+   table = 'codusage'
+   cond = "date = '{}' AND region IS NULL".format(date)
+   pgrecs = PgDBI.pgmget(table, 'codidx, email, ip', cond, PgLOG.LGEREX)
+   if not pgrecs: return 0
+   cnt = len(pgrecs['ip']) if pgrecs else 0
+   mcnt = 0
+   for i in range(cnt):
+      record = get_missing_info(pgrecs['ip'][i], pgrecs['email'][i])
+      if record:
+         mcnt += PgDBI.pgupdt(table, record, "codidx = '{}'".format(pgrecs['codidx'][i]))
+
+   s = 's' if cnt > 1 else ''
+   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
+
+   return mcnt
+
+def fix_wuser_records(date):
+
+   table = 'wuser'
+   cond = "start_date = '{}' AND region IS NULL".format(date)
+   pgrecs = PgDBI.pgmget(table, 'wuid, email, ip', cond, PgLOG.LGEREX)
+   if not pgrecs: return 0
+   cnt = len(pgrecs['ip']) if pgrecs else 0
+   mcnt = 0
+   for i in range(cnt):
+      ip = pgrecs['ip'][i]
+      email = pgrecs['email'][i]
+      if not ip:
+         if email and '@' in email: ip = PgIPInfo.dns_to_ip(email.split('@')[1])
+         if not ip: continue
+      record = get_missing_info(ip, email)
+      if record:
+         mcnt += PgDBI.pgupdt(table, record, "wuid = '{}'".format(pgrecs['wuid'][i]))
 
    s = 's' if cnt > 1 else ''
    PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
@@ -165,19 +199,35 @@ def fix_tdsusage_records(date):
 def fix_ipinfo_records(date):
 
    table = 'ipinfo'
-   cond = "stat_flag = 'M' and date = '{}'".format(date)
+   cond = "date = '{}' AND region IS NULL".format(date)
    pgrecs = PgDBI.pgmget(table, 'ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
    mcnt = 0
    for i in range(cnt):
-      PgIPInfo.set_ipinfo(pgrecs['ip'][i], True)
+      PgIPInfo.set_ipinfo(pgrecs['ip'][i])
 
    mcnt = PgIPInfo.IPINFO['IPUPDT']
    s = 's' if cnt > 1 else ''
    PgLOG.pglog("{}: {} of {} record{} updated".format(table, mcnt, cnt, s), PgLOG.LOGWRN)
 
    return mcnt
+
+#
+# fill the missing info for given ip
+#
+def get_missing_info(ip, email):
+
+   ipinfo = PgIPInfo.set_ipinfo(ip)
+   if ipinfo:
+      record = {'org_type' : ipinfo['org_type'],
+                'country' : ipinfo['country'],
+                'region' : ipinfo['region']}
+      if not email or re.search(r'-$', email):
+         record['email'] =  'unknown@' + ipinfo['hostname']
+      return record
+   else:
+      return None
 
 #
 # call main() to start program

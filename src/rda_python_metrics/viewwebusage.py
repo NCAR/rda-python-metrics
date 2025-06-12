@@ -22,7 +22,7 @@ from rda_python_common import PgUtil
 from . import PgView
 
 VUSG = {
-   'SNMS' : "ABCDEFGHIJKLMNOPRQTUVWYZ",   # all available short field names in %FLDS
+   'SNMS' : "ABCDEFGHIJKLMNOPQRTUVWYZ",   # all available short field names in %FLDS
    'OPTS' : 'AabcCdDeEfFhHiIklLmMNoOStTUvVwyz',  # all available options, used for %params
    'NOPT' : 'abhRwz',                     # stand alone option without inputs
    'ACND' : 'cdefiklmMoStvy',             # available array condition options
@@ -52,11 +52,11 @@ FLDS = {
    'F' : ['FILENAME',     "wfile",                               'wfile',       'wfile',    0,  0,  'G'],
    'G' : ['PRODUCT',      "tindex",                              'tindex',      'wfile',    0,  0,  'G'],
    'I' : ['FIRSTNAME',    "fstname",                             'fstname',     'wuser',    0,  0,  'G'],
-   'K' : ['ORGNAME',      "org_name",                            'org_name',    'wuser',    0,  0,  'G'],
    'Z' : ['TIME',         "time_read",                           'time_read',   'wusage',   8,  0,  'G'],
    'L' : ['LASTNAME',     "lstname",                             'lstname',     'wuser',    0,  0,  'G'],
-   'M' : ['MONTH',        PgDBI.fmtym("date_read"),             'date_read',   'wusage',   7,  0,  'G'],
+   'M' : ['MONTH',        PgDBI.fmtym("date_read"),              'date_read',   'wusage',   7,  0,  'G'],
    'N' : ['COUNTRY',      "country",                             'country',     'wuser',    0,  0,  'G'],
+   'K' : ['REGION',       "region",                              'region',    'wuser',    0,  0,  'G'],
    'O' : ['ORGTYPE',      "org_type",                            'org_type',    'wuser',    7,  0,  'G'],
    'P' : ['DSOWNER',      "specialist",                          'specialist',  'dsowner',  8,  0,  'G'],
    'Q' : ['QUARTER',      "quarter",                             'quarter',     'wusage',   7,  0,  'G'],
@@ -89,7 +89,7 @@ EXPAND = {
    'E' : ["USER",   "eilkco",  "email",        "wuser"],
    'I' : ["USER",   "eilkco",  "fstname",      "wuser"],
    'L' : ["USER",   "eilkco",  "lstname",      "wuser"],
-   'K' : ["USER",   "eilkco",  "org_name",     "wuser"],
+   'K' : ["USER",   "eilkco",  "region",       "wuser"],
    'O' : ["USER",   "eilkco",  "org_type",     "wuser"],
    'N' : ["USER",   "eilkco",  "country",      "wuser"],
 
@@ -116,7 +116,7 @@ EXPAND = {
 #   H -- a string of report title to replace the default one
 #   i -- array of specified first names
 #   I -- use given email IDs for email notice of data update
-#   k -- array of specified orginization names
+#   k -- array of specified region names
 #   l -- array of specified last names
 #   L -- column delimiter for output
 #   m -- array of specified months 
