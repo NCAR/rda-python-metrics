@@ -24,7 +24,8 @@ dependencies = [
   "rda_python_setuid",
   "geoip2",
   "ipinfo",
-  "httplib2"
+  "httplib2",
+  "dnspython"
 ]
 
 [tool.pytest.ini_options]
