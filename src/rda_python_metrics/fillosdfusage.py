@@ -181,7 +181,7 @@ def add_file_usage(year, logrec):
    cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
    if PgDBI.pgget(table, "", cond, PgLOG.LOGWRN): return 0
 
-   wurec =  PgIpinfo.get_wuser_record(logrec['ip'], logrec['date'])
+   wurec =  PgIPInfo.get_wuser_record(logrec['ip'], logrec['date'])
    if not wurec: return 0
    record = {'wid' : pgrec['wid'], 'dsid' : pgrec['dsid']}
    record['wuid_read'] = wurec['wuid']

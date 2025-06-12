@@ -22,6 +22,7 @@ from rda_python_common import PgLOG
 from rda_python_common import PgUtil
 from rda_python_common import PgFile
 from rda_python_common import PgDBI
+from . import PgIPInfo
 
 # the define options for gathering COD data usage, one at a time
 MONTH = 0x02  # fet COD data usages for given months
