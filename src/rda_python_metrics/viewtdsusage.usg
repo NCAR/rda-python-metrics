@@ -7,7 +7,7 @@
                      [-D StartDate [EndDate]] [-e EMailList] -h \
                      [-E StartNoticeDate [EndNoticeDate]] \
                      [-f EndTypeFlags] [-i IPAddresses] [-I EmailIDList] \
-                     [-RegionNamess] [-m MonthList] [-M AccessMethods]  \
+                     [-k RegionNames] [-m MonthList] [-M AccessMethods]  \
                      [-N MinNumberRead [MaxNumberRead]] \
                      [-o OrganizationTypes] \
                      [-q QuaterList] [-s MinSize [MaxSize]] \

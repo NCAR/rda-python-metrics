@@ -126,7 +126,7 @@ def fix_allusage_records(date):
    cnt = len(pgrecs['ip']) if pgrecs else 0
    mcnt = 0
    for i in range(cnt):
-      record = get_missing_info(pgrecs['ip'][i], pgrecs['email'][i])
+      record = PgIPInfo.get_missing_ipinfo(pgrecs['ip'][i], pgrecs['email'][i])
       if record:
          mcnt += PgDBI.pgupdt(table, record, "aidx = '{}'".format(pgrecs['aidx'][i]))
 
@@ -145,7 +145,7 @@ def fix_tdsusage_records(date):
    mcnt = 0
    for i in range(cnt):
       ip = pgrecs['ip'][i]
-      record = get_missing_info(ip, pgrecs['email'][i])
+      record = PgIPInfo.get_missing_ipinfo(ip, pgrecs['email'][i])
       if record:
          cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(date, pgrecs['time'][i], ip)
          mcnt += PgDBI.pgupdt(table, record, cond)
@@ -164,7 +164,7 @@ def fix_codusage_records(date):
    cnt = len(pgrecs['ip']) if pgrecs else 0
    mcnt = 0
    for i in range(cnt):
-      record = get_missing_info(pgrecs['ip'][i], pgrecs['email'][i])
+      record = PgIPInfo.get_missing_ipinfo(pgrecs['ip'][i], pgrecs['email'][i])
       if record:
          mcnt += PgDBI.pgupdt(table, record, "codidx = '{}'".format(pgrecs['codidx'][i]))
 
@@ -184,10 +184,7 @@ def fix_wuser_records(date):
    for i in range(cnt):
       ip = pgrecs['ip'][i]
       email = pgrecs['email'][i]
-      if not ip:
-         if email and '@' in email: ip = PgIPInfo.dns_to_ip(email.split('@')[1])
-         if not ip: continue
-      record = get_missing_info(ip, email)
+      record = PgIPInfo.get_missing_ipinfo(ip, email)
       if record:
          mcnt += PgDBI.pgupdt(table, record, "wuid = '{}'".format(pgrecs['wuid'][i]))
 
@@ -212,22 +209,6 @@ def fix_ipinfo_records(date):
    PgLOG.pglog("{}: {} of {} record{} updated".format(table, mcnt, cnt, s), PgLOG.LOGWRN)
 
    return mcnt
-
-#
-# fill the missing info for given ip
-#
-def get_missing_info(ip, email):
-
-   ipinfo = PgIPInfo.set_ipinfo(ip)
-   if ipinfo:
-      record = {'org_type' : ipinfo['org_type'],
-                'country' : ipinfo['country'],
-                'region' : ipinfo['region']}
-      if not email or re.search(r'-$', email):
-         record['email'] =  'unknown@' + ipinfo['hostname']
-      return record
-   else:
-      return None
 
 #
 # call main() to start program
