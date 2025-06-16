@@ -192,8 +192,8 @@ def object_to_dict(obj):
 #
 def update_wuser_email(nhost, ohost):
 
-   pgrec = PgDBI.pgget('wuser', 'widx', "email = 'unknown@{}'".format(ohost))
-   if pgrec: PgDBI.pgexec("UPDATE wuser SET email = 'unknown@{}' WHERE widx = {}".format(nhost, pgrec['widx']))
+   pgrec = PgDBI.pgget('wuser', 'wuid', "email = 'unknown@{}'".format(ohost))
+   if pgrec: PgDBI.pgexec("UPDATE wuser SET email = 'unknown@{}' WHERE wuid = {}".format(nhost, pgrec['wuid']))
 
 #
 # update a ipinfo record; add a new one if not exists yet
