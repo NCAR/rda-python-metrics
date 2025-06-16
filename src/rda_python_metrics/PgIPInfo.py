@@ -13,6 +13,7 @@
 #
 ###############################################################################
 #
+import re
 import geoip2.database as geodb
 import ipinfo
 import socket
@@ -251,10 +252,10 @@ def get_update_record(nrec, orec):
 def get_missing_ipinfo(ip, email = None):
 
    if not ip:
-      if email and '@' in email: ip = PgIPInfo.dns_to_ip(email.split('@')[1])
+      if email and '@' in email: ip = dns_to_ip(email.split('@')[1])
       if not ip: return None
 
-   ipinfo = PgIPInfo.set_ipinfo(ip)
+   ipinfo = set_ipinfo(ip)
    if ipinfo:
       record = {'org_type' : ipinfo['org_type'],
                 'country' : ipinfo['country'],

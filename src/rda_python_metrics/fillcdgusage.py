@@ -276,7 +276,7 @@ def fill_cdg_usages(dsids, dranges):
                   trecs[tkey]['fcount'] += 1
                else:
                   iprec =  PgIPInfo.get_missing_ipinfo(ip)
-                  if not wurec: continue
+                  if not iprec: continue
                   trecs[tkey] = {'ip' : ip, 'dsid' : dsid, 'date' : cdate, 'time' : time, 'quarter' : quarter,
                                  'size' : dsize, 'fcount' : 1, 'method' : method, 'etype' : etype,
                                  'engine' : engine, 'org_type' : iprec['org_type'], 'country' : iprec['country'],
