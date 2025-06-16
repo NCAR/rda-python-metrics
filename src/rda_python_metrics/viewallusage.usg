@@ -6,7 +6,7 @@
                      [-A RowLimit] [-c CountryCodes] [-d DateList] \
                      [-D StartDate [EndDate]] [-e EMailList] -h \
                      [-E StartNoticeDate [EndNoticeDate]] [-f DataFormats] \
-                     [-g SourceGroups] [-I EmailIDList] [-k RegionLost] \
+                     [-g SourceGroups] [-I EmailIDList] [-k RegionList] \
                      [-m MonthList] [-M MethodList] [-N MinNumberRead [MaxNumberRead]] \
                      [-o OrganizationTypes] [-q QuaterList] [-s MinSize [MaxSize]] \
                      [-S SpecialistLoginNames] [-t DatasetList] \

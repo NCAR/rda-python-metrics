@@ -13,6 +13,7 @@
 #
 ###############################################################################
 #
+import re
 import geoip2.database as geodb
 import ipinfo
 import socket
@@ -53,8 +54,6 @@ def get_dns_resolver(forceget = False):
 def dns_to_ip(dmname, type = 'A'):
    
    ipdns = get_dns_resolver()
-
-   result = []
 
    try:
       answers = ipdns.resolve(dmname, type)
@@ -113,14 +112,11 @@ def get_ipinfo_record(ip):
    if not IPDB: set_ipinfo_database()
    try:
       iprec = IPDB.getDetails(ip).all
-      if 'hostname' not in iprec:
-         PgLOG.pglog("ipinfo: {} - ip address is not in the database".format(ip), PgLOG.LOGERR)
-         return None
    except Exception as e:
       PgLOG.pglog("ipinfo: {} - {}".format(ip, str(e)), PgLOG.LOGWRN)
       return None
       
-   record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip}
+   record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip, 'org_type' : '-'}
    if 'hostname' in iprec:
       record['hostname'] = iprec['hostname']
       record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
@@ -128,7 +124,7 @@ def get_ipinfo_record(ip):
    record['lon'] = float(iprec['longitude']) if iprec['longitude'] else 0
    if 'org' in iprec: record['org_name'] = iprec['org']
    record['country'] = get_country_record_code(iprec, 'country_name')
-   if 'region' in iprec: record['region'] = PgLOG.convert_chars(iprec['region'])
+   record['region'] = PgLOG.convert_chars(iprec['region']) if 'region' in iprec else None
    if 'city' in iprec: record['city'] = PgLOG.convert_chars(iprec['city'])
    if 'postal' in iprec: record['postal'] =  iprec['postal']
    record['timezone'] = iprec['timezone']
@@ -156,17 +152,16 @@ def get_geoip2_record(ip):
       PgLOG.pglog("geoip2: {} - {}".format(ip, str(e)), PgLOG.LOGWRN)
       return None
 
-   record = {'ip' : ip, 'stat_flag' : 'M'}
+   record = {'ip' : ip, 'stat_flag' : 'M', 'org_type' : '-'}
    record['lat'] = float(city.location.latitude) if city.location.latitude else 0
    record['lon'] = float(city.location.longitude) if city.location.longitude else 0
    record['country'] = get_country_name_code(city.country.name)
    record['city'] = PgLOG.convert_chars(city.city.name)
-   if city.subdivisions.most_specific.name: record['region'] = PgLOG.convert_chars(city.subdivisions.most_specific.name)
+   record['region'] = PgLOG.convert_chars(city.subdivisions.most_specific.name) if city.subdivisions.most_specific.name else None
    record['postal'] =  city.postal.code
    record['timezone'] = city.location.time_zone
    record['hostname'] = ip
-   record['org_type'] = '-'
-   record['ipinfo'] = json.dumps(city.__dict__)
+   record['ipinfo'] = json.dumps(object_to_dict(city))
 
    try:
       hostrec = socket.gethostbyaddr(ip)
@@ -177,6 +172,20 @@ def get_geoip2_record(ip):
    record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
 
    return record
+
+#
+# change an object to dict recursively
+#
+def object_to_dict(obj):
+    if hasattr(obj, "__dict__"):
+        result = {}
+        for key, value in obj.__dict__.items():
+            result[key] = object_to_dict(value)
+        return result
+    elif isinstance(obj, list):
+        return [object_to_dict(item) for item in obj]
+    else:
+        return obj
 
 #
 # update wuser.email for hostname changed
@@ -237,17 +246,36 @@ def get_update_record(nrec, orec):
          record[fld] = nrec[fld]
    return record
 
-# return wuser record upon success, None otherwise
-def get_wuser_record(ip, date):
+#
+# fill the missing info for given ip
+#
+def get_missing_ipinfo(ip, email = None):
+
+   if not ip:
+      if email and '@' in email: ip = dns_to_ip(email.split('@')[1])
+      if not ip: return None
 
    ipinfo = set_ipinfo(ip)
-   if not ipinfo: return None
+   if ipinfo:
+      record = {'org_type' : ipinfo['org_type'],
+                'country' : ipinfo['country'],
+                'region' : ipinfo['region']}
+      if not email or re.search(r'-$', email):
+         record['email'] =  'unknown@' + ipinfo['hostname']
+      else:
+         record['email'] = email
+      return record
+   else:
+      return None
 
-   record = {'org_type' : ipinfo['org_type'],
-             'country' : ipinfo['country'],
-             'region' : ipinfo['region']}
-   email = 'unknown@' + ipinfo['hostname']
-   emcond = "email = '{}'".format(email)
+
+# return wuser record upon success, None otherwise
+def get_wuser_record(ip, date, email = None):
+
+   record = get_missing_ipinfo(ip, email)
+   if not record: return None
+
+   emcond = "email = '{}'".format(record['email'])
    flds = 'wuid, email, org_type, country, region, start_date'   
    pgrec = PgDBI.pgget("wuser", flds, emcond, PgLOG.LOGERR)
    if pgrec:
@@ -257,7 +285,6 @@ def get_wuser_record(ip, date):
       return pgrec
 
    # now add one in
-   record['email'] = email
    record['stat_flag'] = 'A'
    record['start_date'] = date
    wuid = PgDBI.pgadd("wuser", record, PgLOG.LOGERR|PgLOG.AUTOID)
