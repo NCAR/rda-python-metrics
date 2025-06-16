@@ -196,15 +196,14 @@ def fix_wuser_records(date):
 def fix_ipinfo_records(date):
 
    table = 'ipinfo'
-   cond = "date = '{}' AND region IS NULL".format(date)
+   cond = "adddate = '{}' AND region IS NULL".format(date)
    pgrecs = PgDBI.pgmget(table, 'ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
    mcnt = 0
    for i in range(cnt):
-      PgIPInfo.set_ipinfo(pgrecs['ip'][i])
+      if PgIPInfo.set_ipinfo(pgrecs['ip'][i]): mcnt +=1
 
-   mcnt = PgIPInfo.IPINFO['IPUPDT']
    s = 's' if cnt > 1 else ''
    PgLOG.pglog("{}: {} of {} record{} updated".format(table, mcnt, cnt, s), PgLOG.LOGWRN)
 
