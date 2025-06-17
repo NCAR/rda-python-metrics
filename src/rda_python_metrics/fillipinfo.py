@@ -112,7 +112,10 @@ def fill_ip_info(option, inputs, table):
          func = eval('fix_{}_records'.format(table))
          cntall += func(date)
          date = PgUtil.adddate(date, 0, 0, 1)
-   return cntall
+   
+   if cntall > 2:
+      PgLOG.pglog("{}: Total {} records updated".format(table, cntall), PgLOG.LOGWRN)
+
 
 def fix_allusage_records(date):
 
@@ -205,7 +208,7 @@ def fix_ipinfo_records(date):
       if PgIPInfo.set_ipinfo(pgrecs['ip'][i]): mcnt +=1
 
    s = 's' if cnt > 1 else ''
-   PgLOG.pglog("{}: {} of {} record{} updated".format(table, mcnt, cnt, s), PgLOG.LOGWRN)
+   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
 
    return mcnt
 
