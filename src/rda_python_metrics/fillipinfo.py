@@ -101,9 +101,10 @@ def fill_ip_info(option, inputs, table):
       else:
          date = input + "-01-01"
          edate = input + "-12-31"
-      while date <= edate:
+      while True:
          (ndate, cond) = get_next_date(date, edate)
          cntall += func(date, cond)
+         if ndate >= edate: break
          date = PgUtil.adddate(ndate, 0, 0, 1)
 
    if cntall > 2:
@@ -113,13 +114,13 @@ def get_next_date(date, edate):
 
    if date < edate:
       ndate = PgUtil.enddate(date, 'M')
-      if ndate > edate: ndate = edate
-   if date < ndate:
-      cond = f"BETWEEN '{date}' AND '{ndate}'"
+      if ndate < edate: edate = ndate
+   if date < edate:
+      cond = f"BETWEEN '{date}' AND '{edate}'"
    else:
       cond = f"= '{date}'"
 
-   return (ndate, cond)
+   return (edate, cond)
 
 
 def fix_allusage_records(date, cnd):

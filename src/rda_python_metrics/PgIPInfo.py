@@ -105,6 +105,23 @@ def domain_ipinfo_record(dmname):
    return None
 
 #
+# try to get hostname via socket for given ip address
+#
+def get_ip_hostname(ip, iprec, record):
+
+   if iprec and 'hostname' in iprec:
+      record['hostname'] = iprec['hostname']
+      record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
+   else:
+      record['hostname'] = ip
+      try:
+         hostrec = socket.gethostbyaddr(ip)
+         record['hostname'] = hostrec[1][0] if hostrec[1] else hostrec[0]
+         record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
+      except Exception as e:
+         PgLOG.pglog("socket: {} - {}".format(ip, str(e)), PgLOG.LOGWRN)
+
+#
 # get a ipinfo record for given ip address
 #
 def get_ipinfo_record(ip):
@@ -117,9 +134,7 @@ def get_ipinfo_record(ip):
       return None
       
    record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip, 'org_type' : '-'}
-   if 'hostname' in iprec:
-      record['hostname'] = iprec['hostname']
-      record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
+   get_ip_hostname(ip, iprec, record)
    record['lat'] = float(iprec['latitude']) if iprec['latitude'] else 0
    record['lon'] = float(iprec['longitude']) if iprec['longitude'] else 0
    if 'org' in iprec: record['org_name'] = iprec['org']
@@ -153,6 +168,7 @@ def get_geoip2_record(ip):
       return None
 
    record = {'ip' : ip, 'stat_flag' : 'M', 'org_type' : '-'}
+   get_ip_hostname(ip, None, record)
    record['lat'] = float(city.location.latitude) if city.location.latitude else 0
    record['lon'] = float(city.location.longitude) if city.location.longitude else 0
    record['country'] = get_country_name_code(city.country.name)
@@ -160,16 +176,7 @@ def get_geoip2_record(ip):
    record['region'] = PgLOG.convert_chars(city.subdivisions.most_specific.name) if city.subdivisions.most_specific.name else None
    record['postal'] =  city.postal.code
    record['timezone'] = city.location.time_zone
-   record['hostname'] = ip
    record['ipinfo'] = json.dumps(object_to_dict(city))
-
-   try:
-      hostrec = socket.gethostbyaddr(ip)
-   except Exception as e:
-      PgLOG.pglog("socket: {} - {}".format(ip, str(e)), PgLOG.LOGWRN)
-      return record
-   record['hostname'] = hostrec[1][0] if hostrec[1] else hostrec[0]
-   record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
 
    return record
 
@@ -223,11 +230,11 @@ def set_ipinfo(ip, ipopt = True):
 
    if ip in IPRECS:
       pgrec = IPRECS[ip]
-      if not pgrec or not ipopt or pgrec['stat_flag'] == 'A': return pgrec
+      if pgrec or not ipopt: return pgrec
    else:
       pgrec = PgDBI.pgget('ipinfo', '*', "ip = '{}'".format(ip))
 
-   if not pgrec or ipopt and pgrec['stat_flag'] == 'M':
+   if not pgrec:
       record = get_ipinfo_record(ip) if ipopt else None
       if not record: record = get_geoip2_record(ip)
       if record and update_ipinfo_record(record, pgrec): pgrec = record
