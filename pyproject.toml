@@ -6,9 +6,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rda_python_metrics"
-version = "1.0.22"
+version = "1.0.23"
 authors = [
-  { name="Zaihua Ji", email="zji@ucar.edu" },
+  { name="Zaihua Ji",  email="zji@ucar.edu" },
 ]
 description = "RDA Python Package to gather and view data usage metrics"
 readme = "README.md"

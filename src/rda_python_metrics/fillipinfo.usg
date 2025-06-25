@@ -3,7 +3,7 @@
 
  Usage: fillipinfo [-b] -t TableName [-N NumberDay] [-m YearMonths] [-y Years]
 
-      select option, -t and -m, -N or -y to run this application.
+      select option, -t and -d, -m, -N or -y to run this application.
 
       - Option -b, log process information into logfile only;
 
@@ -12,6 +12,8 @@
                    emails and country names; 
 
       - Option -N, fix usage info in recent NumberDay days;
+
+      - Option -d, fix usage info in given dates;
 
       - Option -m, fix usage info in given months;
 
