@@ -25,10 +25,11 @@ from rda_python_common import PgDBI
 from . import PgIPInfo
 
 # the define options for gathering ipinfo data
+DATES = 0x01  # fix data usages for given dates
 MONTH = 0x02  # fix data usages for given months
 YEARS = 0x04  # fix data usages for given years
 NDAYS = 0x08  # fix data usages in recent number of days
-MULTI = (MONTH|YEARS)
+MULTI = (DATES|MONTH|YEARS)
 SINGL = (NDAYS)
 
 IPINFO = {
@@ -49,8 +50,10 @@ def main():
    for arg in argv:
       if arg == "-b":
          PgLOG.PGLOG['BCKGRND'] = 1
-      elif re.match(r'^-[mNy]$', arg) and option == 0:
-         if arg == "-m":
+      elif re.match(r'^-[dmNy]$', arg) and option == 0:
+         if arg == "-d":
+            option = DATES
+         elif arg == "-m":
             option = MONTH
          elif arg == "-y":
             option = YEARS
@@ -74,17 +77,6 @@ def main():
    PgDBI.dssdb_dbname()
    PgLOG.cmdlog("fillipinfo {}".format(' '.join(argv)))
 
-   if option&NDAYS:
-      curdate = IPINFO['CDATE']
-      datelimit = PgUtil.adddate(curdate, 0, 0, -int(inputs[0]))  
-      option = MONTH
-      inputs = []
-      
-      while curdate >= datelimit:
-         tms = curdate.split('-')
-         inputs.append("{}-{}".format(tms[0], tms[1]))
-         curdate = PgUtil.adddate(curdate, 0, 0, -int(tms[2]))
-
    fill_ip_info(option, inputs, table)
 
    sys.exit(0)
@@ -95,35 +87,48 @@ def main():
 def fill_ip_info(option, inputs, table):
 
    cntall = 0
-   date = None
+   func = eval('fix_{}_records'.format(table))
    for input in inputs:
       if option&NDAYS:
          edate = IPINFO['CDATE']
-         date = PgUtil.adddate(edate, 0, 0, -int(input))  
+         date = PgUtil.adddate(edate, 0, 0, -int(input))
+      elif option&DATES:
+         edate = date = input
       elif option&MONTH:
          tms = input.split('-')
          date = "{}-{:02}-01".format(tms[0], int(tms[1]))
          edate = PgUtil.enddate(date, 0, 'M')
-      elif option&YEARS:
+      else:
          date = input + "-01-01"
          edate = input + "-12-31"
-
       while date <= edate:
-         func = eval('fix_{}_records'.format(table))
-         cntall += func(date)
-         date = PgUtil.adddate(date, 0, 0, 1)
-   
+         (ndate, cond) = get_next_date(date, edate)
+         cntall += func(date, cond)
+         date = PgUtil.adddate(ndate, 0, 0, 1)
+
    if cntall > 2:
       PgLOG.pglog("{}: Total {} records updated".format(table, cntall), PgLOG.LOGWRN)
 
+def get_next_date(date, edate):
 
-def fix_allusage_records(date):
+   if date < edate:
+      ndate = PgUtil.enddate(date, 'M')
+      if ndate > edate: ndate = edate
+   if date < ndate:
+      cond = f"BETWEEN '{date}' AND '{ndate}'"
+   else:
+      cond = f"= '{date}'"
+
+   return (ndate, cond)
+
+
+def fix_allusage_records(date, cnd):
 
    cnt = 0
    ms = re.match(r'^(\d+)-', date)
    year = ms.group(1)
    table = 'allusage_' + year
-   cond = "date = '{}' AND region IS NULL".format(date)
+   cond = f"date {cnd} AND region IS NULL"
    pgrecs = PgDBI.pgmget(table, 'aidx, email, ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
@@ -134,15 +139,15 @@ def fix_allusage_records(date):
          mcnt += PgDBI.pgupdt(table, record, "aidx = '{}'".format(pgrecs['aidx'][i]))
 
    s = 's' if cnt > 1 else ''
-   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
+   PgLOG.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for date {cnd}", PgLOG.LOGWRN)
 
    return mcnt
 
-def fix_tdsusage_records(date):
+def fix_tdsusage_records(date, cnd):
 
    table = 'tdsusage'
-   cond = "date = '{}' AND region IS NULL".format(date)
-   pgrecs = PgDBI.pgmget(table, 'time, email, ip', cond, PgLOG.LGEREX)
+   cond = f"date {cnd} AND region IS NULL"
+   pgrecs = PgDBI.pgmget(table, 'date, time, email, ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
    mcnt = 0
@@ -150,18 +155,18 @@ def fix_tdsusage_records(date):
       ip = pgrecs['ip'][i]
       record = PgIPInfo.get_missing_ipinfo(ip, pgrecs['email'][i])
       if record:
-         cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(date, pgrecs['time'][i], ip)
+         cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(pgrecs['date'][i], pgrecs['time'][i], ip)
          mcnt += PgDBI.pgupdt(table, record, cond)
 
    s = 's' if cnt > 1 else ''
-   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
+   PgLOG.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for date {cnd}", PgLOG.LOGWRN)
 
    return mcnt
 
-def fix_codusage_records(date):
+def fix_codusage_records(date, cnd):
 
    table = 'codusage'
-   cond = "date = '{}' AND region IS NULL".format(date)
+   cond = f"date {cnd} AND region IS NULL"
    pgrecs = PgDBI.pgmget(table, 'codidx, email, ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
@@ -172,14 +177,14 @@ def fix_codusage_records(date):
          mcnt += PgDBI.pgupdt(table, record, "codidx = '{}'".format(pgrecs['codidx'][i]))
 
    s = 's' if cnt > 1 else ''
-   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
+   PgLOG.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for date {cnd}", PgLOG.LOGWRN)
 
    return mcnt
 
-def fix_wuser_records(date):
+def fix_wuser_records(date, cnd):
 
    table = 'wuser'
-   cond = "start_date = '{}' AND region IS NULL".format(date)
+   cond = f"start_date {cnd} AND region IS NULL"
    pgrecs = PgDBI.pgmget(table, 'wuid, email, ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
@@ -192,14 +197,14 @@ def fix_wuser_records(date):
          mcnt += PgDBI.pgupdt(table, record, "wuid = '{}'".format(pgrecs['wuid'][i]))
 
    s = 's' if cnt > 1 else ''
-   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
+   PgLOG.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for start_date {cnd}", PgLOG.LOGWRN)
 
    return mcnt
 
-def fix_ipinfo_records(date):
+def fix_ipinfo_records(date, cnd):
 
    table = 'ipinfo'
-   cond = "adddate = '{}' AND region IS NULL".format(date)
+   cond = f"adddate {cnd} AND region IS NULL"
    pgrecs = PgDBI.pgmget(table, 'ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
@@ -208,7 +213,7 @@ def fix_ipinfo_records(date):
       if PgIPInfo.set_ipinfo(pgrecs['ip'][i]): mcnt +=1
 
    s = 's' if cnt > 1 else ''
-   PgLOG.pglog("{}: {} of {} record{} updated for {}".format(table, mcnt, cnt, s, date), PgLOG.LOGWRN)
+   PgLOG.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for adddate {cnd}", PgLOG.LOGWRN)
 
    return mcnt
 
