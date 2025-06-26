@@ -109,17 +109,23 @@ def domain_ipinfo_record(dmname):
 #
 def get_ip_hostname(ip, iprec, record):
 
-   if iprec and 'hostname' in iprec:
-      record['hostname'] = iprec['hostname']
-      record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
-   else:
-      record['hostname'] = ip
-      try:
-         hostrec = socket.gethostbyaddr(ip)
-         record['hostname'] = hostrec[1][0] if hostrec[1] else hostrec[0]
+   if iprec:
+      if 'hostname' in iprec and iprec['hostname']:
+         record['hostname'] = iprec['hostname']         
          record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
-      except Exception as e:
-         PgLOG.pglog("socket: {} - {}".format(ip, str(e)), PgLOG.LOGWRN)
+         return
+   record['hostname'] = ip
+   if 'domain' in iprec and iprec['domain']:
+      record['hostname'] += '.' + iprec['domain']
+      record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
+      return
+
+   try:
+      hostrec = socket.gethostbyaddr(ip)
+      record['hostname'] = hostrec[1][0] if hostrec[1] else hostrec[0]
+      record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
+   except Exception as e:
+      PgLOG.pglog("socket: {} - {}".format(ip, str(e)), PgLOG.LOGWRN)
 
 #
 # get a ipinfo record for given ip address
@@ -234,7 +240,7 @@ def set_ipinfo(ip, ipopt = True):
    else:
       pgrec = PgDBI.pgget('ipinfo', '*', "ip = '{}'".format(ip))
 
-   if not pgrec:
+   if not pgrec or iopt and pgrec['stat_flag'] == 'M':
       record = get_ipinfo_record(ip) if ipopt else None
       if not record: record = get_geoip2_record(ip)
       if record and update_ipinfo_record(record, pgrec): pgrec = record
