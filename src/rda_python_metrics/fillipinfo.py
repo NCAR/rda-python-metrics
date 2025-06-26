@@ -113,7 +113,7 @@ def fill_ip_info(option, inputs, table):
 def get_next_date(date, edate):
 
    if date < edate:
-      ndate = PgUtil.enddate(date, 'M')
+      ndate = PgUtil.enddate(date, 0, 'M')
       if ndate < edate: edate = ndate
    if date < edate:
       cond = f"BETWEEN '{date}' AND '{edate}'"

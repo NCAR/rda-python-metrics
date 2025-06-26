@@ -115,8 +115,8 @@ def get_ip_hostname(ip, iprec, record):
          record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
          return
    record['hostname'] = ip
-   if 'domain' in iprec and iprec['domain']:
-      record['hostname'] += '.' + iprec['domain']
+   if 'asn' in iprec and 'domain' in iprec['asn'] and iprec['asn']['domain']:
+      record['hostname'] += '.' + iprec['asn']['domain']
       record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
       return
 
