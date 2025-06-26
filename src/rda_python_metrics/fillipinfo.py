@@ -205,7 +205,7 @@ def fix_wuser_records(date, cnd):
 def fix_ipinfo_records(date, cnd):
 
    table = 'ipinfo'
-   cond = f"adddate {cnd} AND region IS NULL"
+   cond = f"adddate {cnd} AND stat_flag = 'M'"
    pgrecs = PgDBI.pgmget(table, 'ip', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
    cnt = len(pgrecs['ip']) if pgrecs else 0
