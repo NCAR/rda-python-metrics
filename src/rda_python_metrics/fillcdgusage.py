@@ -66,7 +66,13 @@ DSIDS = {
    'ucar.cgd.ccsm4.CESM1-CCSM4_mid-Pliocene' : ['d651042'],
    'ucar.cgd.ccsm4.PaleoIF' : ['d651052'],
    'ucar.cgd.ccsm4.b.e11.B20LE_fixedO3' : ['d651053'],
-   'ucar.cgd.cesm2.single.forcing.large.ensemble' : ['d651055']
+   'ucar.cgd.cesm2.single.forcing.large.ensemble' : ['d651055'],
+   'ucar.cgd.cesm2le.output': ['d651056'],
+   'ucar.cgd.cesm2.s2s_hindcasts': ['d651060'],
+   'ucar.cgd.cesm2.s2s_hindcasts.mjo': ['d651061'],
+   'ucar.cgd.cesm2.s2s_hindcasts.tc_tracks': ['d651062'],
+   'ucar.cgd.cesm2.s2s_hindcasts.cesm2.climo': ['d651063'],
+   'ucar.cgd.ccsm4.ARISE-SAI-1.5' : ['d651059']
 }
 
 ALLIDS = list(DSIDS.keys())

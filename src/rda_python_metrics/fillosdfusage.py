@@ -25,7 +25,7 @@ USAGE = {
    'OSDFTBL'  : "wusage",
    'OSDFDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/zji/osdflogs/",
    'OSDFGET' : 'wget -m -nH -np -nd https://pelicanplatform.org/pelican-access-logs/ncar-access-log/',
-   'OSDFLOG' : "{}.log",   # YYYY-MM-DD.log
+   'OSDFLOG' : "{}-cache.log",   # YYYY-MM-DD-cache.log
 }
 
 #
@@ -37,7 +37,6 @@ def main():
    argv = sys.argv[1:]
    option = None
    datelimits = [None, None]
-   
 
    for arg in argv:
       ms = re.match(r'^-(b|d|p|N)$', arg)
@@ -64,7 +63,7 @@ def main():
    PgFile.change_local_directory(USAGE['OSDFDIR'])
    filenames = get_log_file_names(option, params, datelimits)
    if filenames:
-      fill_osdf_usages(filenames, datelimits)
+      fill_osdf_usages(filenames)
    else:
       PgLOG.pglog("No log file found for given command: " + cmdstr, PgLOG.LOGWRN)
 
@@ -79,10 +78,6 @@ def get_log_file_names(option, params, datelimits):
    filenames = []
    if option == 'd':
       for pdate in params:
-         pdays = PgUtil.get_weekday(pdate)
-         if pdays > 0:
-            PgLOG.pglog(pdate + ": Skip a Non-Sunday date", PgLOG.LOGWRN)
-            continue
          filenames.append(USAGE['OSDFLOG'].format(pdate))
    else:
       if option == 'N':
@@ -94,32 +89,34 @@ def get_log_file_names(option, params, datelimits):
             edate = datelimits[1] = params[1]
          else:
             edate = PgUtil.curdate()
-      pdays = PgUtil.get_weekday(pdate)
-      if pdays > 0: pdate = PgUtil.adddate(pdate, 0, 0, 7-pdays)
       while pdate <= edate:
          filenames.append(USAGE['OSDFLOG'].format(pdate))
-         pdate = PgUtil.adddate(pdate, 0, 0, 7)
+         pdate = PgUtil.adddate(pdate, 0, 0, 1)
 
    return filenames
 
 #
 # Fill OSDF usages into table dssdb.osdfusage of DSS PgSQL database from osdf access logs
 #
-def fill_osdf_usages(fnames, datelimits):
+def fill_osdf_usages(fnames):
 
    cntall = addall = 0
 
    fcnt = len(fnames)
    for logfile in fnames:
-      PgLOG.pgsystem(USAGE['OSDFGET'] + logfile, 5, PgLOG.LOGWRN)
       linfo = PgFile.check_local_file(logfile)
       if not linfo:
-         PgLOG.pglog("{}: Not exists for Gathering OSDF usage".format(logfile), PgLOG.LOGWRN)
-         continue
-      if linfo['data_size'] == 0:
-         PgLOG.pglog("{}: Empty log for Gathering OSDF usage".format(logfile), PgLOG.LOGWRN)
-         continue
-      PgLOG.pglog("Gathering usage info from {} at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
+         xzfile = logfile + '.xz'
+         PgLOG.pgsystem(USAGE['OSDFGET'] + xzfile, 5, PgLOG.LOGWRN)
+         linfo = PgFile.check_local_file(xzfile)
+         if not linfo:
+            PgLOG.pglog("{}: Not exists for Gathering OSDF usage".format(xzfile), PgLOG.LOGWRN)
+            continue
+         PgFile.compress_local_file(xzfile)
+         linfo = PgFile.check_local_file(logfile)
+         if not linfo:
+            PgLOG.pglog("{}: Error unxz OSDF usage".format(xzfile), PgLOG.LGEREX)
+      PgLOG.pglog("{}: Gathering OSDF usage at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
       osdf = PgFile.open_local_file(logfile)
       if not osdf: continue
       cntadd = entcnt = 0
@@ -131,19 +128,26 @@ def fill_osdf_usages(fnames, datelimits):
          if entcnt%10000 == 0:
             PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, cntadd), PgLOG.WARNLG)
 
-         ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/(\S+)\] \[Host:(\S+)\] \[Server:(\S+)\] \[Read:(\d+)\]', line)
+         ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/(\S+)\].* \[Host:(\S+)\].* \[AppInfo:(\S+)\].* \[Read:(\d+)\]', line)
          if not ms: continue
-         size = int(ms.group(6))
-         if size < 100: continue  # ignore small files
-         ip = ms.group(4)
-         dsid = PgUtil.format_dataset_id(ms.group(2))
+         dt = ms.group(1)
+         dsid = ms.group(2)
          wfile = ms.group(3)
+         ip = ms.group(4)
          engine = ms.group(5)
-         
-         (year, quarter, date, time) = get_record_date_time(ms.group(1))
-         if datelimits[0] and date < datelimits[0]: continue
-         if datelimits[1] and date > datelimits[1]: continue
+         size = int(ms.group(6))
+         (year, quarter, date, time) = get_record_date_time(dt)
          locflag = 'C'
+         if re.match(r'^curl', engine, re.I):
+            method = "CURL"
+         elif re.match(r'^wget', engine, re.I):
+            method = "WGET"
+         elif re.match(r'^python', engine, re.I):
+            method = "PYTHN"
+         elif re.match(r'^N/A', engine, re.I):
+            method = "N/A"
+         else:
+            method = "WEB"
          method = "OSDF"
 
          record = {'ip' : ip, 'dsid' : dsid, 'wfile' : wfile, 'date' : date,
@@ -209,7 +213,7 @@ def add_to_allusage(year, logrec, wurec):
    pgrec['size'] = logrec['size']
    pgrec['method'] = logrec['method']
    pgrec['ip'] = logrec['ip']
-   pgrec['source'] = 'W'
+   pgrec['source'] = 'P'
    return PgDBI.add_yearly_allusage(year, pgrec)
 
 #

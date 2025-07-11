@@ -53,7 +53,8 @@
               E*- EMAIL        - user email address
               F*- FORMAT       - dataset default data format
               G*- GROUP        - data usage source group: W - Web log, G - Globus,
-                                 T - Thredds, O - Order, and A - AWS log
+                                 T - Thredds, O - Request Order, A - AWS log,
+                                 C - CDG GDEX DB, and P - OSDF Pelican Platform
               K*- REGION       - Region Name users from
               M*- MONTH        - format as YYYY-MM, for example 2004-04
               N*- COUNTRY      - country codes users from
@@ -135,7 +136,8 @@
       - Option -f, for data in datasets with specified data format;
 
       - Option -g, for data usage source groups, W - Web log, G - Globus,
-           T - Thredds, O - Order, and A - AWS log;
+           T - Thredds, O - Request Order, A - AWS log, C - CDG GDEX DB,
+           and P - OSDF logs on Pelican Platform;
 
       - Option -h, works with Option -e to include historical user emails
            registered before;

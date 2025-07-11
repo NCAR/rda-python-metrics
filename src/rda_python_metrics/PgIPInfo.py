@@ -109,16 +109,16 @@ def domain_ipinfo_record(dmname):
 #
 def get_ip_hostname(ip, iprec, record):
 
+   record['hostname'] = ip
    if iprec:
       if 'hostname' in iprec and iprec['hostname']:
          record['hostname'] = iprec['hostname']         
          record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
          return
-   record['hostname'] = ip
-   if 'asn' in iprec and 'domain' in iprec['asn'] and iprec['asn']['domain']:
-      record['hostname'] += '.' + iprec['asn']['domain']
-      record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
-      return
+      if 'asn' in iprec and iprec['asn'] and 'domain' in iprec['asn'] and iprec['asn']['domain']:
+         record['hostname'] += '.' + iprec['asn']['domain']
+         record['org_type'] = PgDBI.get_org_type(None, record['hostname'])
+         return
 
    try:
       hostrec = socket.gethostbyaddr(ip)
