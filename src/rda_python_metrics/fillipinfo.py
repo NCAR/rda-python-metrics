@@ -186,14 +186,13 @@ def fix_wuser_records(date, cnd):
 
    table = 'wuser'
    cond = f"start_date {cnd} AND region IS NULL"
-   pgrecs = PgDBI.pgmget(table, 'wuid, email, ip', cond, PgLOG.LGEREX)
+   pgrecs = PgDBI.pgmget(table, 'wuid, email', cond, PgLOG.LGEREX)
    if not pgrecs: return 0
-   cnt = len(pgrecs['ip']) if pgrecs else 0
+   cnt = len(pgrecs['wuid']) if pgrecs else 0
    mcnt = 0
    for i in range(cnt):
-      ip = pgrecs['ip'][i]
       email = pgrecs['email'][i]
-      record = PgIPInfo.get_missing_ipinfo(ip, email)
+      record = PgIPInfo.get_missing_ipinfo(None, email)
       if record:
          mcnt += PgDBI.pgupdt(table, record, "wuid = '{}'".format(pgrecs['wuid'][i]))
 
