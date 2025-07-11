@@ -303,7 +303,7 @@ def get_wuser_record(ip, date, email = None):
    wuid = PgDBI.pgadd("wuser", record, PgLOG.LOGERR|PgLOG.AUTOID)
    if wuid:
       record['wuid'] = wuid
-      PgLOG.pglog("{} Added as wuid({})".format(email, wuid), PgLOG.LGWNEM)
+      PgLOG.pglog("{} Added as wuid({})".format(record['email'], wuid), PgLOG.LGWNEM)
       return record
 
    return None
