@@ -138,7 +138,10 @@ def get_ipinfo_record(ip):
    except Exception as e:
       PgLOG.pglog("ipinfo: {} - {}".format(ip, str(e)), PgLOG.LOGWRN)
       return None
-      
+
+   if 'bogon' in iprec and iprec['bogon']:
+      PgLOG.pglog(f"ipinfo: {ip} - bogon", PgLOG.LOGWRN)
+      return None
    record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip, 'org_type' : '-'}
    get_ip_hostname(ip, iprec, record)
    record['lat'] = float(iprec['latitude']) if iprec['latitude'] else 0
