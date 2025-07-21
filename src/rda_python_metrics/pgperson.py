@@ -33,8 +33,9 @@ def main():
 
    pgname = "pgperson"
    argv = sys.argv[1:]
+   argc = len(sys.argv)
    optstr = '|'.join(PERSON)
-   if sys.argc != 3:
+   if argc != 3:
       print("Usage: {} -({}) OptopnValue".format(pgname, optstr))
       sys.exit(0)
 

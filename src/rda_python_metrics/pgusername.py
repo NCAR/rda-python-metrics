@@ -23,7 +23,8 @@ url="https://people.api.ucar.edu/usernames/"
 def main():
 
    pgname = "pgusername"
-   if sys.argc != 2:
+   argc = len(sys.argv)
+   if argc != 2:
       print("Usage: {} UserName".format(pgname))
       sys.exit(0)
 
