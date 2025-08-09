@@ -237,12 +237,9 @@ def update_ipinfo_record(record, pgrec = None):
 #
 def set_ipinfo(ip, ipopt = True):
 
-   if ip in IPRECS:
-      pgrec = IPRECS[ip]
-      if pgrec or not ipopt: return pgrec
-   else:
-      pgrec = PgDBI.pgget('ipinfo', '*', "ip = '{}'".format(ip))
+   if ip in IPRECS: return IPRECS[ip]
 
+   pgrec = PgDBI.pgget('ipinfo', '*', "ip = '{}'".format(ip))
    if not pgrec or ipopt and pgrec['stat_flag'] == 'M':
       record = get_ipinfo_record(ip) if ipopt else None
       if not record: record = get_geoip2_record(ip)
