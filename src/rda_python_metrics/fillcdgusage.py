@@ -269,10 +269,6 @@ def fill_cdg_usages(dsids, dranges):
             if not url: url = pgrec['file_access_point_uri']
             ip = pgrec['remote_address']
             engine = pgrec['user_agent_name']
-            wfile = pgrec['dataset_file_name']
-            if not wfile: wfile = pgrec['logic_file_name']
-            wfrec = get_wfile_record(rdaids, wfile)
-            if not wfrec: continue
             dsid = wfrec['dsid']
             ms = re.search(r'^https*://tds.ucar.edu/thredds/(\w+)/', url)
             if ms:
@@ -303,6 +299,10 @@ def fill_cdg_usages(dsids, dranges):
                                  'region' : iprec['region'], 'email' : iprec['email']}
             else:
                # web usage
+               wfile = pgrec['dataset_file_name']
+               if not wfile: wfile = pgrec['logic_file_name']
+               wfrec = get_wfile_record(rdaids, wfile)
+               if not wfrec: continue
                fsize = pgrec['dataset_file_size']
                if not fsize: fsize = pgrec['logic_file_size']
                method = 'CDG'

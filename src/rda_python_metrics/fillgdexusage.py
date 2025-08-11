@@ -846,8 +846,8 @@ def get_dsid_records(gdexids, dates, strids):
 
    gdex_dbname()
    tbname = 'metrics.file_download'
-   fields = ('date_completed, remote_address, logical_file_size, logical_file_name, file_access_point_uri, user_agent_name, bytes_sent, '
-             'subset_file_size, range_request, dataset_file_size, dataset_file_name, dataset_file_file_access_point_uri')
+   fields = ('date_completed, remote_address, logical_file_size, logical_file_name, user_agent_name, bytes_sent, '
+             'subset_file_size, range_request, dataset_file_size, dataset_file_name')
    dscnt = len(gdexids)
    dscnd = "dataset_id "
    if dscnt == 1:
@@ -867,7 +867,7 @@ def get_dsid_records(gdexids, dates, strids):
 #
 def fill_gdex_usages(dsids, dranges):
 
-   allcnt = awcnt = atcnt = lcnt = 0
+   allcnt = awcnt = lcnt = 0
    for dates in dranges:
       for dsid in dsids:
          lcnt += 1
@@ -883,20 +883,17 @@ def fill_gdex_usages(dsids, dranges):
             continue
          rmsg = PgLOG.seconds_to_string_time(tm() - bt)
          PgLOG.pglog("{}: Got {} records in {} for processing GDEX usage at {}".format(strids, pgcnt, rmsg, PgLOG.current_datetime()), PgLOG.LOGWRN)
-         tcnt = wcnt = 0
+         wcnt = 0
          pwkey = wrec = cdate = None
-         trecs = {}
          bt = tm()
          for i in range(pgcnt):
             if (i+1)%20000 == 0:
-               PgLOG.pglog("{}/{}/{} GDEX/TDS/WEB records processed to add".format(i, tcnt, wcnt), PgLOG.WARNLG)
+               PgLOG.pglog("{}/{} GDEX/WEB records processed to add".format(i, wcnt), PgLOG.WARNLG)
 
             pgrec = PgUtil.onerecord(pgrecs, i)
             dsize = pgrec['bytes_sent']
             if not dsize: continue
             (year, quarter, date, time) = get_record_date_time(pgrec['date_completed'])
-            url = pgrec['dataset_file_file_access_point_uri']
-            if not url: url = pgrec['file_access_point_uri']
             ip = pgrec['remote_address']
             engine = pgrec['user_agent_name']
             wfile = pgrec['dataset_file_name']
@@ -926,11 +923,10 @@ def fill_gdex_usages(dsids, dranges):
                wrec = None
 
          if wrec: wcnt += add_webfile_usage(year, wrec)
-         atcnt += tcnt
          awcnt += wcnt
          allcnt += pgcnt
          rmsg = PgLOG.seconds_to_string_time(tm() - bt)
-         PgLOG.pglog("{}: {}/{} TDS/WEB usage records added for {} GDEX entries in {}".format(strids, atcnt, awcnt, allcnt, rmsg), PgLOG.LOGWRN)
+         PgLOG.pglog("{}: {} WEB usage records added for {} GDEX entries in {}".format(strids, awcnt, allcnt, rmsg), PgLOG.LOGWRN)
 
 def get_record_date_time(ctime):
 
