@@ -239,12 +239,14 @@ def fill_cdg_usages(dsids, dranges):
 
    allcnt = awcnt = atcnt = lcnt = 0
    for dates in dranges:
-      for dsid in dsids:
+      for adsid in dsids:
          lcnt += 1
-         dsname = dsid[0]
-         rdaids = dsid[1]
-         cdgids = dsid[2]
-         strids = dsid[3]
+         dsname = adsid[0]
+         rdaids = adsid[1]
+         getdsid = False if len(rdaids) == 1 else True
+         dsid = rdaids[0]
+         cdgids = adsid[2]
+         strids = adsid[3]
          bt = tm()
          pgrecs = get_dsid_records(cdgids, dates, strids)
          pgcnt = len(pgrecs['dataset_file_name']) if pgrecs else 0
@@ -262,6 +264,10 @@ def fill_cdg_usages(dsids, dranges):
                PgLOG.pglog("{}/{}/{} CDG/TDS/WEB records processed to add".format(i, tcnt, wcnt), PgLOG.WARNLG)
 
             pgrec = PgUtil.onerecord(pgrecs, i)
+            wfile = pgrec['dataset_file_name']
+            if not wfile:
+               wfile = pgrec['logic_file_name']
+               if not wfile: continue
             dsize = pgrec['bytes_sent']
             if not dsize: continue
             (year, quarter, date, time) = get_record_date_time(pgrec['date_completed'])
@@ -269,14 +275,13 @@ def fill_cdg_usages(dsids, dranges):
             if not url: url = pgrec['file_access_point_uri']
             ip = pgrec['remote_address']
             engine = pgrec['user_agent_name']
-            wfile = pgrec['dataset_file_name']
-            if not wfile: wfile = pgrec['logic_file_name']
-            wfrec = get_wfile_record(rdaids, wfile)
-            if not wfrec: continue
-            dsid = wfrec['dsid']
             ms = re.search(r'^https*://tds.ucar.edu/thredds/(\w+)/', url)
             if ms:
                # tds usage
+               if getdsid:
+                  wfrec = get_wfile_record(rdaids, wfile)
+                  if not wfrec: continue
+                  dsid = wfrec['dsid']
                method = ms.group(1)
                if pgrec['subset_file_size']:
                   etype = 'S'
@@ -303,6 +308,9 @@ def fill_cdg_usages(dsids, dranges):
                                  'region' : iprec['region'], 'email' : iprec['email']}
             else:
                # web usage
+               wfrec = get_wfile_record(rdaids, wfile)
+               if not wfrec: continue
+               if getdsid: dsid = wfrec['dsid']
                fsize = pgrec['dataset_file_size']
                if not fsize: fsize = pgrec['logic_file_size']
                method = 'CDG'
