@@ -129,11 +129,12 @@ def fill_osdf_usages(fnames):
             PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, cntadd), PgLOG.WARNLG)
 
          ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/(\S+)\].* \[Host:(\S+)\].* \[AppInfo:(\S+)\].* \[Read:(\d+)\]', line)
-         if not ms or ms.group(4) == 'N/A': continue
+         if not ms: continue
          dt = ms.group(1)
          dsid = ms.group(2)
          wfile = ms.group(3)
          ip = ms.group(4)
+         if ip == 'N/A': ip = '0.0.0.0'
          engine = ms.group(5)
          size = int(ms.group(6))
          (year, quarter, date, time) = get_record_date_time(dt)
