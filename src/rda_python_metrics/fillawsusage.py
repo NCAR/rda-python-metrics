@@ -25,13 +25,13 @@ from rda_python_common import PgDBI
 from . import PgIPInfo
 
 USAGE = {
-   'PGTBL'  : "wusage",
+   'PGTBL'  : "awsusage",
    'AWSDIR' : PgLOG.PGLOG["TRANSFER"] + "/AWSera5log",
    'AWSLOG' : "{}/{}-00-00-00-*",
    'PFMT'   : "YYYY/MM/DD"
 }
 
-DSIDS = {'nsf-ncar-era5' : PgUtil.format_dataset_id('d633000')}
+DSIDS = {'nsf-ncar-era5' : 'd633000'}
 
 #
 # main function to run this program
@@ -79,14 +79,14 @@ def main():
 #
 def get_log_file_names(option, params):
 
-   filenames = []
+   filenames = {}
    if option == 'd':
       for dt in params:
          pdate = PgUtil.format_date(dt)
          pd = PgUtil.format_date(pdate, USAGE['PFMT'])
          fname = USAGE['AWSLOG'].format(pd, pdate)
          fnames = glob.glob(fname)
-         if fnames: filenames.extend(sorted(fnames))
+         if fnames: filenames[pdate] = sorted(fnames)
    else:
       if option == 'N':
          edate = PgUtil.curdate()
@@ -97,11 +97,11 @@ def get_log_file_names(option, params):
             edate = PgUtil.format_date(params[1])
          else:
             edate = PgUtil.curdate()
-      while pdate <= edate:
+      while pdate < edate:
          pd = PgUtil.format_date(pdate, USAGE['PFMT'])
          fname = USAGE['AWSLOG'].format(pd, pdate)
          fnames = glob.glob(fname)
-         if fnames: filenames.extend(sorted(fnames))
+         if fnames: filenames[pdate] = sorted(fnames)
          pdate = PgUtil.adddate(pdate, 0, 0, 1)
 
    return filenames
@@ -109,72 +109,62 @@ def get_log_file_names(option, params):
 #
 # Fill AWS usages into table dssdb.awsusage of DSS PgSQL database from aws access logs
 #
-def fill_aws_usages(fnames):
+def fill_aws_usages(filenames):
 
-   cntall = addall = 0
-   fcnt = len(fnames)
-   for logfile in fnames:
-      if not op.isfile(logfile):
-         PgLOG.pglog("{}: Not exists for Gathering AWS usage".format(logfile), PgLOG.LOGWRN)
-         continue
-      PgLOG.pglog("Gathering usage info from {} at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
-      aws = PgFile.open_local_file(logfile)
-      if not aws: continue
-      ptime = ''
-      record = {}
+   year = cntall = addall = 0
+   for pdate in filenames:
+      fnames = filenames[pdate]
+      records = {}
       cntadd = entcnt = 0
-      pkey = None
-      while True:
-         line = aws.readline()
-         if not line: break
-         entcnt += 1
-         if entcnt%10000 == 0:
-            PgLOG.pglog("{}: {}/{} AWS log entries processed/records added".format(logfile, entcnt, cntadd), PgLOG.WARNLG)
-
-         ms = re.match(r'^\w+ ([\w-]+) \[(\S+).*\] ([\d\.]+) .+ REST\.GET\.OBJECT (\S+) "GET.+" (200|206) - (\d+) (\d+) .* ".+" "(.+)" ', line)
-         if not ms: continue
-         values = list(ms.groups())
-         if values[0] not in DSIDS: continue
-         dsid = DSIDS[values[0]]
-         size = int(values[5])
-         fsize = int(values[6])
-         if fsize < 100: continue  # ignore small files
-         ip = values[2]
-         wfile = values[3]
-         stat = values[4]
-         engine = values[7]
-         (year, quarter, date, time) = get_record_date_time(values[1])
-         locflag = 'A'
-
-         if re.match(r'^aiobotocore', engine, re.I):
-            method = "AIOBT"
-         elif re.match(r'^rclone', engine, re.I):
-            method = "RCLON"
-         elif re.match(r'^python', engine, re.I):
-            method = "PYTHN"
-         else:
-            method = "WEB"
-         
-         key = "{}:{}:{}".format(ip, dsid, wfile) if stat == '206' else None
-
-         if record:
-            if key == pkey:
-               record['size'] += size
-               continue
-            cntadd += add_file_usage(year, record)
-         record = {'ip' : ip, 'dsid' : dsid, 'wfile' : wfile, 'date' : date,
-                   'time' : time, 'quarter' : quarter, 'size' : size,
-                   'locflag' : locflag, 'method' : method}
-         pkey = key
-         if not pkey:
-            cntadd += add_file_usage(year, record)
-            record = None
-      if record: cntadd += add_file_usage(year, record)
-      aws.close()
+      for logfile in fnames:
+         if not op.isfile(logfile):
+            PgLOG.pglog("{}: Not exists for Gathering AWS usage".format(logfile), PgLOG.LOGWRN)
+            continue
+         PgLOG.pglog("Gathering AWS usage info from {} at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
+         aws = PgFile.open_local_file(logfile)
+         if not aws: continue
+         while True:
+            line = aws.readline()
+            if not line: break
+            entcnt += 1
+            if entcnt%20000 == 0:
+               dcnt = len(records)
+               PgLOG.pglog("{}: {}/{} AWS log entries processed/records to add".format(pdate, entcnt, dcnt), PgLOG.WARNLG)
+   
+            ms = re.match(r'^\w+ ([\w-]+) \[(\S+).*\] ([\d\.]+) .+ REST\.GET\.OBJECT \S+ "GET.+" \d+ - (\d+) \d+ .* ".+" "(.+)" ', line)
+            if not ms: continue
+            values = list(ms.groups())
+            if values[0] not in DSIDS: continue
+            dsid = DSIDS[values[0]]
+            size = int(values[3])
+            ip = values[2]
+            engine = values[4]
+            moff = engine.find('/')
+            if moff > 0:
+               if moff > 20: moff = 20
+               method = engine[0:moff].upper()
+            else:
+               method = "AWS"
+            key = "{}:{}:{}".format(ip, dsid, method)
+            if key in records:
+               records[key]['size'] += size
+               records[key]['fcount'] += 1
+            else:
+               (year, quarter, date, time) = get_record_date_time(values[1])
+               iprec =  PgIPInfo.get_missing_ipinfo(ip)
+               if not iprec: continue
+               records[key] = {'ip' : ip, 'dsid' : dsid, 'date' : date, 'time' : time, 'quarter' : quarter,
+                               'size' : size, 'fcount' : 1, 'method' : method, 'engine' : engine,
+                               'org_type' : iprec['org_type'], 'country' : iprec['country'],
+                               'region' : iprec['region'], 'email' : iprec['email']}
+         aws.close()
+      if records: cntadd = add_usage_records(records, year)
+      PgLOG.pglog("{}: {} AWS usage records added for {} entries at {}".format(pdate, cntadd, entcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
       cntall += entcnt
-      addall += cntadd
-      PgLOG.pglog("{} AWS usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
-
+      if cntadd:
+         addall += cntadd
+         if addall > cntadd:
+            PgLOG.pglog("{} AWS usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
 def get_record_date_time(ctime):
    
@@ -189,64 +179,29 @@ def get_record_date_time(ctime):
    else:
       PgLOG.pglog(ctime + ": Invalid date/time format", PgLOG.LGEREX)
 
-#
-# Fill usage of a single online data file into table dssdb.wusage of DSS PgSQL database
-#
-def add_file_usage(year, logrec):
+def add_usage_records(records, year):
 
-   pgrec = get_wfile_wid(logrec['dsid'], logrec['wfile'])
-   if not pgrec: return 0
+   cnt = 0
+   for key in records:
+      record = records[key]
+      cond = "date = '{}' AND time = '{}' AND ip = '{}' AND dsid = '{}'".format(record['date'], record['time'], record['ip'], record['dsid'])
+      if PgDBI.pgget(USAGE['PGTBL'], '', cond, PgLOG.LGEREX): continue
+      if add_to_allusage(year, record):
+         cnt += PgDBI.pgadd(USAGE['PGTBL'], record, PgLOG.LOGWRN)
 
-   table = "{}_{}".format(USAGE['PGTBL'], year)
-   cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
-   if PgDBI.pgget(table, "", cond, PgLOG.LOGWRN): return 0
+   return cnt
 
-   wurec =  PgIPInfo.get_wuser_record(logrec['ip'], logrec['date'])
-   if not wurec: return 0
-   record = {'wid' : pgrec['wid'], 'dsid' : pgrec['dsid']}
-   record['wuid_read'] = wurec['wuid']
-   record['date_read'] = logrec['date']
-   record['time_read'] = logrec['time']
-   record['size_read'] = logrec['size']
-   record['method'] = logrec['method']
-   record['locflag'] = logrec['locflag']
-   record['ip'] = logrec['ip']
-   record['quarter'] = logrec['quarter']
 
-   if add_to_allusage(year, logrec, wurec):
-      return PgDBI.add_yearly_wusage(year, record)
-   else:
-      return 0
+def add_to_allusage(year, pgrec):
 
-def add_to_allusage(year, logrec, wurec):
+   record = {'source' : 'A'}
+   flds = ['ip', 'dsid', 'date', 'time', 'quarter', 'size', 'method',
+           'org_type', 'country', 'region', 'email']
 
-   pgrec = {'email' : wurec['email'], 'org_type' : wurec['org_type'],
-            'country' : wurec['country'], 'region' : wurec['region']}
-   pgrec['dsid'] = logrec['dsid']
-   pgrec['date'] = logrec['date']
-   pgrec['quarter'] = logrec['quarter']
-   pgrec['time'] = logrec['time']
-   pgrec['size'] = logrec['size']
-   pgrec['method'] = logrec['method']
-   pgrec['ip'] = logrec['ip']
-   pgrec['source'] = 'A'
-   return PgDBI.add_yearly_allusage(year, pgrec)
+   for fld in flds:
+      record[fld] = pgrec[fld]
 
-#
-# return wfile.wid upon success, 0 otherwise
-#
-def get_wfile_wid(dsid, wfile):
-
-   dscond = "dsid = '{}' AND wfile = '{}'".format(dsid, wfile) 
-   pgrec = PgDBI.pgget("wfile", "*", dscond)
-
-   if not pgrec:
-      pgrec = PgDBI.pgget("wmove", "wid, dsid", dscond)
-      if pgrec:
-         pgrec = PgDBI.pgget("wfile", "*", "wid = {}".format(pgrec['wid']))
-         if pgrec: pgrec['dsid'] = dsid
-
-   return pgrec
+   return PgDBI.add_yearly_allusage(year, record)
 
 #
 # call main() to start program

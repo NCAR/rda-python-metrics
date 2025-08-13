@@ -1,6 +1,6 @@
 
  Retrieves usage information from OSDF Server logs under directory
-   /gpfs/fs1/collections/rda/work/zji/osdflogs/ to fill table 'wusage' in
+   /gpfs/fs1/collections/rda/work/zji/osdflogs/ to fill table 'osdfusage' in
    database 'dssdb'.
 
  Usage: fillosdfusage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
