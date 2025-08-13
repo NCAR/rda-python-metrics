@@ -2,19 +2,19 @@
  View usage information of OSDF Data Services from information
  stored in PostgreSQL database 'RDADB'.
 
- Usage: viewawsusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
-                     [-A RowLimit] [-c CountryCodes] [-d DateList] \
-                     [-D StartDate [EndDate]] [-e EMailList] -h \
-                     [-E StartNoticeDate [EndNoticeDate]] \
-                     [-i IPAddresses] [-I EmailIDList] \
-                     [-k RegionNames] [-m MonthList] [-M AccessMethods]  \
-                     [-N MinNumberRead [MaxNumberRead]] \
-                     [-o OrganizationTypes] \
-                     [-q QuaterList] [-s MinSize [MaxSize]] \
-                     [-S SpecialistLoginNames] [-t DatasetList] \
-                     [-T MinDataset [MaxDataset]] [-y YearList] \
-                     [-H Title] [-L Delimiter] [-U SizeUnit] \
-                     [-w] [-z] [> OutputFileName] [| lp -d PrinterName] 
+ Usage: viewosdfusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
+                      [-A RowLimit] [-c CountryCodes] [-d DateList] \
+                      [-D StartDate [EndDate]] [-e EMailList] -h \
+                      [-E StartNoticeDate [EndNoticeDate]] \
+                      [-i IPAddresses] [-I EmailIDList] \
+                      [-k RegionNames] [-m MonthList] [-M AccessMethods]  \
+                      [-N MinNumberRead [MaxNumberRead]] \
+                      [-o OrganizationTypes] \
+                      [-q QuaterList] [-s MinSize [MaxSize]] \
+                      [-S SpecialistLoginNames] [-t DatasetList] \
+                      [-T MinDataset [MaxDataset]] [-y YearList] \
+                      [-H Title] [-L Delimiter] [-U SizeUnit] \
+                      [-w] [-z] [> OutputFileName] [| lp -d PrinterName] 
 
       Specify [-C] ColumnNames, refer to Option -C section for detail
       description, and choose at least one of the condition options, -a, -c,
@@ -98,7 +98,7 @@
 
 
       Condition Options:
-      - Option -a, for all usage in table 'awsusage';
+      - Option -a, for all usage in table 'osdfusage';
 
       - Option -A, gives a row limit for querrying; 
 
@@ -175,16 +175,16 @@
       EMAIL(E), ORGTYPE(O), #READ(H), and MBREAD(B); ordered by ORGTYPE as
       ascending and MBREAD(B) as descending; the command line should be:
 
-         viewawsusage XEOHB -y 2005 -O Ob
+         viewosdfusage XEOHB -y 2005 -O Ob
 
       For usage by users not in Organization 'DDS', out of the file usage
       gathered above, the command line should be:
 
-         viewawsusage XEOHB -y 2005 -o ! DSS -O Ob
+         viewosdfusage XEOHB -y 2005 -o ! DSS -O Ob
 
-      To redirect the previous output to a file named awsusage.out:
+      To redirect the previous output to a file named osdfusage.out:
 
-         viewawsusage XEOHB -y 2005 ! DSS -O Ob > awsusage.out
+         viewosdfusage XEOHB -y 2005 ! DSS -O Ob > osdfusage.out
 
       Then you can view the file or print it as a report.
 
