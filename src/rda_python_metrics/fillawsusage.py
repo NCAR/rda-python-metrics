@@ -94,7 +94,7 @@ def get_log_file_names(option, params):
       else:
          pdate = PgUtil.format_date(params[0])
          if len(params) > 1:
-            edate = PgUtil.format_date(params[1])
+            edate = PgUtil.adddate(PgUtil.format_date(params[1]), 0, 0, 1)
          else:
             edate = PgUtil.curdate()
       while pdate < edate:
@@ -114,13 +114,14 @@ def fill_aws_usages(filenames):
    year = cntall = addall = 0
    for pdate in filenames:
       fnames = filenames[pdate]
+      fcnt = len(fnames)
+      PgLOG.pglog("{}: Gathering AWS usage info from {} log files at {}".format(pdate, fcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
       records = {}
       cntadd = entcnt = 0
       for logfile in fnames:
          if not op.isfile(logfile):
             PgLOG.pglog("{}: Not exists for Gathering AWS usage".format(logfile), PgLOG.LOGWRN)
             continue
-         PgLOG.pglog("Gathering AWS usage info from {} at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
          aws = PgFile.open_local_file(logfile)
          if not aws: continue
          while True:
