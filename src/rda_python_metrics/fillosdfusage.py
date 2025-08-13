@@ -22,7 +22,7 @@ from rda_python_common import PgSplit
 from . import PgIPInfo
 
 USAGE = {
-   'OSDFTBL'  : "wusage",
+   'OSDFTBL'  : "osdfusage",
    'OSDFDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/zji/osdflogs/",
    'OSDFGET' : 'wget -m -nH -np -nd https://pelicanplatform.org/pelican-access-logs/ncar-access-log/',
    'OSDFLOG' : "{}-cache.log",   # YYYY-MM-DD-cache.log
@@ -100,9 +100,7 @@ def get_log_file_names(option, params, datelimits):
 #
 def fill_osdf_usages(fnames):
 
-   cntall = addall = 0
-
-   fcnt = len(fnames)
+   year = cntall = addall = 0
    for logfile in fnames:
       linfo = PgFile.check_local_file(logfile)
       if not linfo:
@@ -119,46 +117,54 @@ def fill_osdf_usages(fnames):
       PgLOG.pglog("{}: Gathering OSDF usage at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
       osdf = PgFile.open_local_file(logfile)
       if not osdf: continue
+      records = {}
       cntadd = entcnt = 0
-      pkey = None
       while True:
          line = osdf.readline()
          if not line: break
          entcnt += 1
-         if entcnt%10000 == 0:
-            PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, cntadd), PgLOG.WARNLG)
+         if entcnt%20000 == 0:
+            cnt = len(records)
+            PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, cnt), PgLOG.WARNLG)
 
-         ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/(\S+)\].* \[Host:(\S+)\].* \[AppInfo:(\S+)\].* \[Read:(\d+)\]', line)
+         ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/\S+\].* \[Site:(\S+)\].* \[Host:(\S+)\].* \[AppInfo:(\S+)\].* \[Read:(\d+)\]', line)
          if not ms: continue
          dt = ms.group(1)
          dsid = ms.group(2)
-         wfile = ms.group(3)
+         site = ms.group(3)
          ip = ms.group(4)
          if ip == 'N/A': ip = '0.0.0.0'
          engine = ms.group(5)
          size = int(ms.group(6))
-         (year, quarter, date, time) = get_record_date_time(dt)
-         locflag = 'C'
-         if re.match(r'^curl', engine, re.I):
-            method = "CURL"
-         elif re.match(r'^wget', engine, re.I):
-            method = "WGET"
-         elif re.match(r'^python', engine, re.I):
-            method = "PYTHN"
-         elif re.match(r'^N/A', engine, re.I):
-            method = "N/A"
+         if re.match(r'^N/A', engine, re.I):
+            method = "OSDF"
          else:
-            method = "WEB"
-         method = "OSDF"
-
-         record = {'ip' : ip, 'dsid' : dsid, 'wfile' : wfile, 'date' : date,
-                   'time' : time, 'quarter' : quarter, 'size' : size,
-                   'locflag' : locflag, 'method' : method}
-         cntadd += add_file_usage(year, record)
+            moff = engine.find('/')
+            if moff > 0:
+               if moff > 20: moff = 20
+               method = engine[0:moff].upper()
+            else:
+               method = "OSDF"
+         key = "{}:{}:{}".format(ip, dsid, method)
+         if key in records:
+            records[key]['size'] += size
+            records[key]['fcount'] += 1
+         else:
+            (year, quarter, date, time) = get_record_date_time(dt)
+            iprec =  PgIPInfo.get_missing_ipinfo(ip)
+            if not iprec: continue
+            records[key] = {'ip' : ip, 'dsid' : dsid, 'date' : date, 'time' : time, 'quarter' : quarter,
+                            'size' : size, 'fcount' : 1, 'method' : method, 'engine' : engine,
+                            'org_type' : iprec['org_type'], 'country' : iprec['country'],
+                            'region' : iprec['region'], 'email' : iprec['email'], 'site' : site}
       osdf.close()
+      if records: cntadd = add_usage_records(records, year)
+      PgLOG.pglog("{}: {} OSDF usage records added for {} entries at {}".format(logfile, cntadd, cntent, PgLOG.current_datetime()), PgLOG.LOGWRN)
       cntall += entcnt
-      addall += cntadd
-      PgLOG.pglog("{} OSDF usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
+      if cntadd:
+         addall += cntadd
+         if addall > cntadd:
+            PgLOG.pglog("{} OSDF usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
 
 def get_record_date_time(ctime):
@@ -174,6 +180,30 @@ def get_record_date_time(ctime):
    else:
       PgLOG.pglog(ctime + ": Invalid date/time format", PgLOG.LGEREX)
 
+def add_usage_records(records, year):
+
+   cnt = 0
+   for key in records:
+      record = records[key]
+      cond = "date = '{}' AND time = '{}' AND ip = '{}' AND dsid = '{}'".format(record['date'], record['time'], record['ip'], record['dsid'])
+      if PgDBI.pgget(USAGE['OSDFTBL'], '', cond, PgLOG.LGEREX): continue
+      if add_to_allusage(year, record):
+         cnt += PgDBI.pgadd(USAGE['OSDFTBL'], record, PgLOG.LOGWRN)
+
+   return cnt
+
+def add_to_allusage(year, pgrec):
+
+   record = {'source' : 'P'}
+   flds = ['ip', 'dsid', 'date', 'time', 'quarter', 'size', 'method',
+           'org_type', 'country', 'region', 'email']
+
+   for fld in flds:
+      record[fld] = pgrec[fld]
+
+   return PgDBI.add_yearly_allusage(year, record)
+
+
 #
 # Fill usage of a single online data file into table dssdb.wusage of DSS PgSQL database
 #
@@ -184,7 +214,7 @@ def add_file_usage(year, logrec):
 
    table = "{}_{}".format(USAGE['OSDFTBL'], year)
    cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
-   if PgDBI.pgget(table, "", cond, PgLOG.LOGWRN): return 0
+   if PgDBI.pgget(SAGE['OSDFTBL'], "", cond, PgLOG.LOGWRN): return 0
 
    wurec =  PgIPInfo.get_wuser_record(logrec['ip'], logrec['date'])
    if not wurec: return 0

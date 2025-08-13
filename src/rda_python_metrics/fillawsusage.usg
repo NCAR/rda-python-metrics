@@ -1,6 +1,6 @@
 
  Retrieves usage information from AWS Server logs under directory
-   ../rda/transer/AWSera5log/ to fill table 'wusage' in database 'rdadb'.
+   ../rda/transer/AWSera5log/ to fill table 'awsusage' in database 'rdadb'.
 
  Usage: fillawsusage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
 
