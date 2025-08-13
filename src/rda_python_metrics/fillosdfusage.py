@@ -214,7 +214,7 @@ def add_file_usage(year, logrec):
 
    table = "{}_{}".format(USAGE['OSDFTBL'], year)
    cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
-   if PgDBI.pgget(SAGE['OSDFTBL'], "", cond, PgLOG.LOGWRN): return 0
+   if PgDBI.pgget(USAGE['OSDFTBL'], "", cond, PgLOG.LOGWRN): return 0
 
    wurec =  PgIPInfo.get_wuser_record(logrec['ip'], logrec['date'])
    if not wurec: return 0
