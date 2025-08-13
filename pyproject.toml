@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rda_python_metrics"
-version = "1.0.35"
+version = "1.0.36"
 authors = [
   { name="Zaihua Ji",  email="zji@ucar.edu" },
 ]
@@ -54,9 +54,11 @@ pythonpath = [
 "pgperson" = "rda_python_metrics.pgperson:main"
 "pgusername" = "rda_python_metrics.pgusername:main"
 "viewallusage" = "rda_python_metrics.viewallusage:main"
+"viewawsusage" = "rda_python_metrics.viewawsusage:main"
 "viewcheckusage" = "rda_python_metrics.viewcheckusage:main"
 "viewcodusage" = "rda_python_metrics.viewcodusage:main"
 "viewordusage" = "rda_python_metrics.viewordusage:main"
+"viewosdfusage" = "rda_python_metrics.viewosdfusage:main"
 "viewrqstusage" = "rda_python_metrics.viewrqstusage:main"
 "viewtdsusage" = "rda_python_metrics.viewtdsusage:main"
 "viewwebfile" = "rda_python_metrics.viewwebfile:main"

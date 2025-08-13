@@ -147,18 +147,14 @@ def fill_globus_usages(fnames, datelimits):
          locflag = 'O' if re.match(r'^https://stratus\.', sline) else 'G'
          idx = wfile.find('?')
          if idx > -1: wfile = wfile[:idx]
-
-         if re.match(r'^curl', engine, re.I):
-            method = "CURL"
-         elif re.match(r'^wget', engine, re.I):
-            method = "WGET"
-         elif re.match(r'^python', engine, re.I):
-            method = "PYTHN"
+         moff = engine.find('/')
+         if moff > 0:
+            if moff > 20: moff = 20
+            method = engine[0:moff].upper()
          else:
             method = "WEB"
 
          key = "{}:{}:{}".format(ip, dsid, wfile) if stat == '206' else None
-
          if record:
             if key == pkey:
                record['size'] += size
