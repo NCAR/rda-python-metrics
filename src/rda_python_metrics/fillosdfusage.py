@@ -185,7 +185,7 @@ def add_usage_records(records, year):
    cnt = 0
    for key in records:
       record = records[key]
-      cond = "date = '{}' AND time = '{}' AND ip = '{}' AND dsid = '{}'".format(record['date'], record['time'], record['ip'], record['dsid'])
+      cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(record['date'], record['time'], record['ip'])
       if PgDBI.pgget(USAGE['OSDFTBL'], '', cond, PgLOG.LGEREX): continue
       if add_to_allusage(year, record):
          cnt += PgDBI.pgadd(USAGE['OSDFTBL'], record, PgLOG.LOGWRN)
@@ -202,69 +202,6 @@ def add_to_allusage(year, pgrec):
       record[fld] = pgrec[fld]
 
    return PgDBI.add_yearly_allusage(year, record)
-
-
-#
-# Fill usage of a single online data file into table dssdb.wusage of DSS PgSQL database
-#
-def add_file_usage(year, logrec):
-
-   pgrec = get_wfile_wid(logrec['dsid'], logrec['wfile'])
-   if not pgrec: return 0
-
-   table = "{}_{}".format(USAGE['OSDFTBL'], year)
-   cond = "wid = {} AND method = '{}' AND date_read = '{}' AND time_read = '{}'".format(pgrec['wid'], logrec['method'], logrec['date'], logrec['time'])
-   if PgDBI.pgget(USAGE['OSDFTBL'], "", cond, PgLOG.LOGWRN): return 0
-
-   wurec =  PgIPInfo.get_wuser_record(logrec['ip'], logrec['date'])
-   if not wurec: return 0
-   record = {'wid' : pgrec['wid'], 'dsid' : pgrec['dsid']}
-   record['wuid_read'] = wurec['wuid']
-   record['date_read'] = logrec['date']
-   record['time_read'] = logrec['time']
-   record['size_read'] = logrec['size']
-   record['method'] = logrec['method']
-   record['locflag'] = logrec['locflag']
-   record['ip'] = logrec['ip']
-   record['quarter'] = logrec['quarter']
-
-   if add_to_allusage(year, logrec, wurec):
-      return PgDBI.add_yearly_wusage(year, record)
-   else:
-      return 0
-
-def add_to_allusage(year, logrec, wurec):
-
-   pgrec = {'email' : wurec['email'], 'org_type' : wurec['org_type'],
-            'country' : wurec['country'], 'region' : wurec['region']}
-   pgrec['dsid'] = logrec['dsid']
-   pgrec['date'] = logrec['date']
-   pgrec['quarter'] = logrec['quarter']
-   pgrec['time'] = logrec['time']
-   pgrec['size'] = logrec['size']
-   pgrec['method'] = logrec['method']
-   pgrec['ip'] = logrec['ip']
-   pgrec['source'] = 'P'
-   return PgDBI.add_yearly_allusage(year, pgrec)
-
-#
-# return wfile.wid upon success, 0 otherwise
-#
-def get_wfile_wid(dsid, wfile):
-
-   wfcond = "wfile = '{}'".format(wfile) 
-   pgrec = PgSplit.pgget_wfile(dsid, "*", wfcond)
-   if pgrec:
-      pgrec['dsid'] = dsid
-   else:
-      pgrec = PgDBI.pgget("wfile_delete", "*", "{} AND dsid = '{}'".format(wfcond, dsid))
-      if not pgrec:
-         pgrec = PgDBI.pgget("wmove", "wid, dsid", wfcond)
-         if pgrec:
-            pgrec = PgSplit.pgget_wfile(pgrec['dsid'], "*", "wid = {}".format(pgrec['wid']))
-            if pgrec: pgrec['dsid'] = dsid
-
-   return pgrec
 
 #
 # call main() to start program
