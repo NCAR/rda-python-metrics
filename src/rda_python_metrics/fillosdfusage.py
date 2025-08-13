@@ -124,8 +124,8 @@ def fill_osdf_usages(fnames):
          if not line: break
          entcnt += 1
          if entcnt%20000 == 0:
-            cnt = len(records)
-            PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, cnt), PgLOG.WARNLG)
+            dcnt = len(records)
+            PgLOG.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, dcnt), PgLOG.WARNLG)
 
          ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/\S+\].* \[Site:(\S+)\].* \[Host:(\S+)\].* \[AppInfo:(\S+)\].* \[Read:(\d+)\]', line)
          if not ms: continue
@@ -159,7 +159,7 @@ def fill_osdf_usages(fnames):
                             'region' : iprec['region'], 'email' : iprec['email'], 'site' : site}
       osdf.close()
       if records: cntadd = add_usage_records(records, year)
-      PgLOG.pglog("{}: {} OSDF usage records added for {} entries at {}".format(logfile, cntadd, cntent, PgLOG.current_datetime()), PgLOG.LOGWRN)
+      PgLOG.pglog("{}: {} OSDF usage records added for {} entries at {}".format(logfile, cntadd, entcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
       cntall += entcnt
       if cntadd:
          addall += cntadd

@@ -128,7 +128,7 @@ def fill_aws_usages(filenames):
             if not line: break
             entcnt += 1
             if entcnt%20000 == 0:
-               cnt = len(records)
+               dcnt = len(records)
                PgLOG.pglog("{}: {}/{} AWS log entries processed/records to add".format(pdate, entcnt, dcnt), PgLOG.WARNLG)
    
             ms = re.match(r'^\w+ ([\w-]+) \[(\S+).*\] ([\d\.]+) .+ REST\.GET\.OBJECT \S+ "GET.+" \d+ - (\d+) \d+ .* ".+" "(.+)" ', line)
@@ -159,7 +159,7 @@ def fill_aws_usages(filenames):
                                'region' : iprec['region'], 'email' : iprec['email']}
          aws.close()
       if records: cntadd = add_usage_records(records, year)
-      PgLOG.pglog("{}: {} AWS usage records added for {} entries at {}".format(pdate, cntadd, cntent, PgLOG.current_datetime()), PgLOG.LOGWRN)
+      PgLOG.pglog("{}: {} AWS usage records added for {} entries at {}".format(pdate, cntadd, entcnt, PgLOG.current_datetime()), PgLOG.LOGWRN)
       cntall += entcnt
       if cntadd:
          addall += cntadd
