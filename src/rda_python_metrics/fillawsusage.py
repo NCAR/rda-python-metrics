@@ -184,7 +184,7 @@ def add_usage_records(records, year):
    cnt = 0
    for key in records:
       record = records[key]
-      cond = "date = '{}' AND time = '{}' AND ip = '{}' AND dsid = '{}'".format(record['date'], record['time'], record['ip'], record['dsid'])
+      cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(record['date'], record['time'], record['ip'])
       if PgDBI.pgget(USAGE['PGTBL'], '', cond, PgLOG.LGEREX): continue
       if add_to_allusage(year, record):
          cnt += PgDBI.pgadd(USAGE['PGTBL'], record, PgLOG.LOGWRN)
