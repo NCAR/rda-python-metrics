@@ -330,12 +330,12 @@ def add_sublog_files(fext, sext, minsize = 0):
       sfile = "{}/{}".format(subname, afile)
       if minsize and PgFile.local_file_size(sfile, 1) < 1: continue
       PgLOG.pgsystem("echo '{}: {}' >> {}".format(bid, sfiles[afile], logfile), PgLOG.LGWNEX, 5+1024)
-      PgLOG.pgsystem("cat {} >> {}".format(sfile, logfile), PgLOG.LGWNEX, 5+1024)
-      PgFile.delete_local_file(sfile, PgLOG.LOGWRN)
-      acnt += 1
+      if PgLOG.pgsystem("cat {} >> {}".format(sfile, logfile), PgLOG.EMEROL, 5+1024):
+         PgFile.delete_local_file(sfile, PgLOG.LOGWRN)
+         acnt += 1
    if fcnt > 0:
       s = 's' if fcnt > 1 else ''
-      PgLOG.pglog("{}: {} of {} '{}' file{} appended at {}".format(logfile, acnt, fcnt, fext, s, PgLOG.current_datetime()), PgLOG.LOGWRN)
+      PgLOG.pglog("{}: {} of {} '{}' file{} appended at {}".format(logfile, acnt, fcnt, fext, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
 
    if minsize: PgLOG.PGLOG['MINSIZE'] = tmin
 
