@@ -300,6 +300,7 @@ def append_dssdb_sublog():
 #
 def add_sublog_files(fext, sext, minsize = 0):
 
+   cdate = PgUtil.curdate()
    subname = 'rdaqsub'
    pattern = r'^(\d+)\.'
    afiles = PgFile.local_glob("{}/*.{}".format(subname, fext), 3, PgLOG.LGWNEX)
@@ -314,22 +315,27 @@ def add_sublog_files(fext, sext, minsize = 0):
    for afile in afiles:
       fcnt += 1
       finfo = afiles[afile]
-      sfiles[op.basename(afile)] = "{} {} {}".format(finfo['date_modified'], finfo['time_modified'], finfo['logname'])
+      sfiles[op.basename(afile)] = [finfo['date_modified'], finfo['time_modified'], finfo['logname']]
 
    afiles = sorted(sfiles)
    logfile = "PBS_sublog.{}".format(sext)
    for afile in afiles:
+      ary = sfiles[afile]
       ms = re.match(pattern, afile)
       if ms:
          bid = int(ms.group(1))
-         if bid not in BIDS: BIDS[bid] = PgSIG.check_pbs_process(bid, afile)
+         if bid not in BIDS:
+            if PgUtil.diffdate(cdate, ary[1]) > 6:
+               BIDS[bid] = -1
+            else:
+               BIDS[bid] = PgSIG.check_pbs_process(bid, afile)
          if BIDS[bid] > 0: continue
       else:
          continue
 
       sfile = "{}/{}".format(subname, afile)
       if minsize and PgFile.local_file_size(sfile, 1) < 1: continue
-      PgLOG.pgsystem("echo '{}: {}' >> {}".format(bid, sfiles[afile], logfile), PgLOG.LGWNEX, 5+1024)
+      PgLOG.pgsystem("echo '{}: {} {} {}' >> {}".format(bid, ary[0], ary[1], ary[2], logfile), PgLOG.LGWNEX, 5+1024)
       if PgLOG.pgsystem("cat {} >> {}".format(sfile, logfile), PgLOG.EMEROL, 5+1024):
          PgFile.delete_local_file(sfile, PgLOG.LOGWRN)
          acnt += 1
