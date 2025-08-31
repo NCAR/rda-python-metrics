@@ -325,8 +325,8 @@ def add_sublog_files(fext, sext, minsize = 0):
       if ms:
          bid = int(ms.group(1))
          if bid not in BIDS:
-            if PgUtil.diffdate(cdate, ary[1]) > 6:
-               BIDS[bid] = -1
+            if PgUtil.diffdate(cdate, ary[0]) > 6:
+               BIDS[bid] = 0
             else:
                BIDS[bid] = PgSIG.check_pbs_process(bid, afile)
          if BIDS[bid] > 0: continue
