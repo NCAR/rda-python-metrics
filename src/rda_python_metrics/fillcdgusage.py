@@ -31,29 +31,28 @@ USAGE = {
 }
 
 DSIDS = {
-#   'ucar.cgd.cesm2.cam6.prescribed_sst_amip' : ['d651010'],
-#   'ucar.cgd.ccsm4.CLM_LAND_ONLY' : ['d651011'],
-#   'ucar.cgd.artmip' : ['d651012', 'd651016', 'd651017', 'd651018'],
-#   'tamip' : ['d651013'],
-#   'ucar.cgd.ccsm4.CLIVAR_LE' : ['d651014'],
-#   'ucar.cgd.cesm2.Gettelman_CESM2_ECS' : ['d651015'],
-#   'ucar.cgd.ccsm4.geomip.ssp5' : ['d651024'],
-#   'ucar.cgd.ccsm4.IOD-PACEMAKER' : ['d651021'],
-#   'ucar.cgd.ccsm4.past2k_transient' : ['651023'],
-#   'ucar.cgd.ccsm4.lowwarming' : ['d651025'],
-#   'ucar.cgd.ccsm4.CESM_CAM5_BGC_ME' : ['d651000'],
-#   'ucar.cgd.ccsm4.iTRACE' : ['d651022'],
-#   'ucar.cgd.ccsm4.so2_geoeng' : ['d651026'],
-#   'ucar.cgd.ccsm4.cesmLE' : ['d651027'],
-#   'ucar.cgd.ccsm4.CESM1-CAM5-DP' : ['d651028'],
-#   'ucar.cgd.ccsm4.amv_lens' : ['d651031'],
-#   'ucar.cgd.ccsm4.ATL-PACEMAKER' : ['d651032'],
-#   'ucar.cgd.ccsm4.pac-pacemaker' : ['d651033'],
-#   'ucar.cgd.ccsm4.SD-WACCM-X_v2.1' : ['d651034'],
-#   'ucar.cgd.ccsm4.amv_lens' : ['d651035'],
-#   'ucar.cgd.cesm2.cism_ismip6' : ['d651036'],
-#   'ucar.cgd.ccsm4.pliomip2' : ['d651037'],
-   # new added
+   'ucar.cgd.cesm2.cam6.prescribed_sst_amip' : ['d651010'],
+   'ucar.cgd.ccsm4.CLM_LAND_ONLY' : ['d651011'],
+   'ucar.cgd.artmip' : ['d651012', 'd651016', 'd651017', 'd651018'],
+   'tamip' : ['d651013'],
+   'ucar.cgd.ccsm4.CLIVAR_LE' : ['d651014'],
+   'ucar.cgd.cesm2.Gettelman_CESM2_ECS' : ['d651015'],
+   'ucar.cgd.ccsm4.geomip.ssp5' : ['d651024'],
+   'ucar.cgd.ccsm4.IOD-PACEMAKER' : ['d651021'],
+   'ucar.cgd.ccsm4.past2k_transient' : ['651023'],
+   'ucar.cgd.ccsm4.lowwarming' : ['d651025'],
+   'ucar.cgd.ccsm4.CESM_CAM5_BGC_ME' : ['d651000'],
+   'ucar.cgd.ccsm4.iTRACE' : ['d651022'],
+   'ucar.cgd.ccsm4.so2_geoeng' : ['d651026'],
+   'ucar.cgd.ccsm4.cesmLE' : ['d651027'],
+   'ucar.cgd.ccsm4.CESM1-CAM5-DP' : ['d651028'],
+   'ucar.cgd.ccsm4.amv_lens' : ['d651031'],
+   'ucar.cgd.ccsm4.ATL-PACEMAKER' : ['d651032'],
+   'ucar.cgd.ccsm4.pac-pacemaker' : ['d651033'],
+   'ucar.cgd.ccsm4.SD-WACCM-X_v2.1' : ['d651034'],
+   'ucar.cgd.ccsm4.amv_lens' : ['d651035'],
+   'ucar.cgd.cesm2.cism_ismip6' : ['d651036'],
+   'ucar.cgd.ccsm4.pliomip2' : ['d651037'],
    'ucar.cgd.cesm2-waccm.s2s_hindcasts': ['d651040'],
    'ucar.cgd.CESM1.3_SH_storm_tracks': ['d651044'],
    'ucar.cgd.cesm2.waccm6.ssp245': ['d651045'],
@@ -67,13 +66,12 @@ DSIDS = {
    'ucar.cgd.ccsm4.PaleoIF' : ['d651052'],
    'ucar.cgd.ccsm4.b.e11.B20LE_fixedO3' : ['d651053'],
    'ucar.cgd.cesm2.single.forcing.large.ensemble' : ['d651055'],
-   'ucar.cgd.cesm2le.output': ['d651056'],    # 2025-01 done
+   'ucar.cgd.cesm2le.output': ['d651056'],
    'ucar.cgd.ccsm4.ARISE-SAI-1.5' : ['d651059'],
    'ucar.cgd.cesm2.s2s_hindcasts': ['d651060'],
    'ucar.cgd.cesm2.s2s_hindcasts.mjo': ['d651061'],
    'ucar.cgd.cesm2.s2s_hindcasts.tc_tracks': ['d651062'],
    'ucar.cgd.cesm2.s2s_hindcasts.cesm2.climo': ['d651063'],
-   #add 2025-08-06
    'ucar.cgd.ccsm4.cesmLME' : ['d651058'],
    'ucar.cgd.ccsm4.GLENS' : ['d651064'],
    'ucar.cgd.ccsm4.CESM2-CISM2-LIGtransient' : ['d651066'],
@@ -85,8 +83,8 @@ DSIDS = {
    'ucar.cgd.cesm1.cldmod': ['d651069'],
    'ucar.cgd.cesm2.marine.biogeochemistry': ['d651071'],
    'ucar.cgd.nw2.mom6': ['d651072'],
-#   'ucar.cgd.cesm2.smyle': ['d651065'],  # not done util the end of Aug.
-   
+   'ucar.cgd.cesm2.cam6.ppe': ['d651076'],
+   'ucar.cgd.cesm2.smyle': ['d651065']
 }
 
 ALLIDS = list(DSIDS.keys())

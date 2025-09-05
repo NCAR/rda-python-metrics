@@ -144,8 +144,7 @@ def send_email_notice():
          if receiver: receiver += ', '
          receiver += (logname + "@ucar.edu")
 
-      ret = PgLOG.send_email("RDADB Weekly Data Usage Gathered on " + PgUtil.curdate(), receiver, msg)
-      if ret: PgLOG.pglog(ret, PgLOG.LOGWRN)
+      PgLOG.send_email("RDADB Weekly Data Usage Gathered on " + PgUtil.curdate(), receiver, msg)
 
 #
 # call main() to start program
