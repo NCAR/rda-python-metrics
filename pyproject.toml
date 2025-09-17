@@ -45,6 +45,7 @@ pythonpath = [
 "fillendtime" = "rda_python_metrics.fillendtime:main"
 "fillglobususage" = "rda_python_metrics.fillglobususage:main"
 "fillgdexusage" = "rda_python_metrics.fillgdexusage:main"
+"fillzenodousage" = "rda_python_metrics.fillzenodousage:main"
 "fillipinfo" = "rda_python_metrics.fillipinfo:main"
 "filloneorder" = "rda_python_metrics.filloneorder:main"
 "fillosdfusage" = "rda_python_metrics.fillosdfusage:main"
