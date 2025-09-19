@@ -2,11 +2,11 @@
 #
 ###############################################################################
 #
-#     Title : fillgdexusage
+#     Title : fillzenodousage
 #    Author : Zaihua Ji,  zji@ucar.edu
 #      Date : 2025-04-14
-#   Purpose : python program to retrieve info from ZENODO Postgres database for GDS 
-#             file accesses and backup fill table tdsusage in PostgreSQL database dssdb.
+#   Purpose : python program to retrieve info from GDEX Postgres database for GDEX 
+#             file accesses and backup fill table gdexzenodo in PostgreSQL database dssdb.
 # 
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 #
@@ -187,17 +187,17 @@ def main():
          PgLOG.pglog(arg + ": Value passed in without leading option", PgLOG.LGWNEX)
 
    if not opt:
-      PgLOG.show_usage('fillgdexusage')
+      PgLOG.show_usage('fillzenodousage')
    elif 's' not in params:
       PgLOG.pglog("-s: Missing dataset short name to gather ZENODO metrics", PgLOG.LGWNEX)
    elif len(params) < 2:
       PgLOG.pglog("-(m|N|y): Missing Month, NumberDays or Year to gather ZENODO metrics", PgLOG.LGWNEX)
       
    
-   PgLOG.cmdlog("fillgdexusage {}".format(' '.join(argv)))
+   PgLOG.cmdlog("fillzenodousage {}".format(' '.join(argv)))
    dranges = get_date_ranges(params)
    dsids = get_dataset_ids(params['s'])
-   if dranges and dsids: fill_gdex_usages(dsids, dranges)
+   if dranges and dsids: fill_zenodo_usages(dsids, dranges)
    PgLOG.pglog(None, PgLOG.LOGWRN|PgLOG.SNDEML)  # send email out if any
 
    sys.exit(0)
@@ -306,7 +306,7 @@ def get_dsid_records(gdexids, dates, strids):
 #
 # Fill ZND usages into table dssdb.tdsusage from gdex access records
 #
-def fill_gdex_usages(dsids, dranges):
+def fill_zenodo_usages(dsids, dranges):
 
    allcnt = awcnt = azcnt = lcnt = 0
    for dates in dranges:
@@ -359,7 +359,7 @@ def fill_gdex_usages(dsids, dranges):
                   zcnt += add_zusage_records(zrecs, cdate)
                   zrecs = {}
                cdate = date
-            zkey = "{}:{}:{}:{}".format(ip, zndid, method)
+            zkey = "{}:{}:{}".format(ip, zndid, method)
             if zkey in zrecs:
                zrecs[zkey]['size'] += dsize
                zrecs[zkey]['fcount'] += 1

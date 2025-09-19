@@ -31,6 +31,8 @@ USAGE = {
 }
 
 DSIDS = {
+   'pi_cesm2_atm_river_analysis' : ['d010073'],
+   'na-cordex' : ['d316009'],
    'ucar.cgd.cesm2.cam6.prescribed_sst_amip' : ['d651010'],
    'ucar.cgd.ccsm4.CLM_LAND_ONLY' : ['d651011'],
    'ucar.cgd.artmip' : ['d651012', 'd651016', 'd651017', 'd651018'],
