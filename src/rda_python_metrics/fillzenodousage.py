@@ -250,7 +250,7 @@ def recursive_dataset_ids(pgdexid, gdexids):
    ccnt = 0
    for gdexid in pgrecs['id']:
       if gdexid in gdexids: continue
-      gdexids.append(zenodoid)
+      gdexids.append(gdexid)
       ccnt += 1
       ccnt += recursive_dataset_ids(gdexid, gdexids)
 
