@@ -262,7 +262,7 @@ def archive_dssdb_log():
       if(not info or info['data_size'] < 10000): continue   # skip log files small than 10KB
 
       PgLOG.pgsystem("cp -p -f {} backup/{}".format(file, file), PgLOG.LWEMEX, 5)
-      if info['logname'] != PgLOG.PGLOG['RDAUSER']: PgLOG.pgsystem("rm -rf " + file)
+      if info['logname'] != PgLOG.PGLOG['GDEXUSER']: PgLOG.pgsystem("rm -rf " + file)
       PgLOG.pgsystem("cat /dev/null > " + file, 0, 1024)
       if op.exists(logfile):
          PgLOG.pgsystem("tar -uvf {} -C backup {}".format(logfile, file), PgLOG.LWEMEX, 5)
