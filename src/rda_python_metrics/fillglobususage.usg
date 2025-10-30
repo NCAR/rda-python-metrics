@@ -3,13 +3,15 @@
    /gpfs/fs1/collections/rda/work/logs/gridftp/ to fill table 'wusage' in
    database 'rdadb'.
 
- Usage: fillglobususage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
+ Usage: fillglobususage [-b] [-d LogFileDates] [-f LogFileNames] [-N NumberDay] [-p BeginDate [Enddate]]
 
-      select option, -d, -N or -p to run this application.
+      select option, -d, -f, -N or -p to run this application.
 
       - Option -b, log process information into logfile only;
 
       - Option -d, retrieve usage info from given log file dates; 
+
+      - Option -f, retrieve usage info from given log file names; 
 
       - Option -N, retrieve usage info in recent NumberDay days;
 
