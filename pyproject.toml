@@ -25,7 +25,8 @@ dependencies = [
   "geoip2",
   "ipinfo",
   "httplib2",
-  "dnspython"
+  "dnspython",
+  "unidecode"
 ]
 
 [tool.pytest.ini_options]
