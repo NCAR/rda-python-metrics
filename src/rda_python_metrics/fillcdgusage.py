@@ -86,7 +86,12 @@ DSIDS = {
    'ucar.cgd.cesm2.marine.biogeochemistry': ['d651071'],
    'ucar.cgd.nw2.mom6': ['d651072'],
    'ucar.cgd.cesm2.cam6.ppe': ['d651076'],
-   'ucar.cgd.cesm2.smyle': ['d651065']
+   'ucar.cgd.cesm2.smyle': ['d651065'],
+# new added
+   'gridded_precip_and_temp' : ['d010078'],
+   '29_newman' : ['d010079'],
+   'waccm-x.ion.asymmetry' : ['d010081'],
+   'NARCCAP' : ['d316015']   
 }
 
 ALLIDS = list(DSIDS.keys())

@@ -43,7 +43,7 @@ def main():
    
 
    for arg in argv:
-      ms = re.match(r'^-(b|d|p|N)$', arg)
+      ms = re.match(r'^-(b|d|f|p|N)$', arg)
       if ms:
          opt = ms.group(1)
          if opt == 'b':
@@ -80,7 +80,9 @@ def main():
 def get_log_file_names(option, params, datelimits):
 
    filenames = []
-   if option == 'd':
+   if option == 'f':
+      filenames = params
+   elif option == 'd':
       for pdate in params:
          fdate = PgUtil.format_date(pdate, 'MMDDYYYY')
          fname = USAGE['GBSLOG'].format('?', fdate)
