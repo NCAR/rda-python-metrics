@@ -23,7 +23,7 @@ from . import PgIPInfo
 
 USAGE = {
    'OSDFTBL'  : "osdfusage",
-   'OSDFDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/zji/osdflogs/",
+   'OSDFDIR' : PgLOG.PGLOG["GDEXWORK"] + "/zji/osdflogs/",
    'OSDFGET' : 'wget -m -nH -np -nd https://pelicanplatform.org/pelican-access-logs/ncar-access-log/',
    'OSDFLOG' : "{}-cache.log",   # YYYY-MM-DD-cache.log
 }
