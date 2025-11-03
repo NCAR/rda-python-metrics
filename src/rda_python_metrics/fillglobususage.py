@@ -27,7 +27,7 @@ from . import PgIPInfo
 
 USAGE = {
    'PGTBL'  : "wusage",
-   'GBSDIR' : PgLOG.PGLOG["DSSDATA"] + "/work/logs/gridftp/",
+   'GBSDIR' : PgLOG.PGLOG["GDEXWORK"] + "/logs/gridftp/",
    'GBSLOG' : "access_log_gridftp0{}_{}",
 }
 
