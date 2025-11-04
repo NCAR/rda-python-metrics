@@ -163,7 +163,7 @@ def fill_tds_usages(fnames):
             records[key] = {'ip' : ip, 'email' : email, 'dsid' : dsid, 'time' : time, 'size' : size,
                            'fcount' : 1, 'method' : method, 'etype' : etype, 'engine' : engine}
       tds.close()
-      if records: cntadd += add_usage_records(records, fdate)
+      if records: cntadd += add_usage_records(records, date)
       cntall += entcnt
 
    PgLOG.pglog("{} TDS usage records added for {} entries at {}".format(cntadd, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
