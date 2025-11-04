@@ -34,7 +34,9 @@ USAGE = {
    'OPTION' : 0,
    'PGTBL'  : "tdsusage",
    'TDSLOG' : "/data/logs/nginx/{}.access.log",
-   'CDATE' : PgUtil.curdate()
+   'TDSDIR' : PgLOG.PGLOG["GDEXWORK"] + "/zji/tdslogs/",
+   'TDSGET' : 'wget -m -nH -np -nd https://github.com/NCAR/tds-logs/blob/3ffb86d54aa8a164bbd60995247dc1a7e50813b6/logs/',
+   'TDSLOG' : "localhost_access_log.{}.txt"   # {} = YYYY-MM-DD
 }
 
 #
@@ -44,120 +46,125 @@ def main():
 
    params = []  # array of input values
    argv = sys.argv[1:]
-   datelimit = ''
-   fixrec = False
-   
+   option = None
+   datelimits = [None, None]
+
    for arg in argv:
-      if arg == "-b":
-         PgLOG.PGLOG['BCKGRND'] = 1
-      elif arg == "-f":
-         fixrec = True
-      elif re.match(r'^-[mNy]$', arg) and USAGE['OPTION'] == 0:
-         if arg == "-m":
-            USAGE['OPTION'] = MONTH
-         elif arg == "-y":
-            USAGE['OPTION'] = YEARS
-         elif arg == "-N":
-            USAGE['OPTION'] = NDAYS
+      ms = re.match(r'^-(b|d|p|N)$', arg)
+      if ms:
+         opt = ms.group(1)
+         if opt == 'b':
+            PgLOG.PGLOG['BCKGRND'] = 1
+         elif option:
+            PgLOG.pglog("{}: Option -{} is present already".format(arg, option), PgLOG.LGWNEX)
+         else:
+            option = opt
       elif re.match(r'^-', arg):
          PgLOG.pglog(arg + ": Invalid Option", PgLOG.LGWNEX)
-      elif USAGE['OPTION']&MASKS:
+      elif option:
          params.append(arg)
       else:
          PgLOG.pglog(arg + ": Invalid Parameter", PgLOG.LGWNEX)
    
-   if not (USAGE['OPTION'] and params): PgLOG.show_usage('filltdsusage')
+   if not (option and params): PgLOG.show_usage('filltdsusage')
+
    PgDBI.dssdb_dbname()
-   PgLOG.cmdlog("filltdsusage {}".format(' '.join(argv)))
-
-   if fixrec:
-      fix_tds_usages(USAGE['OPTION'], params)
+   cmdstr = "filltdsusage {}".format(' '.join(argv))
+   PgLOG.cmdlog(cmdstr)
+   PgFile.change_local_directory(USAGE['TDSDIR'])
+   filenames = get_log_file_names(option, params, datelimits)
+   if filenames:
+      fill_tds_usages(filenames)
    else:
-      if USAGE['OPTION']&NDAYS:
-         curdate = USAGE['CDATE']
-         datelimit = PgUtil.adddate(curdate, 0, 0, -int(params[0]))  
-         USAGE['OPTION'] = MONTH
-         params = []
-         
-         while curdate >= datelimit:
-            tms = curdate.split('-')
-            params.append("{}-{}".format(tms[0], tms[1]))
-            curdate = PgUtil.adddate(curdate, 0, 0, -int(tms[2]))
-   
-      fill_tds_usages(USAGE['OPTION'], params, datelimit)
+      PgLOG.pglog("No log file found for given command: " + cmdstr, PgLOG.LOGWRN)
 
-   PgLOG.pglog(None, PgLOG.LOGWRN|PgLOG.SNDEML)  # send email out if any
-
+   PgLOG.pglog(None, PgLOG.LOGWRN)
    sys.exit(0)
+
+#
+# get the log file dates 
+#
+def get_log_file_names(option, params, datelimits):
+
+   filenames = []
+   if option == 'd':
+      for pdate in params:
+         filenames.append(USAGE['TDSLOG'].format(pdate))
+   else:
+      if option == 'N':
+         edate = PgUtil.curdate()
+         pdate = datelimits[0] = PgUtil.adddate(edate, 0, 0, -int(params[0]))
+      else:
+         pdate = datelimits[0] = params[0]
+         if len(params) > 1:
+            edate = datelimits[1] = params[1]
+         else:
+            edate = PgUtil.curdate()
+      while pdate <= edate:
+         filenames.append(USAGE['TDSLOG'].format(pdate))
+         pdate = PgUtil.adddate(pdate, 0, 0, 1)
+
+   return filenames
 
 #
 # Fill TDS usages into table dssdb.tdsusage from tds access logs
 #
-def fill_tds_usages(option, inputs, datelimit):
+def fill_tds_usages(fnames):
 
-   cntall = cntadd = 0
-
-   for input in inputs:
-      # get log file names
-      if option&MONTH:
-         tms = input.split('-')
-         yrmn = "{}-{:02}".format(tms[0], int(tms[1]))
-      else:
-         yrmn = input
-
-      logfiles = glob.glob(USAGE['TDSLOG'].format(yrmn + '*'))
-      if not logfiles: PgLOG.pglog("{}: No file found to gather TDS usage".format(yrmn), PgLOG.LOGWRN)
-      for logfile in logfiles:
-         if not op.isfile(logfile):
-            PgLOG.pglog("{}: Not exists to gather TDS usage".format(logfile), PgLOG.LOGWRN)
+   year = cntall = addall = 0
+   for logfile in fnames:
+      linfo = PgFile.check_local_file(logfile)
+      if not linfo:
+         gzfile = logfile + '.gz'
+         PgLOG.pgsystem(USAGE['TDSGET'] + gzfile, 5, PgLOG.LOGWRN)
+         linfo = PgFile.check_local_file(gzfile)
+         if not linfo:
+            PgLOG.pglog("{}: Not exists for Gathering TDS usage".format(gzfile), PgLOG.LOGWRN)
             continue
-         fdate = None
-         ms = re.search(r'(\d+-\d+-\d+).access.log$', logfile)
-         if ms:
-            fdate = ms.group(1)
-            if fdate >= USAGE['CDATE']: continue
-            if datelimit and fdate < datelimit: continue
-         PgLOG.pglog("Gathering usage info from {} at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
-         tds = PgFile.open_local_file(logfile)
-         if not tds: continue
-         ptime = ''
-         records = {}
-         entcnt = 0
-         while True:
-            line = tds.readline()
-            if not line: break
-            entcnt += 1
-            if entcnt%20000 == 0:
-               cnt = len(records)
-               PgLOG.pglog("{}/{} TDS log entries processed/records to add".format(entcnt, cnt), PgLOG.WARNLG)
+         PgFile.compress_local_file(gzfile)
+         linfo = PgFile.check_local_file(logfile)
+         if not linfo:
+            PgLOG.pglog("{}: Error ungzip TDS usage".format(xzfile), PgLOG.LGEREX)
+      PgLOG.pglog("{}: Gathering TDS usage at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
+      tds = PgFile.open_local_file(logfile)
+      if not tds: continue
+      records = {}
+      cntadd = entcnt = 0
+      while True:
+         line = tds.readline()
+         if not line: break
+         entcnt += 1
+         if entcnt%20000 == 0:
+            cnt = len(records)
+            PgLOG.pglog("{}/{} TDS log entries processed/records to add".format(entcnt, cnt), PgLOG.WARNLG)
 
-            ms = re.search(r'(/thredds/catalog|\sGooglebot/)', line)
-            if ms: continue
-            ms = re.search(r'/thredds/\S+\.(png|jpg|gif|css|htm)', line)
-            if ms: continue
-            ms = re.match(r'^([\d\.]+)\s.*\s(-|\S+@\S+)\s+\[(\S+).*/thredds/(\w+)(/|/grid/)(aggregations|files).*/(ds\d\d\d.\d|[a-z]\d{6})/.*\s200\s+(\d+)(.*)$', line)
-            if not ms: continue
-            ip = ms.group(1)
-            email = ms.group(2)
-            (date, time) = get_record_date_time(ms.group(3))
-            method = ms.group(4)
-            etype = ms.group(6)[0].upper()
-            dsid = PgUtil.format_dataset_id(ms.group(7))
-            size = int(ms.group(8))
-            ebuf = ms.group(9)
-            ms = re.search(r' "(\w+.*\S+)" ', ebuf)
-            engine = ms.group(1) if ms else 'Unknown'
-            key = "{}:{}:{}:{}".format(ip, dsid, method, etype)
+         ms = re.search(r'(/thredds/catalog|\sGooglebot/)', line)
+         if ms: continue
+         ms = re.search(r'/thredds/\S+\.(png|jpg|gif|css|htm)', line)
+         if ms: continue
+         ms = re.match(r'^([\d\.]+)\s.*\s(-|\S+@\S+)\s+\[(\S+).*/thredds/(\w+)(/|/grid/)(aggregations|files).*/(ds\d\d\d.\d|[a-z]\d{6})/.*\s200\s+(\d+)(.*)$', line)
+         if not ms: continue
+         ip = ms.group(1)
+         email = ms.group(2)
+         (date, time) = get_record_date_time(ms.group(3))
+         method = ms.group(4)
+         etype = ms.group(6)[0].upper()
+         dsid = PgUtil.format_dataset_id(ms.group(7))
+         size = int(ms.group(8))
+         ebuf = ms.group(9)
+         ms = re.search(r' "(\w+.*\S+)" ', ebuf)
+         engine = ms.group(1) if ms else 'Unknown'
+         key = "{}:{}:{}:{}".format(ip, dsid, method, etype)
 
-            if key in records:
-               records[key]['size'] += size
-               records[key]['fcount'] += 1
-            else:
-               records[key] = {'ip' : ip, 'email' : email, 'dsid' : dsid, 'time' : time, 'size' : size,
-                              'fcount' : 1, 'method' : method, 'etype' : etype, 'engine' : engine}
-         tds.close()
-         if records: cntadd += add_usage_records(records, fdate)
-         cntall += entcnt
+         if key in records:
+            records[key]['size'] += size
+            records[key]['fcount'] += 1
+         else:
+            records[key] = {'ip' : ip, 'email' : email, 'dsid' : dsid, 'time' : time, 'size' : size,
+                           'fcount' : 1, 'method' : method, 'etype' : etype, 'engine' : engine}
+      tds.close()
+      if records: cntadd += add_usage_records(records, fdate)
+      cntall += entcnt
 
    PgLOG.pglog("{} TDS usage records added for {} entries at {}".format(cntadd, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
 

@@ -1,17 +1,16 @@
 
- Retrieves usage information from RDA TDS Server logs under ../logs/tomcat to
+ Retrieves usage information from RDA TDS Server logs on github to
    fill table 'tdsusage' in MySQL database 'dssdb'.
 
- Usage: filltdsusage [-b] [-m MonthList] [-N NumberDay] [-y YearList]
+ Usage: filltdsusage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
 
-      select one of the options, -m, -N or -y each time to run
-        this application. 
+      select option, -d, -N or -p to run this application.
 
       - Option -b, log process information into logfile only;
 
-      - Option -m, retrieve usage info in given months; 
+      - Option -d, retrieve usage info from given log file dates; 
 
       - Option -N, retrieve usage info in recent NumberDay days;
 
-      - Option -y, retrieve usage info in given years. 
-
+      - Option -p, retrieve usage info between given period. For missing EndDate,
+          it defaults to the current date.
