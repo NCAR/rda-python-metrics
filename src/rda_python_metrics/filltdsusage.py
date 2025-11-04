@@ -124,7 +124,7 @@ def fill_tds_usages(fnames):
          PgFile.compress_local_file(gzfile)
          linfo = PgFile.check_local_file(logfile)
          if not linfo:
-            PgLOG.pglog("{}: Error ungzip TDS usage".format(xzfile), PgLOG.LGEREX)
+            PgLOG.pglog("{}: Error ungzip TDS usage".format(gzfile), PgLOG.LGEREX)
       PgLOG.pglog("{}: Gathering TDS usage at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
       tds = PgFile.open_local_file(logfile)
       if not tds: continue
