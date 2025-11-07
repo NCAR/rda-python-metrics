@@ -33,9 +33,10 @@ MASKS = (MONTH|YEARS|NDAYS)
 USAGE = {
    'OPTION' : 0,
    'PGTBL'  : "tdsusage",
-   'TDSLOG' : "/data/logs/nginx/{}.access.log",
-   'TDSDIR' : PgLOG.PGLOG["GDEXWORK"] + "/zji/tdslogs/",
-   'TDSGET' : 'wget -m -nH -np -nd https://github.com/NCAR/tds-logs/blob/3ffb86d54aa8a164bbd60995247dc1a7e50813b6/logs/',
+   'GITDIR' : PgLOG.PGLOG["GDEXWORK"] + "/zji/tdslogs/tds-logs",
+   'GITGET' : 'git pull',
+   'TDSDIR' : PgLOG.PGLOG["GDEXWORK"] + "/zji/tdslogs/work",
+   'TDSGET' : 'gunzip -c ../tds-logs/logs/{} > {}',
    'TDSLOG' : "localhost_access_log.{}.txt"   # {} = YYYY-MM-DD
 }
 
@@ -68,6 +69,7 @@ def main():
    
    if not (option and params): PgLOG.show_usage('filltdsusage')
 
+   pull_github_repo()
    PgDBI.dssdb_dbname()
    cmdstr = "filltdsusage {}".format(' '.join(argv))
    PgLOG.cmdlog(cmdstr)
@@ -107,24 +109,30 @@ def get_log_file_names(option, params, datelimits):
    return filenames
 
 #
+# git pull the github repo
+#
+def pull_github_repo():
+
+   PgFile.change_local_directory(USAGE['GITDIR'])
+   PgLOG.pgsystem(USAGE['GITGET'], 5, PgLOG.LOGWRN)
+
+#
 # Fill TDS usages into table dssdb.tdsusage from tds access logs
 #
 def fill_tds_usages(fnames):
 
    year = cntall = addall = 0
    for logfile in fnames:
+      gzfile = logfile + '.gz'
+      PgLOG.pgsystem(USAGE['TDSGET'].format(gzfile, logfile), 5, PgLOG.LOGWRN)
+      linfo = PgFile.check_local_file(gzfile)
+      if not linfo:
+         PgLOG.pglog("{}: Not exists for Gathering TDS usage".format(gzfile), PgLOG.LOGWRN)
+         continue
+      PgFile.compress_local_file(gzfile)
       linfo = PgFile.check_local_file(logfile)
       if not linfo:
-         gzfile = logfile + '.gz'
-         PgLOG.pgsystem(USAGE['TDSGET'] + gzfile, 5, PgLOG.LOGWRN)
-         linfo = PgFile.check_local_file(gzfile)
-         if not linfo:
-            PgLOG.pglog("{}: Not exists for Gathering TDS usage".format(gzfile), PgLOG.LOGWRN)
-            continue
-         PgFile.compress_local_file(gzfile)
-         linfo = PgFile.check_local_file(logfile)
-         if not linfo:
-            PgLOG.pglog("{}: Error ungzip TDS usage".format(gzfile), PgLOG.LGEREX)
+         PgLOG.pglog("{}: Error gunzip TDS usage".format(gzfile), PgLOG.LGEREX)
       PgLOG.pglog("{}: Gathering TDS usage at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
       tds = PgFile.open_local_file(logfile)
       if not tds: continue
@@ -166,7 +174,7 @@ def fill_tds_usages(fnames):
       if records: cntadd += add_usage_records(records, date)
       cntall += entcnt
 
-   PgLOG.pglog("{} TDS usage records added for {} entries at {}".format(cntadd, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
+   PgLOG.pglog("{} TDS usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
 
 def get_record_date_time(ctime):
