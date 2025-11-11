@@ -164,8 +164,8 @@ def fill_tds_usages(fnames):
          ebuf = ms.group(9)
          ms = re.search(r' "(\w+.*\S+)" ', ebuf)
          engine = ms.group(1) if ms else 'Unknown'
-         iprec = PGIPInfo.set_ipinfo(ip)
-         if not iprec: conitnue
+         iprec = PgIPInfo.set_ipinfo(ip)
+         if not iprec: continue
          ip = iprec['ip']
          key = "{}:{}:{}:{}".format(ip, dsid, method, etype)
 
