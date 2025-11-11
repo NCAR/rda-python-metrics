@@ -124,15 +124,17 @@ def fill_tds_usages(fnames):
 
    year = cntall = addall = 0
    for logfile in fnames:
-      gzfile = USAGE['GZFILE'].format(logfile)
-      linfo = PgFile.check_local_file(gzfile)
-      if not linfo:
-         PgLOG.pglog("{}: Not exists for Gathering TDS usage".format(gzfile), PgLOG.LOGWRN)
-         continue
-      PgLOG.pgsystem(USAGE['TDSGET'].format(gzfile, logfile), 5, PgLOG.LOGWRN)
       linfo = PgFile.check_local_file(logfile)
       if not linfo:
-         PgLOG.pglog("{}: Error gunzip TDS usage".format(gzfile), PgLOG.LGEREX)
+         gzfile = USAGE['GZFILE'].format(logfile)
+         linfo = PgFile.check_local_file(gzfile)
+         if not linfo:
+            PgLOG.pglog("{}: Not exists for Gathering TDS usage".format(gzfile), PgLOG.LOGWRN)
+            continue
+         PgLOG.pgsystem(USAGE['TDSGET'].format(gzfile, logfile), 5, PgLOG.LOGWRN)
+         linfo = PgFile.check_local_file(logfile)
+         if not linfo:
+            PgLOG.pglog("{}: Error gunzip TDS usage".format(gzfile), PgLOG.LGEREX)
       PgLOG.pglog("{}: Gathering TDS usage at {}".format(logfile, PgLOG.current_datetime()), PgLOG.LOGWRN)
       tds = PgFile.open_local_file(logfile)
       if not tds: continue
@@ -162,6 +164,9 @@ def fill_tds_usages(fnames):
          ebuf = ms.group(9)
          ms = re.search(r' "(\w+.*\S+)" ', ebuf)
          engine = ms.group(1) if ms else 'Unknown'
+         iprec = PgIPInfo.set_ipinfo(ip)
+         if not iprec: continue
+         ip = iprec['ip']
          key = "{}:{}:{}:{}".format(ip, dsid, method, etype)
 
          if key in records:
@@ -199,7 +204,7 @@ def add_usage_records(records, date):
       quarter = 1 + int((int(ms.group(2)) - 1)/3)
    for key in records:
       record = records[key]
-      cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(date, record['time'], record['ip'])
+      cond = "date = '{}' AND time = '{}' AND ip = '{}' AND dsid = '{}'".format(date, record['time'], record['ip'], record['dsid'])
       if PgDBI.pgget(USAGE['PGTBL'], '', cond, PgLOG.LGEREX): continue
       email = None if record['email'] == '-' else record['email']
       wurec = PgIPInfo.get_wuser_record(record['ip'], date)
