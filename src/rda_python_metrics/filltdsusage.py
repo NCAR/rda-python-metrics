@@ -36,7 +36,8 @@ USAGE = {
    'GITDIR' : PgLOG.PGLOG["GDEXWORK"] + "/zji/tdslogs/tds-logs",
    'GITGET' : 'git pull',
    'TDSDIR' : PgLOG.PGLOG["GDEXWORK"] + "/zji/tdslogs/work",
-   'TDSGET' : 'gunzip -c ../tds-logs/logs/{} > {}',
+   'GZFILE' : '../tds-logs/logs/{}.gz',
+   'TDSGET' : 'gunzip -c {} > {}',
    'TDSLOG' : "localhost_access_log.{}.txt"   # {} = YYYY-MM-DD
 }
 
@@ -123,13 +124,12 @@ def fill_tds_usages(fnames):
 
    year = cntall = addall = 0
    for logfile in fnames:
-      gzfile = logfile + '.gz'
-      PgLOG.pgsystem(USAGE['TDSGET'].format(gzfile, logfile), 5, PgLOG.LOGWRN)
+      gzfile = USAGE['GZFILE'].format(logfile)
       linfo = PgFile.check_local_file(gzfile)
       if not linfo:
          PgLOG.pglog("{}: Not exists for Gathering TDS usage".format(gzfile), PgLOG.LOGWRN)
          continue
-      PgFile.compress_local_file(gzfile)
+      PgLOG.pgsystem(USAGE['TDSGET'].format(gzfile, logfile), 5, PgLOG.LOGWRN)
       linfo = PgFile.check_local_file(logfile)
       if not linfo:
          PgLOG.pglog("{}: Error gunzip TDS usage".format(gzfile), PgLOG.LGEREX)
@@ -201,22 +201,14 @@ def add_usage_records(records, date):
       record = records[key]
       cond = "date = '{}' AND time = '{}' AND ip = '{}'".format(date, record['time'], record['ip'])
       if PgDBI.pgget(USAGE['PGTBL'], '', cond, PgLOG.LGEREX): continue
-      if record['email'] == '-':
-         wurec = PgIPInfo.get_wuser_record(record['ip'], date)
-         if not wurec: continue
-         record['org_type'] = wurec['org_type']
-         record['country'] = wurec['country']
-         record['region'] = wurec['region']
-         record['email'] = 'unknown@' + wurec['hostname']
-      else:
-         wuid = PgDBI.check_wuser_wuid(record['email'], date)
-         if not wuid: continue
-         pgrec = PgDBI.pgget("wuser",  "org_type, country, region", "wuid = {}".format(wuid), PgLOG.LGWNEX)
-         if not pgrec: continue
-         record['org_type'] = pgrec['org_type']
-         record['country'] = pgrec['country']
-         record['region'] = pgrec['region']
-
+      email = None if record['email'] == '-' else record['email']
+      wurec = PgIPInfo.get_wuser_record(record['ip'], date)
+      if not wurec: continue
+      record['ip'] = wurec['ip']    # in case generic ip
+      record['org_type'] = wurec['org_type']
+      record['country'] = wurec['country']
+      record['region'] = wurec['region']
+      record['email'] = 'unknown@' + wurec['hostname']
       record['quarter'] = quarter
       record['date'] = date
 

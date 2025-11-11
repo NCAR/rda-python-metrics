@@ -31,6 +31,7 @@ IPINFO = {
    'IPADD'  : 0
 }
 
+GIP = '0.0.0.0'
 IPDNS = None
 IPDB = None
 G2DB = None
@@ -140,8 +141,9 @@ def get_ipinfo_record(ip):
       return None
 
    if 'bogon' in iprec and iprec['bogon']:
-      PgLOG.pglog(f"ipinfo: {ip} - bogon", PgLOG.LOGWRN)
-      return None
+      PgLOG.pglog(f"ipinfo: {ip} - bogon, use {GIP}", PgLOG.LOGWRN)
+      return set_ipinfo(GIP, False)
+
    record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip, 'org_type' : '-'}
    get_ip_hostname(ip, iprec, record)
    record['lat'] = float(iprec['latitude']) if iprec['latitude'] else 0
@@ -272,7 +274,9 @@ def get_missing_ipinfo(ip, email = None):
    if ipinfo:
       record = {'org_type' : ipinfo['org_type'],
                 'country' : ipinfo['country'],
-                'region' : ipinfo['region']}
+                'region' : ipinfo['region'],
+                'hostname' : ipinfo['hostname'],
+                'ip' : ipinfo['ip']}
       if not email or re.search(r'-$', email):
          record['email'] =  'unknown@' + ipinfo['hostname']
       else:
@@ -289,21 +293,31 @@ def get_wuser_record(ip, date, email = None):
    if not record: return None
 
    emcond = "email = '{}'".format(record['email'])
-   flds = 'wuid, email, org_type, country, region, start_date'   
+   flds = 'wuid, start_date'   
    pgrec = PgDBI.pgget("wuser", flds, emcond, PgLOG.LOGERR)
    if pgrec:
+      record['wuid'] = pgrec['wuid']
       if PgUtil.diffdate(pgrec['start_date'], date) > 0:
-         pgrec['start_date'] = record['start_date'] = date
-         PgDBI.pgupdt('wuser', record, emcond)
-      return pgrec
+         PgDBI.pgupdt('wuser', new_wuser_record(record, date, False), emcond)
+      return record
 
    # now add one in
-   record['stat_flag'] = 'A'
-   record['start_date'] = date
-   wuid = PgDBI.pgadd("wuser", record, PgLOG.LOGERR|PgLOG.AUTOID)
+   wuid = PgDBI.pgadd("wuser", new_wuser_record(record, date), PgLOG.LOGERR|PgLOG.AUTOID)
    if wuid:
       record['wuid'] = wuid
       PgLOG.pglog("{} Added as wuid({})".format(record['email'], wuid), PgLOG.LGWNEM)
       return record
 
    return None
+
+def new_wuser_record(iprec, date, nuser = True):
+
+   wurec = {'start_date' : date}
+   wurec['org_type'] = iprec['org_type']
+   wurec['country'] = iprec['country']
+   wurec['region'] = iprec['region']
+   if nuser:
+      wurec['email'] = iprec['email']
+      wurec['stat_flag'] = 'A'
+
+   return wurec
