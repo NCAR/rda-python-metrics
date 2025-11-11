@@ -133,7 +133,7 @@ def fill_osdf_usages(fnames):
          dsid = ms.group(2)
          site = ms.group(3)
          ip = ms.group(4)
-         if ip == 'N/A': ip = '0.0.0.0'
+         if ip == 'N/A': ip = PgIPInfo.GIP
          engine = ms.group(5)
          size = int(ms.group(6))
          if re.match(r'^N/A', engine, re.I):
@@ -153,7 +153,7 @@ def fill_osdf_usages(fnames):
             (year, quarter, date, time) = get_record_date_time(dt)
             iprec =  PgIPInfo.get_missing_ipinfo(ip)
             if not iprec: continue
-            records[key] = {'ip' : ip, 'dsid' : dsid, 'date' : date, 'time' : time, 'quarter' : quarter,
+            records[key] = {'ip' : iprec['ip'], 'dsid' : dsid, 'date' : date, 'time' : time, 'quarter' : quarter,
                             'size' : size, 'fcount' : 1, 'method' : method, 'engine' : engine,
                             'org_type' : iprec['org_type'], 'country' : iprec['country'],
                             'region' : iprec['region'], 'email' : iprec['email'], 'site' : site}
