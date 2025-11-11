@@ -157,6 +157,7 @@ def fill_tds_usages(fnames):
          ip = ms.group(1)
          email = ms.group(2)
          (date, time) = get_record_date_time(ms.group(3))
+         if not date: continue
          method = ms.group(4)
          etype = ms.group(6)[0].upper()
          dsid = PgUtil.format_dataset_id(ms.group(7))
@@ -178,6 +179,7 @@ def fill_tds_usages(fnames):
       tds.close()
       if records: cntadd += add_usage_records(records, date)
       cntall += entcnt
+      addall += cntadd
 
    PgLOG.pglog("{} TDS usage records added for {} entries at {}".format(addall, cntall, PgLOG.current_datetime()), PgLOG.LOGWRN)
 
@@ -192,7 +194,8 @@ def get_record_date_time(ctime):
       t = ms.group(4)
       return ("{}-{:02}-{:02}".format(y, m, d), t)
    else:
-      PgLOG.pglog("time: Invalid date format", PgLOG.LGEREX)
+      PgLOG.pglog(f"{ctime}: Invalid time format", PgLOG.LGEREX)
+      return (None, None)
 
 def add_usage_records(records, date):
 
