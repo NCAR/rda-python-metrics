@@ -142,7 +142,8 @@ def get_ipinfo_record(ip):
 
    if 'bogon' in iprec and iprec['bogon']:
       PgLOG.pglog(f"ipinfo: {ip} - bogon, use {GIP}", PgLOG.LOGWRN)
-      return set_ipinfo(GIP, False)
+      IPRECS[ip] = PgDBI.pgget('ipinfo', '*', f"ip = '{GIP}'", PgLOG.LGEREX)
+      return IPRECS[ip]
 
    record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip, 'org_type' : '-'}
    get_ip_hostname(ip, iprec, record)
@@ -245,7 +246,9 @@ def set_ipinfo(ip, ipopt = True):
    if not pgrec or ipopt and pgrec['stat_flag'] == 'M':
       record = get_ipinfo_record(ip) if ipopt else None
       if not record: record = get_geoip2_record(ip)
-      if record and update_ipinfo_record(record, pgrec): pgrec = record
+      if record:
+         update_ipinfo_record(record, pgrec)
+         pgrec = record
    
    IPRECS[ip] = pgrec
    return pgrec
