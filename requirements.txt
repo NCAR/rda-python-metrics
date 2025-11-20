@@ -25,3 +25,4 @@ urllib3==2.3.0
 yarl==1.19.0
 dnspython==2.7.0
 unidecode==1.4.0
+hvac
