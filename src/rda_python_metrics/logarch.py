@@ -1,403 +1,342 @@
 #!/usr/bin/env python3
-#
 ##################################################################################
-#
 #     Title : logarch
 #    Author : Zaihua Ji, zji@ucar.edu
 #      Date : 11/19/2020
 #             2025-03-26 transferred to package rda_python_metrics from
 #             https://github.com/NCAR/rda-utility-programs.git
+#             2025-12-17 convert to class LogArch
 #   Purpose : archive log files automatically
-#
 #    Github : https://github.com/NCAR/rda-python-metrics.git
-#
 ##################################################################################
-
 import sys
 import re
 from os import path as op
 import glob
-from rda_python_common import PgLOG
-from rda_python_common import PgUtil
-from rda_python_common import PgFile
-from rda_python_common import PgSIG
+from rda_python_common.pg_file import PgFile
 
-# the defined options for archiving different logs
-WLOG = 0x21  # archive web log
-TLOG = 0x02  # archive tds log
-DLOG = 0x04  # archive dssdb logs
-SLOG = 0x08  # append dssdb sub batch logs
-ALOG = 0x10  # archive AWS web log
-OLOG = 0x20  # archive OSDF web log
+class LogArch(PgFile):
 
-LOGS = {
-   'OPTION' : 0,
-   'AWSLOG' : PgLOG.PGLOG["TRANSFER"] + "/AWSera5log",
-   'WEBLOG' : PgLOG.PGLOG["DSSDATA"] + "/work/logs/gridftp",
-   'OSDFLOG' : PgLOG.PGLOG["DSSDATA"] + "/zji/osdflogs",
-   'MGTLOG' : "/data/logs",
-   'TDSLOG' : "/data/logs/nginx",
-   'RDALOG' : PgLOG.PGLOG['LOGPATH'],
-   'LOGPATH' : None,
-   'CHKLOG' : 1,
-   'DECSLOGS' : PgLOG.PGLOG['DECSHOME'] + "/DECSLOGS"
-}
+   def __init__(self):
+      super().__init__()
+      # the defined options for archiving different logs
+      self.WLOG = 0x21  # archive web log
+      self.TLOG = 0x02  # archive tds log
+      self.DLOG = 0x04  # archive dssdb logs
+      self.SLOG = 0x08  # append dssdb sub batch logs
+      self.ALOG = 0x10  # archive AWS web log
+      self.OLOG = 0x20  # archive OSDF web log
+      self.LOGS = {
+         'OPTION' : 0,
+         'AWSLOG' : self.PGLOG["TRANSFER"] + "/AWSera5log",
+         'WEBLOG' : self.PGLOG["DSSDATA"] + "/work/logs/gridftp",
+         'OSDFLOG' : self.PGLOG["DSSDATA"] + "/zji/osdflogs",
+         'MGTLOG' : "/data/logs",
+         'TDSLOG' : "/data/logs/nginx",
+         'RDALOG' : self.PGLOG['LOGPATH'],
+         'LOGPATH' : None,
+         'CHKLOG' : 1,
+         'DECSLOGS' : self.PGLOG['DECSHOME'] + "/DECSLOGS"
+      }      
+      self.BIDS = {}
+      self.smonth = None
 
-BIDS = {}
-
-#
-# main function to excecute this script
-#
-def main():
-
-   pgname = "logarch"
-   argv = sys.argv[1:]
-   smonth = None
-
-   # set different log file
-   PgLOG.PGLOG['LOGFILE'] = pgname + '.log'
-   PgLOG.set_suid(PgLOG.PGLOG['EUID'])
-   
-   option = None
-   for arg in argv:
-      ms = re.match(r'^-([abdmnpstw])', arg)
-      if ms:
-         option = ms.group(1)
-         if option in 'mp': continue
-         if option == "b":
-            PgLOG.PGLOG['BCKGRND'] = 1
-         elif option == "d":
-            LOGS['OPTION'] |= DLOG
-         elif option == "w":
-            LOGS['OPTION'] |= WLOG
-         elif option == "a":
-            LOGS['OPTION'] |= ALOG
-         elif option == "o":
-            LOGS['OPTION'] |= OLOG
-         elif option == "s":
-            LOGS['OPTION'] |= SLOG
-         elif option == "t":
-            LOGS['OPTION'] |= TLOG
-         elif option == "n":
-            LOGS['CHKLOG'] = 0
-         option = None
-      elif option == 'm':
-         smonth = arg
-      elif option == 'p':
-         LOGS['LOGPATH'] = arg
-      else:
-         PgLOG.pglog(arg + ": Invalid Option", PgLOG.LGWNEX)
+   # function to read parameters
+   def read_parameters(self):
+      pgname = "logarch"
+      argv = sys.argv[1:]
+      # set different log file
+      self.PGLOG['LOGFILE'] = pgname + '.log'
+      self.set_suid(self.PGLOG['EUID'])
       option = None
+      for arg in argv:
+         ms = re.match(r'^-([abdmnpstw])', arg)
+         if ms:
+            option = ms.group(1)
+            if option in 'mp': continue
+            if option == "b":
+               self.PGLOG['BCKGRND'] = 1
+            elif option == "d":
+               self.LOGS['OPTION'] |= self.DLOG
+            elif option == "w":
+               self.LOGS['OPTION'] |= self.WLOG
+            elif option == "a":
+               self.LOGS['OPTION'] |= self.ALOG
+            elif option == "o":
+               self.LOGS['OPTION'] |= self.OLOG
+            elif option == "s":
+               self.LOGS['OPTION'] |= self.SLOG
+            elif option == "t":
+               self.LOGS['OPTION'] |= self.TLOG
+            elif option == "n":
+               self.LOGS['CHKLOG'] = 0
+            option = None
+         elif option == 'm':
+            self.smonth = arg
+         elif option == 'p':
+            self.LOGS['LOGPATH'] = arg
+         else:
+            self.pglog(arg + ": Invalid Option", self.LGWNEX)
+         option = None
+      if not self.LOGS['OPTION']: self.show_usage(pgname)
+      self.cmdlog("{} {}".format(pgname, ' '.join(argv)))
 
-   if not LOGS['OPTION']: PgLOG.show_usage(pgname)
-   PgLOG.cmdlog("{} {}".format(pgname, ' '.join(argv)))
+   # function to start actions
+   def start_actions(self):
+      if self.LOGS['OPTION']&self.SLOG: self.append_dssdb_sublog()
+      if self.LOGS['OPTION']&self.DLOG: self.archive_dssdb_log()
+      if self.LOGS['OPTION']&self.WLOG: self.archive_web_log()
+      if self.LOGS['OPTION']&self.OLOG: self.archive_osdf_log()
+      if self.LOGS['OPTION']&self.ALOG: self.archive_aws_log()
+      if self.LOGS['OPTION']&self.TLOG: self.archive_tds_log()
+      self.cmdlog(None, 0, self.LOGWRN|self.SNDEML)   
 
-   if LOGS['OPTION']&SLOG: append_dssdb_sublog()
-   if LOGS['OPTION']&DLOG: archive_dssdb_log()
-   if LOGS['OPTION']&WLOG: archive_web_log(smonth)
-   if LOGS['OPTION']&OLOG: archive_osdf_log(smonth)
-   if LOGS['OPTION']&ALOG: archive_aws_log(smonth)
-   if LOGS['OPTION']&TLOG: archive_tds_log(smonth)
+   # get year and month
+   def get_year_month(self):
+      if not self.smonth: self.smonth = self.adddate(self.curdate('YYYY-MM') + '-01', 0, -1, 0, 'YYYY-MM')
+      ms = re.match(r'^(\d+)-(\d+)', self.smonth)
+      return [ms.group(1), '{:02}'.format(int(ms.group(2)))]
 
-   PgLOG.cmdlog(None, 0, PgLOG.LOGWRN|PgLOG.SNDEML)   
-   PgLOG.pgexit(0)
+   # Archive globus web log files to LOGS['DECSLOGS']
+   def archive_web_log(self):
+      (yr, mn) = self.get_year_month()
+      self.change_local_directory(self.LOGS['DECSLOGS'], self.LGEREM)
+      logpath = self.LOGS['LOGPATH'] if self.LOGS['LOGPATH'] else self.LOGS['WEBLOG']
+      afile = "globusweb{}-{}.log.tar".format(yr, mn)
+      dfile = "./WEBLOG/{}.gz".format(afile)
+      if op.exists(dfile):
+         self.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, self.LOGS['DECSLOGS']), self.LGWNEM)
+         return
+      if op.exists(afile): self.delete_local_file(afile)
+      logfiles = sorted(glob.glob("{}/access_log_gridftp??_{}??{}".format(logpath, mn, yr)))
+      topt = '-cvf'
+      tcnt = 0
+      for logfile in logfiles:
+         if not op.exists(logfile):
+            self.pglog(logfile + ": file not exists", self.LGWNEM)
+            continue
+         if  op.getsize(logfile) == 0:
+            self.pglog(logfile + ": empty file", self.LGWNEM)
+            continue
+         lfile = op.basename(logfile)
+         tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
+         tcnt += self.pgsystem(tcmd, self.LGWNEM, 5)
+         topt = '-uvf'   
+      if tcnt > 0:
+         self.pgsystem("gzip " + afile, self.LGWNEM, 5)
+         afile += '.gz'
+         self.move_local_file(dfile, afile, self.LGWNEM)
+         s = 's' if tcnt > 1 else ''
+         self.pglog("{}: {} globus log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, self.current_datetime()), self.LGWNEM)
 
-def get_year_month(smonth):
+   # Archive OSDF web log files to self.LOGS['DECSLOGS']
+   def archive_osdf_log(self):
+      (yr, mn) = self.get_year_month()
+      self.change_local_directory(self.LOGS['DECSLOGS'], self.LGEREM)
+      logpath = self.LOGS['LOGPATH'] if self.LOGS['LOGPATH'] else self.LOGS['OSDFLOG']
+      afile = "osdfweb{}-{}.log.tar".format(yr, mn)
+      dfile = "./OSDFLOG/{}.gz".format(afile)
+      if op.exists(dfile):
+         self.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, self.LOGS['DECSLOGS']), self.LGWNEM)
+         return
+      if op.exists(afile): self.delete_local_file(afile)
+      logfiles = sorted(glob.glob("{}/{}-{}-??.log".format(logpath, yr, mn)))
+      topt = '-cvf'
+      tcnt = 0
+      for logfile in logfiles:
+         lfile = op.basename(logfile)
+         tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
+         tcnt += self.pgsystem(tcmd, self.LGWNEM, 5)
+         topt = '-uvf'
+      if tcnt > 0:
+         self.pgsystem("gzip " + afile, self.LGWNEM, 5)
+         afile += '.gz'
+         self.move_local_file(dfile, afile, self.LGWNEM)
+         s = 's' if tcnt > 1 else ''
+         self.pglog("{}: {} globus log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, self.current_datetime()), self.LGWNEM)
 
-   if not smonth: smonth = PgUtil.adddate(PgUtil.curdate('YYYY-MM') + '-01', 0, -1, 0, 'YYYY-MM')
-   ms = re.match(r'^(\d+)-(\d+)', smonth)
-   return [ms.group(1), '{:02}'.format(int(ms.group(2)))]
-
-#
-# Archive globus web log files to LOGS['DECSLOGS']
-#
-def archive_web_log(smonth):
-
-   (yr, mn) = get_year_month(smonth)
-   PgFile.change_local_directory(LOGS['DECSLOGS'], PgLOG.LGEREM)
-   logpath = LOGS['LOGPATH'] if LOGS['LOGPATH'] else LOGS['WEBLOG']
-   afile = "globusweb{}-{}.log.tar".format(yr, mn)
-   dfile = "./WEBLOG/{}.gz".format(afile)
-   if op.exists(dfile):
-      PgLOG.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, LOGS['DECSLOGS']), PgLOG.LGWNEM)
-      return
-
-   if op.exists(afile): PgFile.delete_local_file(afile)
-
-   logfiles = sorted(glob.glob("{}/access_log_gridftp??_{}??{}".format(logpath, mn, yr)))
-   topt = '-cvf'
-   tcnt = 0
-   for logfile in logfiles:
-      if not op.exists(logfile):
-         PgLOG.pglog(logfile + ": file not exists", PgLOG.LGWNEM)
-         continue
-      if  op.getsize(logfile) == 0:
-         PgLOG.pglog(logfile + ": empty file", PgLOG.LGWNEM)
-         continue
-      lfile = op.basename(logfile)
-      tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
-      tcnt += PgLOG.pgsystem(tcmd, PgLOG.LGWNEM, 5)
-      topt = '-uvf'
-
-   
-   if tcnt > 0:
-      PgLOG.pgsystem("gzip " + afile, PgLOG.LGWNEM, 5)
+   # Archive AWS web log files to self.LOGS['DECSLOGS']
+   def archive_aws_log(self):
+      (yr, mn) = self.get_year_month()
+      self.change_local_directory(self.LOGS['DECSLOGS'], self.LGEREM)
+      logpath = self.LOGS['LOGPATH'] if self.LOGS['LOGPATH'] else self.LOGS['AWSLOG']
+      afile = "awsweb{}-{}.log.tar".format(yr, mn)
+      dfile = "./AWSLOG/{}.gz".format(afile)
+      if op.exists(dfile):
+         self.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, self.LOGS['DECSLOGS']), self.LGWNEM)
+         return
+      if op.exists(afile): self.delete_local_file(afile)
+      lfile = "{}/{}".format(yr, mn)
+      tcmd = "tar -cvf {} -C {} {}".format(afile, logpath, lfile)
+      self.pgsystem(tcmd, self.LGWNEM, 5)
+      self.pgsystem("gzip " + afile, self.LGWNEM, 5)
       afile += '.gz'
-      PgFile.move_local_file(dfile, afile, PgLOG.LGWNEM)
-      s = 's' if tcnt > 1 else ''
-      PgLOG.pglog("{}: {} globus log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
+      self.move_local_file(dfile, afile, self.LGWNEM)
+      self.pglog("{}: AWS logs tarred, gzipped and archived at {}".format(afile, self.current_datetime()), self.LGWNEM)
 
-#
-# Archive OSDF web log files to LOGS['DECSLOGS']
-#
-def archive_osdf_log(smonth):
+   # Archive monthly tds logs under DECSLOGS/TDSLOG/
+   def archive_tds_log(self):
+      (yr, mn) = self.get_year_month()
+      self.change_local_directory(self.LOGS['DECSLOGS'], self.LGEREM)
+      logpath = self.LOGS['LOGPATH'] if self.LOGS['LOGPATH'] else self.LOGS['TDSLOG']
+      afile = "thredds{}-{}.log.tar".format(yr, mn)
+      dfile = "./TDSLOG/{}.gz".format(afile)
+      if op.exists(dfile):
+         self.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, self.LOGS['DECSLOGS']), self.LGWNEM)
+         return
+      if op.exists(afile): self.delete_local_file(afile)
+      logfiles = sorted(glob.glob("{}/{}-{}-??.access.log".format(logpath, yr, mn)))
+      topt = '-cvf'
+      tcnt = 0
+      for logfile in logfiles:
+         if not op.exists(logfile):
+            self.pglog(logfile + ": file not exists", self.LGWNEM)
+            continue
+         if  op.getsize(logfile) == 0:
+            self.pglog(logfile + ": empty file", self.LGWNEM)
+            continue
+         lfile = op.basename(logfile)
+         tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
+         tcnt += self.pgsystem(tcmd, self.LGWNEM, 5)
+         topt = '-uvf'
+      if tcnt > 0:
+         self.pgsystem("gzip " + afile, self.LGWNEM, 5)
+         afile += '.gz'
+         self.move_local_file(dfile, afile, self.LGWNEM)
+         s = 's' if tcnt > 1 else ''
+         self.pglog("{}: {} thredds log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, self.current_datetime()), self.LGWNEM)
 
-   (yr, mn) = get_year_month(smonth)
-   PgFile.change_local_directory(LOGS['DECSLOGS'], PgLOG.LGEREM)
-   logpath = LOGS['LOGPATH'] if LOGS['LOGPATH'] else LOGS['OSDFLOG']
-   afile = "osdfweb{}-{}.log.tar".format(yr, mn)
-   dfile = "./OSDFLOG/{}.gz".format(afile)
-   if op.exists(dfile):
-      PgLOG.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, LOGS['DECSLOGS']), PgLOG.LGWNEM)
-      return
+   # Archive current dssdb logs  onto hpss under /DSS/RDADB/LOG
+   def archive_dssdb_log(self):
+      cntall = 0
+      logfile = "{}_dblog{}.tar".format(self.PGLOG['HOSTNAME'], self.curdate("YYMMDD"))
+      dfile = "{}/RDADB/LOG/{}.gz".format(self.LOGS['DECSLOGS'], logfile)
+      if self.LOGS['CHKLOG'] and self.check_decs_archive(dfile):
+         return self.pglog(dfile + ": archived already", self.LGWNEM)
+      self.change_local_directory(self.LOGS['RDALOG'], self.LWEMEX)
+      # collect all the large log/err files
+      files = sorted(glob.glob("*.log") + glob.glob("*.err"))
+      for file in files:
+         info = self.check_local_file(file, 2)
+         if(not info or info['data_size'] < 10000): continue   # skip log files small than 10KB
+         self.pgsystem("cp -p -f {} backup/{}".format(file, file), self.LWEMEX, 5)
+         if info['logname'] != self.PGLOG['GDEXUSER']: self.pgsystem("rm -rf " + file)
+         self.pgsystem("cat /dev/null > " + file, 0, 1024)
+         if file == 'gdexls.log': self.pgsystem("chmod 666 " + file, 0, 1024)
+         if op.exists(logfile):
+            self.pgsystem("tar -uvf {} -C backup {}".format(logfile, file), self.LWEMEX, 5)
+         else:
+            self.pgsystem("tar -cvf {} -C backup {}".format(logfile, file), self.LWEMEX, 5)
+         cntall += 1
+      if cntall > 0:
+         if self.LOGS['CHKLOG']:
+            if self.backup_decsdata_file(logfile, logfile, dfile, 1):
+               s = 's' if cntall > 1 else ''
+               self.pglog("{} dssdb log{} archived at {}".format(cntall, s, self.current_datetime()), self.LGWNEM)
+         else:
+            self.pgsystem("gzip " + logfile, self.LWEMEX, 5)
+            logfile += ".gz"
+            self.pgsystem("mv -f {} backup/".format(logfile), self.LWEMEX, 5)
 
-   if op.exists(afile): PgFile.delete_local_file(afile)
+   # append individual batch logs to common stdout/error logs 
+   def append_dssdb_sublog(self):
+      logpath = self.LOGS['LOGPATH'] if self.LOGS['LOGPATH'] else self.LOGS['RDALOG']
+      self.change_local_directory(logpath, self.LGWNEX);   
+      if not self.valid_command(self.BCHCMDS['PBS']):
+         self.pglog("Must run on PBS Nodes to append sublogs", self.LGEREM)
+         return
+      self.add_sublog_files('OU', 'log')
+      self.add_sublog_files('ER', 'err', 37)
 
-   logfiles = sorted(glob.glob("{}/{}-{}-??.log".format(logpath, yr, mn)))
-   topt = '-cvf'
-   tcnt = 0
-   for logfile in logfiles:
-      lfile = op.basename(logfile)
-      tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
-      tcnt += PgLOG.pgsystem(tcmd, PgLOG.LGWNEM, 5)
-      topt = '-uvf'
+   # add individual sublog files to the common ones
+   def add_sublog_files(self, fext, sext, minsize = 0):
+      cdate = self.curdate()
+      subname = 'rdaqsub'
+      pattern = r'^(\d+)\.'
+      afiles = self.local_glob("{}/*.{}".format(subname, fext), 3, self.LGWNEX)
+      if not afiles:
+         self.pglog("{}: NO '{}' file found to collect".format(subname, fext), self.LOGWRN)
+         return
+      if minsize:
+         tmin = self.PGLOG['MINSIZE']
+         self.PGLOG['MINSIZE'] = minsize
+      acnt = fcnt = 0
+      sfiles = {}
+      for afile in afiles:
+         fcnt += 1
+         finfo = afiles[afile]
+         sfiles[op.basename(afile)] = [finfo['date_modified'], finfo['time_modified'], finfo['logname']]
+      afiles = sorted(sfiles)
+      logfile = "PBS_sublog.{}".format(sext)
+      for afile in afiles:
+         ary = sfiles[afile]
+         ms = re.match(pattern, afile)
+         if ms:
+            bid = int(ms.group(1))
+            if bid not in self.BIDS:
+               if self.diffdate(cdate, ary[0]) > 6:
+                  self.BIDS[bid] = 0
+               else:
+                  self.BIDS[bid] = self.check_pbs_process(bid, afile)
+            if self.BIDS[bid] > 0: continue
+         else:
+            continue
+         sfile = "{}/{}".format(subname, afile)
+         if minsize and self.local_file_size(sfile, 1) < 1: continue
+         self.pgsystem("echo '{}: {} {} {}' >> {}".format(bid, ary[0], ary[1], ary[2], logfile), self.LGWNEX, 5+1024)
+         if self.pgsystem("cat {} >> {}".format(sfile, logfile), self.EMEROL, 5+1024):
+            self.delete_local_file(sfile, self.LOGWRN)
+            acnt += 1
+      if fcnt > 0:
+         s = 's' if fcnt > 1 else ''
+         self.pglog("{}: {} of {} '{}' file{} appended at {}".format(logfile, acnt, fcnt, fext, s, self.current_datetime()), self.LGWNEM)
+      if minsize: self.PGLOG['MINSIZE'] = tmin
+   # backup a log file to decsdata area
+   def backup_decsdata_file(self, logfile, locfile, dfile, skipcheck = 0):
+      ret = 0
+      if op.getsize(logfile) == 0:
+         self.pglog(logfile + ": Empty log file", self.LGWNEM)
+         return 0
+      if not skipcheck and self.check_decs_archive(dfile, logfile, 1):
+         return 0   # archived already
+      if locfile != logfile:
+         locfile = "{}/{}".format(self.PGLOG['TMPPATH'], locfile)
+         if not self.local_copy_local(locfile, logfile, self.LGWNEM): return 0
+      lfile = locfile
+      locfile += ".gz"
+      if self.check_local_file(locfile, 0, self.LGWNEM): self.delete_local_file(locfile, self.LGWNEM)
+      self.pgsystem("gzip " + lfile, self.LWEMEX, 5)
    
-   if tcnt > 0:
-      PgLOG.pgsystem("gzip " + afile, PgLOG.LGWNEM, 5)
-      afile += '.gz'
-      PgFile.move_local_file(dfile, afile, PgLOG.LGWNEM)
-      s = 's' if tcnt > 1 else ''
-      PgLOG.pglog("{}: {} globus log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
+      self.pglog("archive {} to {}".format(locfile, dfile), self.LGWNEM)
+      if self.local_copy_local(dfile, locfile, self.LGWNEM):
+         size = self.check_decs_archive(dfile)
+         if size:
+            self.pglog("{}: archived as {}({})".format(logfile, dfile, size), self.LGWNEM)
+            ret = 1
+      if op.exists(locfile) and ret: self.pgsystem("rm -f " + locfile, self.LGWNEM)
+      return ret
 
-#
-# Archive AWS web log files to LOGS['DECSLOGS']
-#
-def archive_aws_log(smonth):
+   # return decs file size if archived already; otherwise 0
+   def check_decs_archive(self, afile, logfile = None, checktime = 0):
+      ainfo =  self.check_local_file(afile, 1)
+      if not ainfo: return 0
+      size = ainfo['data_size']
+      if logfile:
+         linfo = self.check_local_file(logfile, 1, self.LGWNEM)
+         if linfo:
+            if checktime:
+               if linfo['date_modified'] > ainfo['date_modified']: size = 0
+            elif size < linfo['data_size']:
+               size = 0
+         if size > 0: self.pglog("{}: archived on {} as {}({})".format(logfile, ainfo['date_modified'], afile, size), self.LGWNEM)
+      return size
 
-   (yr, mn) = get_year_month(smonth)
-   PgFile.change_local_directory(LOGS['DECSLOGS'], PgLOG.LGEREM)
-   logpath = LOGS['LOGPATH'] if LOGS['LOGPATH'] else LOGS['AWSLOG']
-   afile = "awsweb{}-{}.log.tar".format(yr, mn)
-   dfile = "./AWSLOG/{}.gz".format(afile)
-   if op.exists(dfile):
-      PgLOG.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, LOGS['DECSLOGS']), PgLOG.LGWNEM)
-      return
+# main function to excecute this script
+def main():
+   object = LogArch()
+   object.read_parameters()
+   object.start_actions()
+   object.pgexit(0)
 
-   if op.exists(afile): PgFile.delete_local_file(afile)
-
-   lfile = "{}/{}".format(yr, mn)
-   tcmd = "tar -cvf {} -C {} {}".format(afile, logpath, lfile)
-   PgLOG.pgsystem(tcmd, PgLOG.LGWNEM, 5)
-
-   PgLOG.pgsystem("gzip " + afile, PgLOG.LGWNEM, 5)
-   afile += '.gz'
-   PgFile.move_local_file(dfile, afile, PgLOG.LGWNEM)
-   PgLOG.pglog("{}: AWS logs tarred, gzipped and archived at {}".format(afile, PgLOG.current_datetime()), PgLOG.LGWNEM)
-
-#
-# Archive monthly tds logs under DECSLOGS/TDSLOG/
-#
-def archive_tds_log(smonth):
-
-   (yr, mn) = get_year_month(smonth)
-   PgFile.change_local_directory(LOGS['DECSLOGS'], PgLOG.LGEREM)
-   logpath = LOGS['LOGPATH'] if LOGS['LOGPATH'] else LOGS['TDSLOG']
-   afile = "thredds{}-{}.log.tar".format(yr, mn)
-   dfile = "./TDSLOG/{}.gz".format(afile)
-   if op.exists(dfile):
-      PgLOG.pglog("{}: file exists already under {}, remove it before backup again".format(dfile, LOGS['DECSLOGS']), PgLOG.LGWNEM)
-      return
-
-   if op.exists(afile): PgFile.delete_local_file(afile)
-
-   logfiles = sorted(glob.glob("{}/{}-{}-??.access.log".format(logpath, yr, mn)))
-   topt = '-cvf'
-   tcnt = 0
-   for logfile in logfiles:
-      if not op.exists(logfile):
-         PgLOG.pglog(logfile + ": file not exists", PgLOG.LGWNEM)
-         continue
-      if  op.getsize(logfile) == 0:
-         PgLOG.pglog(logfile + ": empty file", PgLOG.LGWNEM)
-         continue
-      lfile = op.basename(logfile)
-      tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
-      tcnt += PgLOG.pgsystem(tcmd, PgLOG.LGWNEM, 5)
-      topt = '-uvf'
-
-   if tcnt > 0:
-      PgLOG.pgsystem("gzip " + afile, PgLOG.LGWNEM, 5)
-      afile += '.gz'
-      PgFile.move_local_file(dfile, afile, PgLOG.LGWNEM)
-      s = 's' if tcnt > 1 else ''
-      PgLOG.pglog("{}: {} thredds log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
-
-#
-# Archive current dssdb logs  onto hpss under /DSS/RDADB/LOG
-#
-def archive_dssdb_log():
-
-   cntall = 0
-   logfile = "{}_dblog{}.tar".format(PgLOG.PGLOG['HOSTNAME'], PgUtil.curdate("YYMMDD"))
-   dfile = "{}/RDADB/LOG/{}.gz".format(LOGS['DECSLOGS'], logfile)
-   if LOGS['CHKLOG'] and check_decs_archive(dfile):
-      return PgLOG.pglog(dfile + ": archived already", PgLOG.LGWNEM)
-
-   PgFile.change_local_directory(LOGS['RDALOG'], PgLOG.LWEMEX)
-
-   # collect all the large log/err files
-   files = sorted(glob.glob("*.log") + glob.glob("*.err"))
-   for file in files:
-      info = PgFile.check_local_file(file, 2)
-      if(not info or info['data_size'] < 10000): continue   # skip log files small than 10KB
-
-      PgLOG.pgsystem("cp -p -f {} backup/{}".format(file, file), PgLOG.LWEMEX, 5)
-      if info['logname'] != PgLOG.PGLOG['GDEXUSER']: PgLOG.pgsystem("rm -rf " + file)
-      PgLOG.pgsystem("cat /dev/null > " + file, 0, 1024)
-      if file == 'gdexls.log': PgLOG.pgsystem("chmod 666 " + file, 0, 1024)
-      if op.exists(logfile):
-         PgLOG.pgsystem("tar -uvf {} -C backup {}".format(logfile, file), PgLOG.LWEMEX, 5)
-      else:
-         PgLOG.pgsystem("tar -cvf {} -C backup {}".format(logfile, file), PgLOG.LWEMEX, 5)
-      cntall += 1
-
-   if cntall > 0:
-      if LOGS['CHKLOG']:
-         if backup_decsdata_file(logfile, logfile, dfile, 1):
-            s = 's' if cntall > 1 else ''
-            PgLOG.pglog("{} dssdb log{} archived at {}".format(cntall, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
-      else:
-         PgLOG.pgsystem("gzip " + logfile, PgLOG.LWEMEX, 5)
-         logfile += ".gz"
-         PgLOG.pgsystem("mv -f {} backup/".format(logfile), PgLOG.LWEMEX, 5)
-
-#
-# append individual batch logs to common stdout/error logs 
-#
-def append_dssdb_sublog():
-
-   logpath = LOGS['LOGPATH'] if LOGS['LOGPATH'] else LOGS['RDALOG']
-   PgFile.change_local_directory(logpath, PgLOG.LGWNEX);   
-
-   if not PgLOG.valid_command(PgLOG.BCHCMDS['PBS']):
-      PgLOG.pglog("Must run on PBS Nodes to append sublogs", PgLOG.LGEREM)
-      return
-
-   add_sublog_files('OU', 'log')
-   add_sublog_files('ER', 'err', 37)
-
-#
-# add individual sublog files to the common ones
-#
-def add_sublog_files(fext, sext, minsize = 0):
-
-   cdate = PgUtil.curdate()
-   subname = 'rdaqsub'
-   pattern = r'^(\d+)\.'
-   afiles = PgFile.local_glob("{}/*.{}".format(subname, fext), 3, PgLOG.LGWNEX)
-   if not afiles:
-      PgLOG.pglog("{}: NO '{}' file found to collect".format(subname, fext), PgLOG.LOGWRN)
-      return
-   if minsize:
-      tmin = PgLOG.PGLOG['MINSIZE']
-      PgLOG.PGLOG['MINSIZE'] = minsize
-   acnt = fcnt = 0
-   sfiles = {}
-   for afile in afiles:
-      fcnt += 1
-      finfo = afiles[afile]
-      sfiles[op.basename(afile)] = [finfo['date_modified'], finfo['time_modified'], finfo['logname']]
-
-   afiles = sorted(sfiles)
-   logfile = "PBS_sublog.{}".format(sext)
-   for afile in afiles:
-      ary = sfiles[afile]
-      ms = re.match(pattern, afile)
-      if ms:
-         bid = int(ms.group(1))
-         if bid not in BIDS:
-            if PgUtil.diffdate(cdate, ary[0]) > 6:
-               BIDS[bid] = 0
-            else:
-               BIDS[bid] = PgSIG.check_pbs_process(bid, afile)
-         if BIDS[bid] > 0: continue
-      else:
-         continue
-
-      sfile = "{}/{}".format(subname, afile)
-      if minsize and PgFile.local_file_size(sfile, 1) < 1: continue
-      PgLOG.pgsystem("echo '{}: {} {} {}' >> {}".format(bid, ary[0], ary[1], ary[2], logfile), PgLOG.LGWNEX, 5+1024)
-      if PgLOG.pgsystem("cat {} >> {}".format(sfile, logfile), PgLOG.EMEROL, 5+1024):
-         PgFile.delete_local_file(sfile, PgLOG.LOGWRN)
-         acnt += 1
-   if fcnt > 0:
-      s = 's' if fcnt > 1 else ''
-      PgLOG.pglog("{}: {} of {} '{}' file{} appended at {}".format(logfile, acnt, fcnt, fext, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
-
-   if minsize: PgLOG.PGLOG['MINSIZE'] = tmin
-
-#
-# backup a log file to decsdata area
-#
-def backup_decsdata_file(logfile, locfile, dfile, skipcheck = 0):
-   
-   ret = 0
-   if op.getsize(logfile) == 0:
-      PgLOG.pglog(logfile + ": Empty log file", PgLOG.LGWNEM)
-      return 0
-   if not skipcheck and check_decs_archive(dfile, logfile, 1):
-      return 0   # archived already
-
-   if locfile != logfile:
-      locfile = "{}/{}".format(PgLOG.PGLOG['TMPPATH'], locfile)
-      if not PgFile.local_copy_local(locfile, logfile, PgLOG.LGWNEM): return 0
-   lfile = locfile
-   locfile += ".gz"
-   if PgFile.check_local_file(locfile, 0, PgLOG.LGWNEM): PgFile.delete_local_file(locfile, PgLOG.LGWNEM)
-   PgLOG.pgsystem("gzip " + lfile, PgLOG.LWEMEX, 5)
-
-   PgLOG.pglog("archive {} to {}".format(locfile, dfile), PgLOG.LGWNEM)
-   if PgFile.local_copy_local(dfile, locfile, PgLOG.LGWNEM):
-      size = check_decs_archive(dfile)
-      if size:
-         PgLOG.pglog("{}: archived as {}({})".format(logfile, dfile, size), PgLOG.LGWNEM)
-         ret = 1
-   
-   if op.exists(locfile) and ret: PgLOG.pgsystem("rm -f " + locfile, PgLOG.LGWNEM)
-
-   return ret
-
-#
-# return decs file size if archived already; otherwise 0
-#
-def check_decs_archive(afile, logfile = None, checktime = 0):
-   
-   ainfo =  PgFile.check_local_file(afile, 1)
-   if not ainfo: return 0
-   size = ainfo['data_size']
-   if logfile:
-      linfo = PgFile.check_local_file(logfile, 1, PgLOG.LGWNEM)
-      if linfo:
-         if checktime:
-            if linfo['date_modified'] > ainfo['date_modified']: size = 0
-         elif size < linfo['data_size']:
-            size = 0
-
-      if size > 0: PgLOG.pglog("{}: archived on {} as {}({})".format(logfile, ainfo['date_modified'], afile, size), PgLOG.LGWNEM)
-
-   return size
-
-#
 # call main() to start program
-#
 if __name__ == "__main__": main()

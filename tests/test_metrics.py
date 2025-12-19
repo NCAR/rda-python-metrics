@@ -18,13 +18,17 @@ def test_metrics():
     import rda_python_metrics.filluser
     import rda_python_metrics.logarch
     import rda_python_metrics.PgIPInfo
+    import rda_python_metrics.pg_ipinfo
     import rda_python_metrics.pgperson
     import rda_python_metrics.pgusername
     import rda_python_metrics.PgView
+    import rda_python_metrics.pg_view
     import rda_python_metrics.viewallusage
+    import rda_python_metrics.viewawsusage
     import rda_python_metrics.viewcheckusage
     import rda_python_metrics.viewcodusage
     import rda_python_metrics.viewordusage
+    import rda_python_metrics.viewosdfusage
     import rda_python_metrics.viewrqstusage
     import rda_python_metrics.viewtdsusage
     import rda_python_metrics.viewwebfile
