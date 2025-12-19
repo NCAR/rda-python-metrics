@@ -277,7 +277,7 @@ class LogArch(PgFile):
                if self.diffdate(cdate, ary[0]) > 6:
                   self.BIDS[bid] = 0
                else:
-                  self.BIDS[bid] = PgSIG.check_pbs_process(bid, afile)
+                  self.BIDS[bid] = self.check_pbs_process(bid, afile)
             if self.BIDS[bid] > 0: continue
          else:
             continue

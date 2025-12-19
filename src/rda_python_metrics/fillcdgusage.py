@@ -118,8 +118,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
 
    # function to start actions
    def start_actions(self):
-      dranges = self.get_date_ranges(params)
-      dsids = self.get_dataset_ids(params['s'])
+      dranges = self.get_date_ranges(self.params)
+      dsids = self.get_dataset_ids(self.params['s'])
       if dranges and dsids: self.fill_cdg_usages(dsids, dranges)
       self.pglog(None, self.LOGWRN|self.SNDEML)  # send email out if any
 

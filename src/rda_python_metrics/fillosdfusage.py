@@ -26,10 +26,9 @@ class FillOSDUsage(PgIPInfo, PgFile, PgSplit):
          'OSDFLOG' : "{}-cache.log",   # YYYY-MM-DD-cache.log
       }
       self.params = []  # array of input values
-      self.option = None
       self.datelimits = [None, None]
       self.logfiles = []
-      self.cmdstr = None
+      self.option = self.cmdstr = None
 
    # function to read parameters
    def read_parameters(self):
@@ -58,7 +57,7 @@ class FillOSDUsage(PgIPInfo, PgFile, PgSplit):
    def start_actions(self):
       self.dssdb_dbname()
       self.change_local_directory(self.USAGE['OSDFDIR'])
-      get_log_file_names()
+      self.get_log_file_names()
       if self.logfiles:
          self.fill_osdf_usages()
       else:

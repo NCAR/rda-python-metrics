@@ -18,7 +18,7 @@ from rda_python_common.pg_file import PgFile
 from rda_python_common.pg_split import PgSplit
 from .pg_ipinfo import PgIPInfo
 
-class FillAWSUsage(PgIPInfo, PgSplit, PgFile):
+class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
 
    def __init__(self):
       super().__init()
@@ -30,7 +30,7 @@ class FillAWSUsage(PgIPInfo, PgSplit, PgFile):
       self.logfiles = []
       self.datelimits = [None, None]
       self.params = []  # array of input values
-      self.option = None
+      self.option = self.cmdstr = None
 
    # function to red paramters
    def read_parameters(self):
@@ -52,18 +52,18 @@ class FillAWSUsage(PgIPInfo, PgSplit, PgFile):
          else:
             self.pglog(arg + ": Invalid Parameter", self.LGWNEX)
       if not (self.option and self.params): self.show_usage('fillglobususage')
-      cmdstr = "fillglobususage {}".format(' '.join(argv))
-      self.cmdlog(cmdstr)
+      self.cmdstr = "fillglobususage {}".format(' '.join(argv))
+      self.cmdlog(self.cmdstr)
    
    # function to start actions
    def start_actions(self):
       self.dssdb_dbname()
       self.change_local_directory(self.USAGE['GBSDIR'])
-      get_log_file_names()
+      self.get_log_file_names()
       if self.logfiles:
-         fill_globus_usages()
+         self.fill_globus_usages()
       else:
-         self.pglog("No log file found for given command: " + cmdstr, self.LOGWRN)
+         self.pglog("No log file found for given command: " + self.cmdstr, self.LOGWRN)
       self.pglog(None, self.LOGWRN)
    
    # get the log file dates 
@@ -79,11 +79,11 @@ class FillAWSUsage(PgIPInfo, PgSplit, PgFile):
       else:
          if self.option == 'N':
             edate = self.curdate()
-            pdate = self.datelimits[0] = self.adddate(edate, 0, 0, -int(params[0]))
+            pdate = self.datelimits[0] = self.adddate(edate, 0, 0, -int(self.params[0]))
          else:
-            pdate = self.datelimits[0] = params[0]
-            if len(params) > 1:
-               edate = self.datelimits[1] = params[1]
+            pdate = self.datelimits[0] = self.params[0]
+            if len(self.params) > 1:
+               edate = self.datelimits[1] = self.params[1]
             else:
                edate = self.curdate()
          while pdate <= edate:

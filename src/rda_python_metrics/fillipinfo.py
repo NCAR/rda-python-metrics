@@ -143,7 +143,7 @@ class FillIPInfo(PgIPInfo):
       return mcnt
    
    # fix ipinfo in table codusage
-   def fix_codusage_records(dself, ate, cnd):
+   def fix_codusage_records(self, date, cnd):
       table = 'codusage'
       cond = f"date {cnd} AND region IS NULL"
       pgrecs = self.pgmget(table, 'codidx, email, ip', cond, self.LGEREX)
