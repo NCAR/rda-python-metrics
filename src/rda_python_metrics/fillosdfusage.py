@@ -4,18 +4,18 @@
 #     Title : fillosdfusage
 #    Author : Zaihua Ji,  zji@ucar.edu
 #      Date : 2025-04-01
-#             2025-12-17 convert to class FillOSDUsage
+#             2025-12-17 convert to class FillOSDFUsage
 #   Purpose : python program to retrieve info from weekly OSDF logs 
 #             and fill table wusages in PgSQL database dssdb.
 #    Github : https://github.com/NCAR/rda-pythn-metrics.git
 ###############################################################################
 import sys
 import re
-from rda_python_common import PgFile
-from rda_python_common import PgSplit
+from rda_python_common.pg_file import PgFile
+from rda_python_common.pg_split import PgSplit
 from .pg_ipinfo import PgIPInfo
 
-class FillOSDUsage(PgIPInfo, PgFile, PgSplit):
+class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
 
    def __init__(self):
       super().__init__()
@@ -185,7 +185,7 @@ class FillOSDUsage(PgIPInfo, PgFile, PgSplit):
 
 # main function to excecute this script
 def main():
-   object = FillOSDUsage()
+   object = FillOSDFUsage()
    object.read_parameters()
    object.start_actions()
    object.pgexit(0)
