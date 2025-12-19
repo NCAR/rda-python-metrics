@@ -13,9 +13,7 @@ import sys
 import re
 import time
 from os import path as op
-from rda_python_common import PgLOG
-from rda_python_common import PgUtil
-from rda_python_common import PgDBI
+from rda_python_common.pg_util import PgUtil
 
 class FillUser(PgUtil):
 
