@@ -116,7 +116,7 @@ class FillUser(PgUtil):
    #         return: a reference to a new mysql record for update or add
    def get_user_record(self, orarec, pgrec = None, neworg = False):
       if not orarec['email']: return None
-      ms = re.match("^(.+\@).+\.ucar\.edu$", orarec['email'], re.I)
+      ms = re.match(r"^(.+@).+\.ucar\.edu$", orarec['email'], re.I)
       if ms: orarec['email'] = ms.group(1) + "ucar.edu"
       newrec = {}   
       if pgrec:
