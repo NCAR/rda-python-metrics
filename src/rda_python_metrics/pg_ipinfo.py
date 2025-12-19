@@ -127,7 +127,7 @@ class PgIPInfo(PgUtil):
       return record
 
    # setup geoip2 database
-   def set_geoip2_database():
+   def set_geoip2_database(self):
       try:
          self.G2DB = geodb.Reader(self.IPINFO['DBFILE'])
       except Exception as e:
