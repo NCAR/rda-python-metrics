@@ -199,7 +199,7 @@ class ViewRQSTUsage(PgView):
       records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
       if not records: self.pglog("No Usage Found For Given Conditions", self.LGWNEX)
       totals = None if 'w' in self.params else {}
-      if dfields or totals != None:
+      if self.dfields or totals != None:
          records = self.compact_hash_groups(records, self.gfields, self.sfields, self.dfields, totals)
       if 'z' in self.params: records = self.expand_records(records)
       ostr = self.params['O'][0] if 'O' in self.params else self.params['C'][0]

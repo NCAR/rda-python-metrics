@@ -145,7 +145,7 @@ class ViewOSDFUsage(PgView):
                if option == 's':
                   val = int(val)*1000000    # convert MBytes to Bytes
                elif option in self.SNS:
-                  sfld = SNS[option]
+                  sfld = self.SNS[option]
                   if self.VUSG['SFLD'].find(sfld) > -1:
                      if self.VUSG['UFLD'].find(sfld) > -1:
                         val = arg.upper()     # in case not in upper case

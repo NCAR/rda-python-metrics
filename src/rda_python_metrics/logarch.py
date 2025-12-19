@@ -38,7 +38,7 @@ class LogArch(PgFile):
          'CHKLOG' : 1,
          'DECSLOGS' : self.PGLOG['DECSHOME'] + "/DECSLOGS"
       }      
-      BIDS = {}
+      self.BIDS = {}
       self.smonth = None
 
    # function to read parameters
@@ -273,12 +273,12 @@ class LogArch(PgFile):
          ms = re.match(pattern, afile)
          if ms:
             bid = int(ms.group(1))
-            if bid not in BIDS:
+            if bid not in self.BIDS:
                if self.diffdate(cdate, ary[0]) > 6:
-                  BIDS[bid] = 0
+                  self.BIDS[bid] = 0
                else:
-                  BIDS[bid] = PgSIG.check_pbs_process(bid, afile)
-            if BIDS[bid] > 0: continue
+                  self.BIDS[bid] = PgSIG.check_pbs_process(bid, afile)
+            if self.BIDS[bid] > 0: continue
          else:
             continue
          sfile = "{}/{}".format(subname, afile)

@@ -28,30 +28,29 @@ class FillAWSUsage(PgIPInfo, PgFile):
          'PFMT'   : "YYYY/MM/DD"
       }
       self.DSIDS = {'nsf-ncar-era5' : 'd633000'}
-      self.cmdstr = None
+      self.option = self.cmdstr = None
       self.params = []  # array of input values
 
    # function to read parameters
    def read_parameters(self):
       argv = sys.argv[1:]
-      option = None
       for arg in argv:
          ms = re.match(r'^-(b|d|p|N)$', arg)
          if ms:
             opt = ms.group(1)
             if opt == 'b':
                self.PGLOG['BCKGRND'] = 1
-            elif option:
-               self.pglog("{}: Option -{} is present already".format(arg, option), self.LGWNEX)
+            elif self.option:
+               self.pglog("{}: Option -{} is present already".format(arg, self.option), self.LGWNEX)
             else:
-               option = opt
+               self.option = opt
          elif re.match(r'^-', arg):
            self.pglog(arg + ": Invalid Option", self.LGWNEX)
-         elif option:
+         elif self.option:
             self.params.append(arg)
          else:
            self.pglog(arg + ": Invalid Parameter", self.LGWNEX)
-      if not (option and self.params): self.show_usage('fillawsusage')
+      if not (self.option and self.params): self.show_usage('fillawsusage')
       self.dssdb_dbname()
       self.cmdstr = "fillawsusage {}".format(' '.join(argv))
       self.cmdlog(self.cmdstr)
@@ -59,7 +58,7 @@ class FillAWSUsage(PgIPInfo, PgFile):
    # function to start actions
    def start_actions(self):
       self.change_local_directory(self.USAGE['AWSDIR'])
-      filenames = self.get_log_file_names(option)
+      filenames = self.get_log_file_names()
       if filenames:
          self.fill_aws_usages(filenames)
       else:
@@ -67,9 +66,9 @@ class FillAWSUsage(PgIPInfo, PgFile):
       self.pglog(None, self.LOGWRN)
 
    # get the log file dates 
-   def get_log_file_names(self, option):
+   def get_log_file_names(self):
       filenames = {}
-      if option == 'd':
+      if self.option == 'd':
          for dt in self.params:
             pdate = self.format_date(dt)
             pd = self.format_date(pdate, self.USAGE['PFMT'])
@@ -77,7 +76,7 @@ class FillAWSUsage(PgIPInfo, PgFile):
             fnames = glob.glob(fname)
             if fnames: filenames[pdate] = sorted(fnames)
       else:
-         if option == 'N':
+         if self.option == 'N':
             edate = self.curdate()
             pdate = self.adddate(edate, 0, 0, -int(self.params[0]))
          else:

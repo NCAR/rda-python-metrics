@@ -70,7 +70,7 @@ class PgIPInfo(PgUtil):
       return name
 
    # setup ipinfo database
-   def set_ipinfo_database():
+   def set_ipinfo_database(self):
       try:
          self.IPDB = ipinfo.getHandler(self.IPINFO['TOKEN'])
       except Exception as e:

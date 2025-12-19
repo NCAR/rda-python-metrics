@@ -82,7 +82,7 @@ class FillUser(PgUtil):
       return modcnt
 
    # Fill one user for given condition userno or logname
-   def fill_one_user():
+   def fill_one_user(self):
       if self.userno:
          msg = "User ID {}: ".format(self.userno)
       else:

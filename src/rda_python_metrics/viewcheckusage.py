@@ -121,136 +121,136 @@ class ViewCheckUsage(PgView):
       self.dfields = []
       self.pgname = 'viewcheckusage'
 
-# function to read parameters
-def read_parameters(self):
-   self.view_dbinfo()
-   argv = sys.argv[1:]
-   inputs = []
-   option = 'C'
-   for arg in argv:
-      if re.match(r'^-.*$', arg):
-         curopt = arg[1:2]
-         if curopt and self.VUSG['OPTS'].find(curopt) > -1:
-            if self.VUSG['NOPT'].find(option) > -1:
-               self.params[option] = 1
-            elif inputs:
-               self.params[option]= inputs   # record input array
-               inputs = []      # empty input array
-            option = curopt     # start a new option
+   # function to read parameters
+   def read_parameters(self):
+      self.view_dbinfo()
+      argv = sys.argv[1:]
+      inputs = []
+      option = 'C'
+      for arg in argv:
+         if re.match(r'^-.*$', arg):
+            curopt = arg[1:2]
+            if curopt and self.VUSG['OPTS'].find(curopt) > -1:
+               if self.VUSG['NOPT'].find(option) > -1:
+                  self.params[option] = 1
+               elif inputs:
+                  self.params[option]= inputs   # record input array
+                  inputs = []      # empty input array
+               option = curopt     # start a new option
+            else:
+               self.pglog(arg + ": Unknown Option", self.LGWNEX)
          else:
-            self.pglog(arg + ": Unknown Option", self.LGWNEX)
+            val = arg
+            if val != '!' and option in self.SNS:
+               sfld = self.SNS[option]
+               if self.VUSG['SFLD'].find(sfld) > -1:
+                  if self.VUSG['UFLD'].find(sfld) > -1:
+                     val = arg.upper()     # in case not in upper case
+                  elif self.VUSG['LFLD'].find(sfld) > -1:
+                     val = arg.lower()     # in case not in lower case
+                  if option == 'c':
+                     val = self.get_country_name(val)
+                  elif option == 't' or option == 'T':
+                     val = self.format_dataset_id(val)   # add 'ds' if only numbers
+                  val = "'{}'".format(val)
+            inputs.append(val)
+      # record the last option
+      if self.VUSG['NOPT'].find(option) > -1:
+         self.params[option] = 1
+      elif inputs:
+         self.params[option] = inputs   # record input array
+      if not self.params:
+         self.show_usage(self.pgname)
       else:
-         val = arg
-         if val != '!' and option in self.SNS:
-            sfld = self.SNS[option]
-            if self.VUSG['SFLD'].find(sfld) > -1:
-               if self.VUSG['UFLD'].find(sfld) > -1:
-                  val = arg.upper()     # in case not in upper case
-               elif self.VUSG['LFLD'].find(sfld) > -1:
-                  val = arg.lower()     # in case not in lower case
-               if option == 'c':
-                  val = self.get_country_name(val)
-               elif option == 't' or option == 'T':
-                  val = self.format_dataset_id(val)   # add 'ds' if only numbers
-               val = "'{}'".format(val)
-         inputs.append(val)
-   # record the last option
-   if self.VUSG['NOPT'].find(option) > -1:
-      self.params[option] = 1
-   elif inputs:
-      self.params[option] = inputs   # record input array
-   if not self.params:
-      self.show_usage(self.pgname)
-   else:
-      self.check_enough_options()
+         self.check_enough_options()
 
-# function to start actions
-def start_actions(self):
-   usgtable = 'dschkhist'
-   self.build_query_strings(usgtable)   # build tablenames, fieldnames, and condtions
-   records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
-   if not records: self.pglog("No Usage Found For Given Conditions", self.LGWNEX)
-   totals = None if 'w' in self.params else {}
-   if self.dfields or totals != None:
-      records = self.compact_hash_groups(records, self.gfields, self.sfields, self.dfields, totals)
-   if 'z' in self.params: records = self.expand_records(records)
-   ostr = self.params['O'][0] if 'O' in self.params else self.params['C'][0]
-   records = self.order_records(records, ostr.replace('X', ''))
-   self.simple_output(self.params, self.FLDS, records, totals)
+   # function to start actions
+   def start_actions(self):
+      usgtable = 'dschkhist'
+      self.build_query_strings(usgtable)   # build tablenames, fieldnames, and condtions
+      records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
+      if not records: self.pglog("No Usage Found For Given Conditions", self.LGWNEX)
+      totals = None if 'w' in self.params else {}
+      if self.dfields or totals != None:
+         records = self.compact_hash_groups(records, self.gfields, self.sfields, self.dfields, totals)
+      if 'z' in self.params: records = self.expand_records(records)
+      ostr = self.params['O'][0] if 'O' in self.params else self.params['C'][0]
+      records = self.order_records(records, ostr.replace('X', ''))
+      self.simple_output(self.params, self.FLDS, records, totals)
 
-# check if enough information entered on command line for generate view/report, exit if not
-def check_enough_options(self):
-   flds = self.params['C'][0] if 'C' in self.params else 'X'
-   if flds == 'X': self.pglog("{}: MISS short field names '{}'".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
-   for sn in flds:
-      if sn == 'X': continue  # do not process INDEX field
-      if self.VUSG['SNMS'].find(sn) == -1:
-         self.pglog("{}: Field sn must be in short field names: {}X".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
-      if 'z' not in self.params or sn in self.EXPAND: continue
-      fld = self.FLDS[sn]
-      if fld[6] != 'G': continue
-      self.pglog("{}: cannot show zero usage for unexpandable field {} - {}".format(self.pgname, sn, fld[0]), self.LGWNEX)
-   for arg in self.params:
-      if arg in self.VUSG['CNDS']: return
-   self.pglog("{}: miss condition options '{}'".format(self.pgname, self.VUSG['CNDS']), self.LGWNEX)
-
-# process parameter options to build all query strings
-# global variables are used directly and nothing passes in and returns back
-def build_query_strings(self, usgtable):
-   joins = having = ordernames = groupnames = ''
-   self.tablenames = usgtable
-   cols = self.params['C'][0]
-   if 'U' in self.params:    # reset units for file and read sizes
-      if cols.find('B') > -1: self.FLDS['B'] = self.set_data_unit(self.FLDS['B'], self.params['U'][0], "sum(size)")
-      if cols.find('P') > -1: self.FLDS['P'] = self.set_data_unit(self.FLDS['P'], self.params['U'][0], "size")
-   for opt in self.params:
-      if opt == 'O' or self.VUSG['NOPT'].find(opt) > -1: continue
-      if opt == 'C':   # build field, table and group names
-         for sn in cols:
-            if sn == 'X': continue  # do not process INDEX field
-            fld = self.FLDS[sn]
-            if self.fieldnames: self.fieldnames += ', '
-            self.fieldnames += "{} {}".format(fld[1], sn)   # add to field name string
-            (self.tablenames, joins) = self.join_query_tables(fld[3], self.tablenames, joins, usgtable)
-            if fld[6] == 'S':
-               self.sfields.append(sn)
-            else:
-               if groupnames: groupnames += ', '
-               groupnames += sn     # add to group name string
-               if fld[6] == 'D':
-                  self.dfields.append(sn)
-               else:
-                  self.gfields.append(sn)
-      elif opt == 'O':
-         continue   # order records later
-      elif self.VUSG['CNDS'].find(opt) > -1:
-         sn = self.SNS[opt]
+   # check if enough information entered on command line for generate view/report, exit if not
+   def check_enough_options(self):
+      flds = self.params['C'][0] if 'C' in self.params else 'X'
+      if flds == 'X': self.pglog("{}: MISS short field names '{}'".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
+      for sn in flds:
+         if sn == 'X': continue  # do not process INDEX field
+         if self.VUSG['SNMS'].find(sn) == -1:
+            self.pglog("{}: Field sn must be in short field names: {}X".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
+         if 'z' not in self.params or sn in self.EXPAND: continue
          fld = self.FLDS[sn]
-         # build having and where conditon strings
-         cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
-         if cnd:
-            if self.VUSG['HCND'].find(opt) > -1:
-               if having: having += ' AND '
-               having += cnd
-            else:
-               if self.condition: self.condition += ' AND '
-               self.condition += cnd
-            (self.tablenames, joins) = self.join_query_tables(fld[3], self.tablenames, joins, usgtable)
-   # append joins, group by, order by, and having strings to condition string
-   if joins:
-      if self.condition:
-         self.condition = "{} AND {}".format(joins, self.condition)
-      else:
-         self.condition = joins
-   if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
-   if having: self.condition += " HAVING " + having
+         if fld[6] != 'G': continue
+         self.pglog("{}: cannot show zero usage for unexpandable field {} - {}".format(self.pgname, sn, fld[0]), self.LGWNEX)
+      for arg in self.params:
+         if arg in self.VUSG['CNDS']: return
+      self.pglog("{}: miss condition options '{}'".format(self.pgname, self.VUSG['CNDS']), self.LGWNEX)
 
-# exand records as needed
-def expand_records(records):
-   recs = self.expand_query("TIME", records, self.params, self.EXPAND)
-   trecs = self.expand_query("CHECK", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
-   recs = self.crosshash(recs, trecs)
-   return self.joinhash(records, recs, 0, 1)
+   # process parameter options to build all query strings
+   # global variables are used directly and nothing passes in and returns back
+   def build_query_strings(self, usgtable):
+      joins = having = ordernames = groupnames = ''
+      self.tablenames = usgtable
+      cols = self.params['C'][0]
+      if 'U' in self.params:    # reset units for file and read sizes
+         if cols.find('B') > -1: self.FLDS['B'] = self.set_data_unit(self.FLDS['B'], self.params['U'][0], "sum(size)")
+         if cols.find('P') > -1: self.FLDS['P'] = self.set_data_unit(self.FLDS['P'], self.params['U'][0], "size")
+      for opt in self.params:
+         if opt == 'O' or self.VUSG['NOPT'].find(opt) > -1: continue
+         if opt == 'C':   # build field, table and group names
+            for sn in cols:
+               if sn == 'X': continue  # do not process INDEX field
+               fld = self.FLDS[sn]
+               if self.fieldnames: self.fieldnames += ', '
+               self.fieldnames += "{} {}".format(fld[1], sn)   # add to field name string
+               (self.tablenames, joins) = self.join_query_tables(fld[3], self.tablenames, joins, usgtable)
+               if fld[6] == 'S':
+                  self.sfields.append(sn)
+               else:
+                  if groupnames: groupnames += ', '
+                  groupnames += sn     # add to group name string
+                  if fld[6] == 'D':
+                     self.dfields.append(sn)
+                  else:
+                     self.gfields.append(sn)
+         elif opt == 'O':
+            continue   # order records later
+         elif self.VUSG['CNDS'].find(opt) > -1:
+            sn = self.SNS[opt]
+            fld = self.FLDS[sn]
+            # build having and where conditon strings
+            cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
+            if cnd:
+               if self.VUSG['HCND'].find(opt) > -1:
+                  if having: having += ' AND '
+                  having += cnd
+               else:
+                  if self.condition: self.condition += ' AND '
+                  self.condition += cnd
+               (self.tablenames, joins) = self.join_query_tables(fld[3], self.tablenames, joins, usgtable)
+      # append joins, group by, order by, and having strings to condition string
+      if joins:
+         if self.condition:
+            self.condition = "{} AND {}".format(joins, self.condition)
+         else:
+            self.condition = joins
+      if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
+      if having: self.condition += " HAVING " + having
+
+   # exand records as needed
+   def expand_records(self, records):
+      recs = self.expand_query("TIME", records, self.params, self.EXPAND)
+      trecs = self.expand_query("CHECK", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
+      recs = self.crosshash(recs, trecs)
+      return self.joinhash(records, recs, 0, 1)
 
 # main function to excecute this script
 def main():

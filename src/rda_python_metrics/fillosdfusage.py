@@ -29,6 +29,7 @@ class FillOSDUsage(PgIPInfo, PgFile, PgSplit):
       self.option = None
       self.datelimits = [None, None]
       self.logfiles = []
+      self.cmdstr = None
 
    # function to read parameters
    def read_parameters(self):
@@ -50,8 +51,8 @@ class FillOSDUsage(PgIPInfo, PgFile, PgSplit):
          else:
             self.pglog(arg + ": Invalid Parameter", self.LGWNEX)
       if not (self.option and self.params): self.show_usage('fillosdfusage')
-      cmdstr = "fillosdfusage {}".format(' '.join(argv))
-      self.cmdlog(cmdstr)
+      self.cmdstr = "fillosdfusage {}".format(' '.join(argv))
+      self.cmdlog(self.cmdstr)
 
    # function to start actions
    def start_actions(self):
@@ -61,7 +62,7 @@ class FillOSDUsage(PgIPInfo, PgFile, PgSplit):
       if self.logfiles:
          self.fill_osdf_usages()
       else:
-         self.pglog("No log file found for given command: " + cmdstr, self.LOGWRN)
+         self.pglog("No log file found for given command: " + self.cmdstr, self.LOGWRN)
       self.pglog(None, self.LOGWRN)
 
    # get the log file dates 
