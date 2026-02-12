@@ -56,7 +56,7 @@ class PgIPInfo(PgUtil):
          self.pglog(f"{dmname}: the domain name request timed out", self.LOGWRN)
       except dns.exception.DNSException as e:
          self.pglog(f"{dmname}: error domain name request: {e}", self.LOGWRN)
-      DMRECS[dmname] = dm
+      self.DMRECS[dmname] = dm
       return dm
 
    # Get country token name for given two-character domain id
