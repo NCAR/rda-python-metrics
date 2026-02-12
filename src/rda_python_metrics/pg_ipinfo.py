@@ -34,6 +34,7 @@ class PgIPInfo(PgUtil):
       self.IPDB = None
       self.G2DB = None
       self.IPRECS = {}
+      self.DMRECS = {}
       self.COUNTRIES = {}
 
    # get save a global dns.resolver.Resolver object
@@ -43,17 +44,20 @@ class PgIPInfo(PgUtil):
 
    # Resolve a domain name to an IP address (A record)
    def dns_to_ip(self, dmname, type = 'A'):
+      if dmname in self.DMRECS: return self.DMRECS[dmname]
       ipdns = self.get_dns_resolver()
+      dm = None
       try:
          answers = ipdns.resolve(dmname, type)
-         return [str(rdata) for rdata in answers]
+         dm = [str(rdata) for rdata in answers]
       except dns.resolver.NXDOMAIN:
-         self.pglog(f"{dmname}: the domain name does not exist", self.LOGERR)
+         self.pglog(f"{dmname}: the domain name does not exist", self.LOGWRN)
       except dns.resolver.Timeout:
-         self.pglog(f"{dmname}: the domain name request timed out", self.LOGERR)
+         self.pglog(f"{dmname}: the domain name request timed out", self.LOGWRN)
       except dns.exception.DNSException as e:
-         self.pglog(f"{dmname}: error domain name request: {e}", self.LOGERR)
-      return None
+         self.pglog(f"{dmname}: error domain name request: {e}", self.LOGWRN)
+      self.DMRECS[dmname] = dm
+      return dm
 
    # Get country token name for given two-character domain id
    def get_country_name_code(self, dm):
@@ -62,7 +66,7 @@ class PgIPInfo(PgUtil):
          self.COUNTRIES[dm] = pgrec['token'] if pgrec else 'Unknown'
       return self.COUNTRIES[dm]
 
-   # get contry code from name
+   # get country code from name
    def get_country_record_code(self, cname, kname = None):
       name = cname[kname] if kname else cname
       name = name.replace(' ', '.').upper() if name else 'UNITED.STATES'
@@ -209,21 +213,23 @@ class PgIPInfo(PgUtil):
       return record
 
    # fill the missing info for given ip
-   def get_missing_ipinfo(self, ip, email = None):
+   def get_missing_ipinfo(self, ip, email = None, gethost = False):
       if not ip:
          if email and '@' in email: ip = self.dns_to_ip(email.split('@')[1])
          if not ip: return None
+         ip = ip[0]
       ipinfo = self.set_ipinfo(ip)
       if ipinfo:
          record = {'org_type' : ipinfo['org_type'],
                    'country' : ipinfo['country'],
                    'region' : ipinfo['region'],
-                   'hostname' : ipinfo['hostname'],
                    'ip' : ipinfo['ip']}
          if not email or re.search(r'-$', email):
             record['email'] =  'unknown@' + ipinfo['hostname']
          else:
             record['email'] = email
+         if gethost: record['hostname'] = ipinfo['hostname']
+
          return record
       else:
          return None

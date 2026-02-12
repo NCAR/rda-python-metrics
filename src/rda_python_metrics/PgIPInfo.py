@@ -272,13 +272,13 @@ def get_missing_ipinfo(ip, email = None):
    if not ip:
       if email and '@' in email: ip = dns_to_ip(email.split('@')[1])
       if not ip: return None
-
+      ip = ip[0]
    ipinfo = set_ipinfo(ip)
    if ipinfo:
       record = {'org_type' : ipinfo['org_type'],
                 'country' : ipinfo['country'],
                 'region' : ipinfo['region'],
-                'hostname' : ipinfo['hostname'],
+#                'hostname' : ipinfo['hostname'],
                 'ip' : ipinfo['ip']}
       if not email or re.search(r'-$', email):
          record['email'] =  'unknown@' + ipinfo['hostname']
