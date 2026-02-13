@@ -18,7 +18,7 @@ import json
 from rda_python_common.pg_dbi import PgDBI
 from rda_python_common.pg_util import PgUtil
 
-class PgIPInfo(PgDBI, PgUtil):
+class PgIPInfo(PgUtil, PgDBI):
 
    def __init__(self):
       super().__init__()  # initialize parent class
