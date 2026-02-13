@@ -15,9 +15,10 @@ import ipinfo
 import socket
 import dns.resolver
 import json
+from rda_python_common.pg_dbi import PgDBI
 from rda_python_common.pg_util import PgUtil
 
-class PgIPInfo(PgUtil):
+class PgIPInfo(PgDBI, PgUtil):
 
    def __init__(self):
       super().__init__()  # initialize parent class
@@ -149,7 +150,7 @@ class PgIPInfo(PgUtil):
       self.get_ip_hostname(ip, None, record)
       record['lat'] = float(city.location.latitude) if city.location.latitude else 0
       record['lon'] = float(city.location.longitude) if city.location.longitude else 0
-      record['country'] = self.get_country_name_code(city.country.name)
+      record['country'] = self.get_country_record_code(city.country.name)
       record['city'] = self.convert_chars(city.city.name)
       record['region'] = self.convert_chars(city.subdivisions.most_specific.name) if city.subdivisions.most_specific.name else None
       record['postal'] =  city.postal.code
