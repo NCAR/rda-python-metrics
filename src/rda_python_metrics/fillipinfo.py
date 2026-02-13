@@ -17,7 +17,7 @@ from .pg_ipinfo import PgIPInfo
 class FillIPInfo(PgIPInfo):
 
    def __init__(self):
-      super()._init__()
+      super().__init__()
       # the define options for gathering ipinfo data
       self.DATES = 0x01  # fix data usages for given dates
       self.MONTH = 0x02  # fix data usages for given months
