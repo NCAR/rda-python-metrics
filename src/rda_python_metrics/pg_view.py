@@ -12,8 +12,9 @@
 import os
 import re
 from rda_python_common.pg_util import PgUtil
+from rda_python_common.pg_dbi import PgDBI
 
-class PgView(PgUtil):
+class PgView(PgUtil, PgDBI):
 
    def __init__(self):
       super().__init__()  # initialize parent class
