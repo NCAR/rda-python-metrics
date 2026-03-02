@@ -1,5 +1,5 @@
 ###############################################################################
-#     Title : Pg_ipinfo
+#     Title : pg_ipinfo
 #    Author : Zaihua Ji,  zji@ucar.edu
 #      Date : 08/22/2023
 #            2025-03-26 transferred to package rda_python_metrics from
@@ -7,7 +7,7 @@
 #            2025-12-16 convert to class PgIPInfo
 #   Purpose : python module to retrieve ip info from ipinfo
 #             or geoip2 modules
-#    Github : https://github.com/NCAR/rda-python-common.git
+#    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import re
 import geoip2.database as geodb

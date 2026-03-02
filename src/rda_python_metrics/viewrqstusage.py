@@ -142,7 +142,7 @@ class ViewRQSTUsage(PgView):
       self.rsname = "size_request"
 
    # function to read parameters
-   def read_pararmeters(self):
+   def read_parameters(self):
       self.view_dbinfo()
       argv = sys.argv[1:]
       inputs = []
