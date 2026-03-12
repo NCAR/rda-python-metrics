@@ -21,7 +21,7 @@ from .pg_ipinfo import PgIPInfo
 class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
 
    def __init__(self):
-      super().__init()
+      super().__init__()
       self.USAGE = {
          'PGTBL'  : "wusage",
          'GBSDIR' : self.PGLOG["GDEXWORK"] + "/logs/gridftp/",

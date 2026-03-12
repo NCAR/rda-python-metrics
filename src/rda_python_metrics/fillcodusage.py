@@ -19,7 +19,7 @@ from .pg_ipinfo import PgIPInfo
 class FillCODUsage(PgIPInfo):
 
    def __init__(self):
-      super().__init()
+      super().__init__()
       # the define options for gathering COD data usage, one at a time
       self.MONTH = 0x02  # fet COD data usages for given months
       self.YEARS = 0x04  # get COD data usages for given years

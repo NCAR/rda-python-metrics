@@ -20,7 +20,7 @@ from .pg_ipinfo import PgIPInfo
 class FillAWSUsage(PgIPInfo, PgFile):
 
    def __init__(self):
-      super().__init()
+      super().__init__()
       self.USAGE = {
          'PGTBL'  : "awsusage",
          'AWSDIR' : self.PGLOG["TRANSFER"] + "/AWSera5log",
