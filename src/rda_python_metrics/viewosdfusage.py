@@ -261,7 +261,11 @@ class ViewOSDFUsage(PgView):
          else:
             self.condition = joins
       if 'E' in self.params or 'I' in self.params:
-         self.condition += self.notice_condition(self.params['E'], None, self.params['t'][0])
+         self.condition += self.notice_condition(
+            self.params.get('E'),
+            self.params.get('I'),
+            self.params.get('t', [None])[0]
+         )
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
 
    # exand records as needed
