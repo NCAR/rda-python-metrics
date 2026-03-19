@@ -253,18 +253,22 @@ class ViewOSDFUsage(PgView):
                self.condition += cnd
                (self.tablenames, joins) = self.join_query_tables(fld[3], self.tablenames, joins, usgtable)
       # append joins, group by, order by, and having strings to condition string
-      if 'E' in self.params or 'I' in self.self.params:
+      if 'E' in self.params or 'I' in self.params:
          (self.tablenames, joins) = self.join_query_tables("emreceive", self.tablenames, joins, usgtable)
       if joins:
          if self.condition:
             self.condition = "{} AND {}".format(joins, self.condition)
          else:
             self.condition = joins
-      if 'E' in self.self.params or 'I' in self.params:
-         self.condition += self.notice_condition(self.params['E'], None, self.params['t'][0])
+      if 'E' in self.params or 'I' in self.params:
+         self.condition += self.notice_condition(
+            self.params.get('E'),
+            self.params.get('I'),
+            self.params.get('t', [None])[0]
+         )
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
 
-   # exand records as needed
+   # expand records as needed
    def expand_records(self, records):
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("USER", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)

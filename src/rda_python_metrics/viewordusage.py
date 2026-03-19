@@ -282,7 +282,7 @@ class ViewORDUsage(PgView):
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
       if having: self.condition += " HAVING " + having
 
-   # exand records as needed
+   # expand records as needed
    def expand_records(self, records):
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("USER", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)

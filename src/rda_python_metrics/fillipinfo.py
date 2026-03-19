@@ -25,12 +25,10 @@ class FillIPInfo(PgIPInfo):
       self.NDAYS = 0x08  # fix data usages in recent number of days
       self.MULTI = (self.DATES|self.MONTH|self.YEARS)
       self.SINGL = (self.NDAYS)
-      self.IPINFO = {
-         'USGTBL'  : ['ipinfo', 'wuser', 'allusage', 'codusage', 'tdsusage'],
-         'CDATE' : self.curdate(),
-      }
+      self.IPINFO['USGTBL'] = ['ipinfo', 'wuser', 'allusage', 'codusage', 'tdsusage']
+      self.IPINFO['CDATE'] = self.curdate()
       self.inputs = []  # array of input values
-      self.table = None  # table names: ipinfo, allusage, globususage, or tdsusage
+      self.table = None
       self.option = 0
 
    # function to read parameters
