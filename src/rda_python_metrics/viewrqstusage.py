@@ -320,7 +320,7 @@ class ViewRQSTUsage(PgView):
       if trecs: recs = self.crosshash(recs, trecs)
       return self.joinhash(records, recs, 0, 1)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = ViewRQSTUsage()
    object.read_parameters()

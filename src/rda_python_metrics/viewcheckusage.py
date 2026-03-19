@@ -252,7 +252,7 @@ class ViewCheckUsage(PgView):
       recs = self.crosshash(recs, trecs)
       return self.joinhash(records, recs, 0, 1)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = ViewCheckUsage()
    object.read_parameters()
