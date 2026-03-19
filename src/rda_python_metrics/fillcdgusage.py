@@ -19,7 +19,7 @@ from .pg_ipinfo import PgIPInfo
 class FillCDGUsage(PgSplit, PgIPInfo):
 
    def __init__(self):
-      super().__init()
+      super().__init__()
       self.USAGE = {
          'TDSTBL'  : "tdsusage",
          'WEBTBL'  : "wusage",
