@@ -253,14 +253,14 @@ class ViewOSDFUsage(PgView):
                self.condition += cnd
                (self.tablenames, joins) = self.join_query_tables(fld[3], self.tablenames, joins, usgtable)
       # append joins, group by, order by, and having strings to condition string
-      if 'E' in self.params or 'I' in self.self.params:
+      if 'E' in self.params or 'I' in self.params:
          (self.tablenames, joins) = self.join_query_tables("emreceive", self.tablenames, joins, usgtable)
       if joins:
          if self.condition:
             self.condition = "{} AND {}".format(joins, self.condition)
          else:
             self.condition = joins
-      if 'E' in self.self.params or 'I' in self.params:
+      if 'E' in self.params or 'I' in self.params:
          self.condition += self.notice_condition(self.params['E'], None, self.params['t'][0])
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
 
