@@ -314,7 +314,7 @@ class ViewWEBUsage(PgView):
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
       if having: self.condition += " HAVING " + having
 
-   # exand records as needed
+   # expand records as needed
    def expand_records(self, records):
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("USER", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
@@ -325,7 +325,7 @@ class ViewWEBUsage(PgView):
       recs = self.crosshash(recs, trecs)
       return self.joinhash(records, recs, 0, 1)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = ViewWEBUsage()
    object.read_parameters()
