@@ -301,11 +301,15 @@ class ViewRQSTUsage(PgView):
             self.condition = joins
       if 'n' in self.params: self.condition += " AND location > ' '"
       if 'E' in self.params or 'I' in self.params:
-         self.condition += self.notice_condition(self.params['E'], self.params['I'], self.params['t'][0])
+         self.condition += self.notice_condition(
+            self.params.get('E'),
+            self.params.get('I'),
+            self.params.get('t', [None])[0]
+         )
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
       if having: self.condition += " HAVING " + having
    
-   # exand records as needed
+   # expand records as needed
    def expand_records(self, records):
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("USER", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
