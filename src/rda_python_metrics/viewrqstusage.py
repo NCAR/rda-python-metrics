@@ -7,7 +7,7 @@
 #             https://github.com/NCAR/rda-database.git
 #             2025-12-19 convert to class ViewRQSTUsage
 #   Purpose : python program to view usage information for Web Online files
-#             staged by utility prgoram dsrqst.
+#             staged by utility program dsrqst.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import os
@@ -39,12 +39,12 @@ class ViewRQSTUsage(PgView):
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
       # column 3   - table name that the field belongs to 
-      # column 4   - output field length, the longer one of data size and comlun title, determine
+      # column 4   - output field length, the longer one of data size and column title, determine
       #              dynamically if it is 0. Negative values indicate right justification
       # column 5   - precision for floating point value if positive and show total value if not zero
       # column 6   - field flag to indicate it is a group, distinct or sum field
       self.FLDS = {
-      # SHRTNM COLUMNNANE      FIELDNAME                              CNDNAME          TBLNAM     Size Prc Grp/Sum
+      # SHRTNM COLUMNNAME      FIELDNAME                              CNDNAME          TBLNAM     Size Prc Grp/Sum
          'D' : ['DATE',         "date_rqst",                           'date_rqst',     'dspurge', 10,  0,  'G'],
          'E' : ['EMAIL',        "dspurge.email",                       'dspurge.email', 'dspurge',  0,  0,  'G'],
          'U' : ['FILENAME',     "wfile",                               'wfile',         'wfpurge',  0,  0,  'G'],
@@ -105,8 +105,8 @@ class ViewRQSTUsage(PgView):
       #   E -- use given date or date range for email notice of data update
       #   f -- array of specified WEB Online file names
       #   F -- file name range, array of 1 or 2 file names
-      #   g -- array of specified orginization names
-      #   h -- for give emails, include their histical emails registered before
+      #   g -- array of specified organization names
+      #   h -- for give emails, include their historical emails registered before
       #   H -- a string of report title to replace the default one
       #   i -- array of specified first names
       #   I -- use given email IDs for email notice of data update
@@ -114,8 +114,8 @@ class ViewRQSTUsage(PgView):
       #   L -- column delimiter for output
       #   m -- array of specified months 
       #   M -- array of specified request types
-      #   N -- number read range, arrage of 1 or 2 integers
-      #   o -- array of specified orginization types
+      #   N -- number read range, range of 1 or 2 integers
+      #   o -- array of specified organization types
       #   O -- a string of short field names for sorting on
       #   q -- array of the specified quarters, normally combined with years
       #   s -- array of from-flags the requests are initiated
@@ -123,7 +123,7 @@ class ViewRQSTUsage(PgView):
       #   t -- array of specified dataset names
       #   T -- dataset range, array of 1 or 2 dataset names
       #   U -- use given unit for file or data sizes
-      #   v -- aray of specified request indices
+      #   v -- array of specified request indices
       #   w -- generate view without totals
       #   y -- array of specified years
       #   z -- generate view including entries with zero usage
@@ -282,7 +282,7 @@ class ViewRQSTUsage(PgView):
          elif self.VUSG['CNDS'].find(opt) > -1:
             sn = self.SNS[opt]
             fld = self.FLDS[sn]
-            # build having and where conditon strings
+            # build having and where condition strings
             cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
             if cnd:
                if self.VUSG['HCND'].find(opt) > -1:

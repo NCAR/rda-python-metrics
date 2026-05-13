@@ -62,7 +62,7 @@ class FillCountry(PgDBI):
          cntmod += self.pgupdt(self.table, record, "email = '{}' AND country IS NULL".format(email), self.LOGWRN)
       self.pglog("{} Record(s) modified in table '{}'".format(cntmod, self.table), self.LOGWRN)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillCountry()
    object.read_parameters()

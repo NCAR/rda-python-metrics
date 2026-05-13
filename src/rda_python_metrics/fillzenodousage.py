@@ -223,7 +223,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
       return dsids
 
    #
-   # get gdexids recursivley
+   # get gdexids recursively
    #
    def recursive_dataset_ids(self, pgdexid, gdexids):
 
@@ -391,7 +391,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
    #
    if __name__ == "__main__": main()
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillZenodoUsage()
    object.read_parameters()

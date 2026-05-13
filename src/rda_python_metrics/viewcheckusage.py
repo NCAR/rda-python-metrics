@@ -7,7 +7,7 @@
 #             https://github.com/NCAR/rda-database.git
 #             2025-12-19 convert to class ViewCheckUsage
 #   Purpose : python program to view historical information of command activities
-#             controlled by utility prgoram dscheck.
+#             controlled by utility program dscheck.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import os
@@ -39,12 +39,12 @@ class ViewCheckUsage(PgView):
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
       # column 3   - table name that the field belongs to 
-      # column 4   - output field length, the longer one of data size and comlun title, determine
+      # column 4   - output field length, the longer one of data size and column title, determine
       #              dynamically if it is 0. Negative values indicate right justification
       # column 5   - precision for floating point value if positive and show total value if not zero
       # column 6   - field flag to indicate it is a group, distinct or sum field
       self.FLDS = {
-      # SHRTNM COLUMNNANE      FIELDNAME                         CNDNAME        TBLNAM       Size Prc Grp/Sum
+      # SHRTNM COLUMNNAME      FIELDNAME                         CNDNAME        TBLNAM       Size Prc Grp/Sum
          'A' : ['ARGV',         "argv",                           'argv',        'dschkhist',  0,  0,  'G'],
          'C' : ['COMMAND',      "command",                        'command',     'dschkhist',  0,  0,  'G'],
          'D' : ['DATE',         "date",                           'date',        'dschkhist', 10,  0,  'G'],
@@ -227,7 +227,7 @@ class ViewCheckUsage(PgView):
          elif self.VUSG['CNDS'].find(opt) > -1:
             sn = self.SNS[opt]
             fld = self.FLDS[sn]
-            # build having and where conditon strings
+            # build having and where condition strings
             cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
             if cnd:
                if self.VUSG['HCND'].find(opt) > -1:

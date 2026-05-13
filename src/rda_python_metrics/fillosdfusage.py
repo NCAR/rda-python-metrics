@@ -166,7 +166,7 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
          self.pglog(ctime + ": Invalid date/time format", self.LGEREX)
 
    def add_usage_records(self, records, year):
-      """Add usage to table osdusage."""
+      """Add usage to table osdfusage."""
       cnt = 0
       for key in records:
          record = records[key]
@@ -185,7 +185,7 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
          record[fld] = pgrec[fld]
       return self.add_yearly_allusage(year, record)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillOSDFUsage()
    object.read_parameters()

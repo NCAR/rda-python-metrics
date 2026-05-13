@@ -184,7 +184,7 @@ class FillUser(PgUtil):
          if 'faxno' in orarec: newrec['faxno'] = orarec['faxno']
       return newrec if newrec else None
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillUser()
    object.read_parameters()

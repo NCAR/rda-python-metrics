@@ -46,7 +46,7 @@ LOGS = {
 BIDS = {}
 
 #
-# main function to excecute this script
+# main function to execute this script
 #
 def main():
 

@@ -6,7 +6,7 @@
 #      Date : 09/24/2020
 #             2025-03-27 transferred to package rda_python_metrics from
 #             https://github.com/NCAR/rda-database.git
-#   Purpose : python library module to help rountinely updates of new data 
+#   Purpose : python library module to help routinely updates of new data 
 #             for one or multiple datasets
 #
 #    Github : https://github.com/NCAR/rda-python-metrics.git
@@ -32,7 +32,7 @@ def simple_output(params, flds, records, totals = None):
    sep = params['L'][0] if 'L' in params else '  '
    slen = len(sep)
 
-   # get total line length, dynamically evaluating column lengthes if column 4 in %FLDS is zero
+   # get total line length, dynamically evaluating column lengths if column 4 in %FLDS is zero
    rcnt = linelen = 0
    if 'A' in params: rcnt = int(params['A'][0])
    for i in range(ccnt):
@@ -390,7 +390,7 @@ def join_query_tables(tblname, tablenames = '', joins = '', tbljoin = ''):
    return (tablenames, joins)
 
 #
-# expand reocrds via query action
+# expand records via query action
 #
 def expand_query(expid, records, params, expand, vusg = None, sns = None, flds = None):
    

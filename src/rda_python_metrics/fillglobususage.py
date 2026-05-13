@@ -222,7 +222,7 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
                if pgrec: pgrec['dsid'] = dsid
       return pgrec
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillGlobusUsage()
    object.read_parameters()

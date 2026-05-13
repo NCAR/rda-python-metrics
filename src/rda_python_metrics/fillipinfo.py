@@ -189,7 +189,7 @@ class FillIPInfo(PgIPInfo):
       self.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for adddate {cnd}", self.LOGWRN)
       return mcnt
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillIPInfo()
    object.read_parameters()

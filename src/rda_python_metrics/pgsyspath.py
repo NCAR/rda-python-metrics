@@ -17,7 +17,7 @@ import os
 import re
 
 #
-# intinialize the sys.path to include paths for local modules
+# initialize the sys.path to include paths for local modules
 #
 def include_local_paths():
 

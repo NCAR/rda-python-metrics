@@ -63,7 +63,7 @@ class PgPerson:
       elif status == 500:
          print('Server error')
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = PgPerson()
    object.read_parameters()

@@ -121,7 +121,7 @@ class FillRDADB(PgUtil, PgDBI):
             receiver += (logname + "@ucar.edu")
          self.send_email("RDADB Weekly Data Usage Gathered on " + self.curdate(), receiver, msg)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillRDADB()
    object.read_parameters()

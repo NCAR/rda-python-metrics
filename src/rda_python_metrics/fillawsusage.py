@@ -182,7 +182,7 @@ class FillAWSUsage(PgIPInfo, PgFile):
          record[fld] = pgrec[fld]
       return self.add_yearly_allusage(year, record)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillAWSUsage()
    object.read_parameters()

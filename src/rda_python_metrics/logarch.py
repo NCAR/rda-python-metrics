@@ -332,7 +332,7 @@ class LogArch(PgFile):
          if size > 0: self.pglog("{}: archived on {} as {}({})".format(logfile, ainfo['date_modified'], afile, size), self.LGWNEM)
       return size
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    if os.path.basename(sys.argv[0]) == 'setuid_logarch':
       from rda_python_metrics.metrics_setup import main as setup_main

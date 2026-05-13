@@ -39,12 +39,12 @@ FILE = {
 # column 1   - field name in format as shown in select clauses
 # column 2   - field name shown in where condition query string
 # column 3   - table name that the field belongs to
-# column 4   - output field length, the longer one of data size and comlun title, determine
+# column 4   - output field length, the longer one of data size and column title, determine
 #              dynamically if it is 0. Negative values indicate right justification
 # column 5   - precision for floating point value if positive and show total value if not zero
 # column 6   - field flag to indicate it is a group, distinct or sum field
 FLDS = {
-# SHRTNM COLUMNNANE      FIELDNAME                              CNDNAME          TBLNAM     Size Prc Grp/Sum
+# SHRTNM COLUMNNAME      FIELDNAME                              CNDNAME          TBLNAM     Size Prc Grp/Sum
    'D' : ['DATEWRITE',    "date_modified",                       'date_modified', 'wfile',   0,  0,  'G'],
    'E' : ['EMAIL',        "email",                               'email',         'user',    0,  0,  'G'],
    'F' : ['FILENAME',     "wfile",                               'wfile',         'wfile',   0,  0,  'G'],
@@ -98,7 +98,7 @@ FLDS = {
 #   O -- a string of short field names for sorting on
 #   p -- array of web file types, Data, Document, and etc.
 #   r -- group index range, array of 1 or 2 group indices
-#   s -- file size range, arrage of 1 or 2 sizes in unit of MByte
+#   s -- file size range, range of 1 or 2 sizes in unit of MByte
 #   S -- specialist lognames who handle the datasets
 #   t -- array of specified dataset names
 #   T -- dataset range, array of 1 or 2 dataset names
@@ -198,7 +198,7 @@ def main():
    PgLOG.pgexit(0)
 
 #
-# cehck if enough information entered on command line for generate view/report, exit if not
+# check if enough information entered on command line for generate view/report, exit if not
 #
 def check_enough_options():
 
@@ -268,7 +268,7 @@ def build_query_strings(usgtable):
          if FILE['NOPT'].find(opt) > -1: continue
          sn = SNS[opt]
          fld = FLDS[sn]
-         # build having and where conditon strings
+         # build having and where condition strings
          cnd = PgView.get_view_condition(opt, sn, fld, params, FILE)
          if cnd:
             if condition: condition += ' AND '

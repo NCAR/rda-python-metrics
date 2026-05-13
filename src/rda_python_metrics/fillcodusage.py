@@ -211,7 +211,7 @@ class FillCODUsage(PgIPInfo):
          period -= int(ms.group(1))*3600+int(ms.group(2))*60+int(ms.group(3))
       return period
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillCODUsage()
    object.read_parameters()

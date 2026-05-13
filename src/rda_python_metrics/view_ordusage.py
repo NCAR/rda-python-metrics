@@ -39,12 +39,12 @@ VUSG = {
 # column 1   - field name in format as shown in select clauses
 # column 2   - field name shown in where condition query string
 # column 3   - table name that the field belongs to
-# column 4   - output field length, the longer one of data size and comlun title, determine
+# column 4   - output field length, the longer one of data size and column title, determine
 #              dynamically if it is 0. Negative values indicate right justification
 # column 5   - precision for floating point value if positive and show total value if not zero
 # column 6   - field flag to indicate it is a group, distinct or sum field
 FLDS = {
-# SHRTNM COLUMNNANE      FIELDNAME                              CNDNAME        TBLNAM      Size Prc Grp/Sum
+# SHRTNM COLUMNNAME      FIELDNAME                              CNDNAME        TBLNAM      Size Prc Grp/Sum
    'D' : ['DATE',         "date_request",                        'date_request','ousage',  10,  0,  'G'],
    'E' : ['EMAIL',        "wuser.email",                   'wuser.email',       'wuser',    0,  0,  'G'],
    'G' : ['ORGNAME',      "org_name",                            'org_name',    'wuser',    0,  0,  'G'],
@@ -110,8 +110,8 @@ EXPAND = {
 #   D -- dates range, array of 1 or 2 dates in format of YYYY-MM-DD
 #   e -- array of specified email addresses
 #   E -- use given date or date range for email notice of data update
-#   g -- array of specified orginization names
-#   h -- for give emails, include their histical emails registered before
+#   g -- array of specified organization names
+#   h -- for give emails, include their historical emails registered before
 #   H -- a string of report title to replace the default one
 #   i -- array of specified first names
 #   j -- array of specified projects
@@ -121,15 +121,15 @@ EXPAND = {
 #   m -- array of specified months
 #   M -- array of specified download methods
 #   n -- array of specified order numbers
-#   N -- number request range, arrage of 1 or 2 integers
-#   o -- array of specified orginization types
+#   N -- number request range, range of 1 or 2 integers
+#   o -- array of specified organization types
 #   O -- a string of short field names for sorting on
-#   s -- output data size range, arrage of 1 or 2 sizes in unit of MByte
+#   s -- output data size range, range of 1 or 2 sizes in unit of MByte
 #   S -- array of login names of specialists who processed the orders
 #   t -- array of specified dataset names
 #   T -- dataset range, array of 1 or 2 dataset names
 #   U -- use given unit for file or data sizes
-#   v -- aray of specified roder numbers
+#   v -- array of specified order numbers
 #   w -- generate view without totals
 #   y -- array of specified years
 #   z -- generate view including entries without usage
@@ -222,7 +222,7 @@ def main():
    PgLOG.pgexit(0)
 
 #
-# cehck if enough information entered on command line for generate view/report, exit if not
+# check if enough information entered on command line for generate view/report, exit if not
 #
 def check_enough_options():
 
@@ -293,7 +293,7 @@ def build_query_strings(usgtable):
          if VUSG['NOPT'].find(opt) > -1: continue
          sn = SNS[opt]
          fld = FLDS[sn]
-         # build having and where conditon strings
+         # build having and where condition strings
          cnd = PgView.get_view_condition(opt, sn, fld, params, VUSG)
          if cnd:
             if VUSG['HCND'].find(opt) > -1:

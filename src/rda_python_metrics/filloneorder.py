@@ -129,7 +129,7 @@ class FillONEOrder(PgUtil):
       pgrec = self.pgget("dsowner, dssgrp", "specialist", scond, self.LGEREX)
       return pgrec['specialist'] if pgrec else "datahelp"
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillONEOrder()
    object.read_parameters()

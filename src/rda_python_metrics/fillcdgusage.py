@@ -155,7 +155,7 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       return dsids
 
    def recursive_dataset_ids(self, pcdgid, cdgids):
-      """Get cdgids recursivley."""
+      """Get cdgids recursively."""
       tbname = 'metadata.dataset'
       pgrecs = self.pgmget(tbname, 'id', "parent_dataset_id = '{}'".format(pcdgid))
       if not pgrecs: return 0
@@ -412,7 +412,7 @@ class FillCDGUsage(PgSplit, PgIPInfo):
          self.WFILES[wkey] = pgrec
       return pgrec
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillCDGUsage()
    object.read_parameters()

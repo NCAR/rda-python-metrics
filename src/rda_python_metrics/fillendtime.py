@@ -59,7 +59,7 @@ class FillEndTime(PgUtil):
       dsstr = dsids[0] if dscnt == 1 else '{} datasets'.format(dscnt)
       self.pglog("{}: {} records updated for dssdb.dlupdt.endtime".format(dsstr, cnt, s), self.LOGWRN)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillEndTime()
    object.read_parameters()

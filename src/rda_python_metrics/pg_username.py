@@ -18,7 +18,7 @@ from rda_python_common import PgLOG
 url="https://people.api.ucar.edu/usernames/"
 
 #
-# main function to excecute this script
+# main function to execute this script
 #
 def main():
 

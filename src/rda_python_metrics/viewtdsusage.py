@@ -37,12 +37,12 @@ class ViewTDSUsage(PgView):
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
       # column 3   - table name that the field belongs to 
-      # column 4   - output field length, the longer one of data size and comlun title, determine
+      # column 4   - output field length, the longer one of data size and column title, determine
       #              dynamically if it is 0. Negative values indicate right justification
       # column 5   - precision for floating point value if positive and show total value if not zero
       # column 6   - field flag to indicate it is a group, distinct or sum field
       self.FLDS = {
-      # SHRTNM COLUMNNANE   FIELDNAME                         CNDNAME       TBLNAM        Size Prc Grp/Sum
+      # SHRTNM COLUMNNAME   FIELDNAME                         CNDNAME       TBLNAM        Size Prc Grp/Sum
          'D' : ['DATE',      "date",                           'date',       'tdsusage',  10,   0,  'G'],
          'E' : ['EMAIL',     "tdsusage.email",        'tdsusage.email',      'tdsusage',   0,   0,  'G'],
          'F' : ['EF',        "etype",                          'etype',      'tdsusage',   2,   0,  'G'],
@@ -96,7 +96,7 @@ class ViewTDSUsage(PgView):
       #   e -- array of specified email addresses
       #   E -- use given date or date range for email notice of data update
       #   f -- array of specified flags for end point types
-      #   h -- for give emails, include their histical emails registered before
+      #   h -- for give emails, include their historical emails registered before
       #   H -- a string of report title to replace the default one
       #   i -- array of specified IP addresses
       #   I -- use given email IDs for email notice of data update
@@ -104,10 +104,10 @@ class ViewTDSUsage(PgView):
       #   L -- column delimiter for output
       #   m -- array of specified months 
       #   M -- array of specified download methods 
-      #   o -- array of specified orginization types
+      #   o -- array of specified organization types
       #   O -- a string of short field names for sorting on
       #   q -- array of the specified quarters, normally combined with years
-      #   s -- file size range, arrage of 1 or 2 sizes in unit of MByte
+      #   s -- file size range, range of 1 or 2 sizes in unit of MByte
       #   S -- array of login names of specialists who owns the datasets
       #   t -- array of specified dataset names
       #   T -- dataset range, array of 1 or 2 dataset names
@@ -252,7 +252,7 @@ class ViewTDSUsage(PgView):
             if self.VUSG['NOPT'].find(opt) > -1: continue
             sn = self.SNS[opt]
             fld = self.FLDS[sn]
-            # build having and where conditon strings
+            # build having and where condition strings
             cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
             if cnd:
                if self.condition: self.condition += ' AND '

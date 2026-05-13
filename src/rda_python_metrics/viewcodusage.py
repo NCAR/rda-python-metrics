@@ -37,12 +37,12 @@ class ViewCODUsage(PgView):
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
       # column 3   - table name that the field belongs to 
-      # column 4   - output field length, the longer one of data size and comlun title, determine
-      #              dynamiccody if it is 0. Negative values indicate right justification
+      # column 4   - output field length, the longer one of data size and column title, determine
+      #              dynamically if it is 0. Negative values indicate right justification
       # column 5   - precision for floating point value if positive and show total value if not zero
       # column 6   - field flag to indicate it is a group, distinct or sum field
       self.FLDS = {
-      # SHRTNM COLUMNNANE   FIELDNAME                         CNDNAME       TBLNAM        Size Prc Grp/Sum
+      # SHRTNM COLUMNNAME   FIELDNAME                         CNDNAME       TBLNAM        Size Prc Grp/Sum
          'D' : ['DATE',      "date",                           'date',       'codusage',  10,   0,  'G'],
          'E' : ['EMAIL',     "codusage.email",        'codusage.email',      'codusage',   0,   0,  'G'],
          'G' : ['AGGREID',   "aid",                           'aid',        'codusage',    0,   0,  'G'],
@@ -95,16 +95,16 @@ class ViewCODUsage(PgView):
       #   e -- array of specified email addresses
       #   E -- use given date or date range for email notice of data update
       #   g -- array of specified aggregation IDs
-      #   h -- for give emails, include their histical emails registered before
+      #   h -- for give emails, include their historical emails registered before
       #   H -- a string of report title to replace the default one
       #   i -- array of specified IP addresses
       #   I -- use given email IDs for email notice of data update
       #   k -- array of specified region names
       #   L -- column delimiter for output
       #   m -- array of specified months 
-      #   o -- array of specified orginization types
+      #   o -- array of specified organization types
       #   O -- a string of short field names for sorting on
-      #   q -- array of the specified quarters, normcody combined with years
+      #   q -- array of the specified quarters, normally combined with years
       #   S -- array of login names of specialists who owns the datasets
       #   t -- array of specified dataset names
       #   T -- dataset range, array of 1 or 2 dataset names
@@ -249,7 +249,7 @@ class ViewCODUsage(PgView):
             if self.VUSG['NOPT'].find(opt) > -1: continue
             sn = self.SNS[opt]
             fld = self.FLDS[sn]
-            # build where conditon strings
+            # build where condition strings
             cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
             if cnd:
                if self.condition: self.condition += ' AND '

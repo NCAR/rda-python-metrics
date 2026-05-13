@@ -27,7 +27,7 @@ class PgView(PgUtil, PgDBI):
       ccnt = len(cols)        # get output dimensions
       sep = params['L'][0] if 'L' in params else '  '
       slen = len(sep)
-      # get total line length, dynamically evaluating column lengthes if column 4 in %FLDS is zero
+      # get total line length, dynamically evaluating column lengths if column 4 in %FLDS is zero
       rcnt = linelen = 0
       if 'A' in params: rcnt = int(params['A'][0])
       for i in range(ccnt):
@@ -347,7 +347,7 @@ class PgView(PgUtil, PgDBI):
       return (tablenames, joins)
 
    def expand_query(self, expid, records, params, expand, vusg = None, sns = None, flds = None):
-      """Expand reocrds via query action."""
+      """Expand records via query action."""
       cols = params['C'][0]
       exps = []
       # gather the valid expands

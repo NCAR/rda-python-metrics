@@ -173,7 +173,7 @@ def get_dataset_ids(dsnames):
    return dsids
 
 #
-# get cdgids recursivley
+# get cdgids recursively
 #
 def recursive_dataset_ids(pcdgid, cdgids):
 
