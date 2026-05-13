@@ -18,6 +18,8 @@ from .pg_ipinfo import PgIPInfo
 
 class FillCDGUsage(PgSplit, PgIPInfo):
 
+   """Retrieve info from GDEX Postgres database for CDG file accesses and fill tables tdsusage and wusage in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.USAGE = {

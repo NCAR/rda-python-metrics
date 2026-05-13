@@ -20,6 +20,8 @@ from rda_python_common.pg_util import PgUtil
 # mandatory options: -t, -e, -v, and -m
 class FillONEOrder(PgUtil):
 
+   """Fill one order usage record into the database from command-line input."""
+
    def __init__(self):
       super().__init__()
       self.params = {}

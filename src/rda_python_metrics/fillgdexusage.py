@@ -16,6 +16,8 @@ from .pg_ipinfo import PgIPInfo
 
 class FillGDEXUsage(PgSplit, PgIPInfo):
 
+   """Retrieve info from GDEX Postgres database for GDEX file accesses and fill table wusage in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.USAGE = {

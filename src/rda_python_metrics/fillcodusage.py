@@ -18,6 +18,8 @@ from .pg_ipinfo import PgIPInfo
 
 class FillCODUsage(PgIPInfo):
 
+   """Retrieve info from web logs and fill table codusage in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       # the define options for gathering COD data usage, one at a time

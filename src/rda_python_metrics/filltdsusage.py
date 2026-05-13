@@ -19,6 +19,8 @@ from .pg_ipinfo import PgIPInfo
 
 class FillTDSUsage(PgIPInfo, PgFile):
 
+   """Retrieve info from TDS logs and fill table tdsusage in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.USAGE = {

@@ -15,6 +15,8 @@ import re
 from rda_python_common.pg_dbi import PgDBI
 
 class FillCountry(PgDBI):
+   """Fill missing country field from email info for a given table name."""
+
    def __init__(self):
       super().__init__()
       self.tables = ['allusage', 'user', 'wuser']

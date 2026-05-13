@@ -17,6 +17,8 @@ from rda_python_common.pg_dbi import PgDBI
 
 class FillRDADB(PgUtil, PgDBI):
 
+   """Retrieve info from data logs and fill tables in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       # the define options for gathering web online file usage, one at a time

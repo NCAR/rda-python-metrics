@@ -14,6 +14,8 @@ from rda_python_common.pg_util import PgUtil
 
 class FillEndTime(PgUtil):
 
+   """Fill field dlupdt.endtime from enddate/endhour in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.DSIDS = []    # empty for all datasets

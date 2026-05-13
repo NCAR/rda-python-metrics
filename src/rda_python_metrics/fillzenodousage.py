@@ -16,6 +16,8 @@ from .pg_ipinfo import PgIPInfo
 
 class FillZenodoUsage(PgSplit, PgIPInfo):
 
+   """Retrieve info from GDEX Postgres database for Zenodo file accesses and fill table gdexzenodo in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.USAGE = {

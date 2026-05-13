@@ -17,6 +17,8 @@ from rda_python_common.pg_util import PgUtil
 
 class FillUser(PgUtil):
 
+   """Retrieve user info from the UCAR People API and fill table user in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.TBNAME = 'dssdb.user'

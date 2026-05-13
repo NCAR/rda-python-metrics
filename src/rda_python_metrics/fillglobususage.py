@@ -20,6 +20,8 @@ from .pg_ipinfo import PgIPInfo
 
 class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
 
+   """Retrieve info from Globus logs and fill table wusage in PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.USAGE = {
