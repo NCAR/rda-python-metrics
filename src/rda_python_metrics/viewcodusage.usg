@@ -1,6 +1,6 @@
 
  View usage information of custom OPeNDAP aggregation Data Services from
- information stored in MySQL database 'RDADB'.
+ information stored in PostgreSQL database 'dssdb'.
 
  Usage: viewcodusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
                      [-A RowLimit] [-c CountryCodes] [-d DateList] \

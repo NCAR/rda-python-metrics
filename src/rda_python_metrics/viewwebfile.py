@@ -16,6 +16,8 @@ from .pg_view import PgView
 
 class ViewWEBFile(PgView):
 
+   """View web online file access records from PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.FILE = {
@@ -120,8 +122,8 @@ class ViewWEBFile(PgView):
       self.dfields = []
       self.pgname = 'viewwebfile'
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       self.view_dbinfo()
       argv = sys.argv[1:]
       inputs = []
@@ -166,8 +168,8 @@ class ViewWEBFile(PgView):
       else:
          self.check_enough_options()
    
-   # function to start actions
    def start_actions(self):   
+      """Function to start actions."""
       usgtable = "wfile"
       self.build_query_strings(usgtable)  # build tablenames, fieldnames, and conditions
       records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
@@ -183,8 +185,8 @@ class ViewWEBFile(PgView):
       records = self.order_records(records, ostr.replace('X', ''))
       self.simple_output(self.params, self.FLDS, records, totals)
 
-   # cehck if enough information entered on command line for generate view/report, exit if not
    def check_enough_options(self):
+      """Check if enough information entered on command line to generate view/report, exit if not."""
       cols = self.params['C'][0] if 'C' in self.params else 'X'
       if cols == 'X': self.pglog("{}: miss field names '{}'".format(self.pgname, self.FILE['SNMS']), self.LGWNEX)
       for sn in cols:
@@ -207,9 +209,8 @@ class ViewWEBFile(PgView):
          if self.FILE['CNDS'].find(opt) > -1: return
       self.pglog("{}: miss condition options '{}'".format(self.pgname, self.FILE['CNDS']), self.LGWNEX)
 
-   # process parameter options to build all query strings
-   # global variables are used directly and nothing passes in and returns back
    def build_query_strings(self, usgtable):
+      """Process parameter options to build all query strings."""
       # initialize query strings
       joins = groupnames = ''
       self.tablenames = usgtable

@@ -1,6 +1,6 @@
 
- View all usage information of MSS, WEB and Order data from information
- stored in MySQL database 'RDADB'.
+ View all usage information of WEB and Order data from information
+ stored in PostgreSQL database 'dssdb'.
 
  Usage: viewallusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
                      [-A RowLimit] [-c CountryCodes] [-d DateList] \

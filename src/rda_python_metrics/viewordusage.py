@@ -14,6 +14,8 @@ from .pg_view import PgView
 
 class ViewORDUsage(PgView):
    
+   """View order usage statistics from PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.VUSG = {
@@ -136,8 +138,8 @@ class ViewORDUsage(PgView):
       self.dfields = []
       self.pgname = 'viewordusage'
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       self.view_dbinfo()
       argv = sys.argv[1:]
       inputs = []
@@ -187,8 +189,8 @@ class ViewORDUsage(PgView):
       elif self.params['o'][0] == "'ALL'":
          del self.params['o']
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       usgtable = "ousage"
       self.build_query_strings(usgtable)  # build tablenames, fieldnames, and conditions
       records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
@@ -201,8 +203,8 @@ class ViewORDUsage(PgView):
       records = self.order_records(records, ostr.replace('X', ''))
       self.simple_output(self.params, self.FLDS, records, totals)
 
-   # cehck if enough information entered on command line for generate view/report, exit if not
    def check_enough_options(self):
+      """Check if enough information entered on command line to generate view/report, exit if not."""
       cols = self.params['C'][0] if 'C' in self.params else 'X'
       if cols == 'X': self.pglog("{}: miss field names '{}'".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
       if cols.find('Q') > -1 and cols.find('Y') < 0:   # add Y if Q included
@@ -225,9 +227,8 @@ class ViewORDUsage(PgView):
          if self.VUSG['CNDS'].find(opt) > -1: return
       self.pglog("{}: miss condition options '{}'".format(self.pgname, self.VUSG['CNDS']), self.LGWNEX)
 
-   # process parameter options to build all query strings
-   # global variables are used directly and nothing passes in and returns back
    def build_query_strings(self, usgtable):
+      """Process parameter options to build all query strings."""
       # initialize query strings
       joins = having = groupnames = ''
       self.tablenames = usgtable
@@ -282,8 +283,8 @@ class ViewORDUsage(PgView):
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
       if having: self.condition += " HAVING " + having
 
-   # expand records as needed
    def expand_records(self, records):
+      """Expand records as needed."""
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("USER", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
       if trecs: self.crosshash(recs, trecs)

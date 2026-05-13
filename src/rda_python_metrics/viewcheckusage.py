@@ -17,6 +17,8 @@ from .pg_view import PgView
 
 class ViewCheckUsage(PgView):
 
+   """View historical information of command activities from PostgreSQL database dssdb."""
+
    def __init__(self):
       super().__init__()
       self.VUSG = {
@@ -121,8 +123,8 @@ class ViewCheckUsage(PgView):
       self.dfields = []
       self.pgname = 'viewcheckusage'
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       self.view_dbinfo()
       argv = sys.argv[1:]
       inputs = []
@@ -164,8 +166,8 @@ class ViewCheckUsage(PgView):
       else:
          self.check_enough_options()
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       usgtable = 'dschkhist'
       self.build_query_strings(usgtable)   # build tablenames, fieldnames, and condtions
       records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
@@ -178,8 +180,8 @@ class ViewCheckUsage(PgView):
       records = self.order_records(records, ostr.replace('X', ''))
       self.simple_output(self.params, self.FLDS, records, totals)
 
-   # check if enough information entered on command line for generate view/report, exit if not
    def check_enough_options(self):
+      """Check if enough information entered on command line for generate view/report, exit if not."""
       flds = self.params['C'][0] if 'C' in self.params else 'X'
       if flds == 'X': self.pglog("{}: MISS short field names '{}'".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
       for sn in flds:
@@ -194,9 +196,8 @@ class ViewCheckUsage(PgView):
          if arg in self.VUSG['CNDS']: return
       self.pglog("{}: miss condition options '{}'".format(self.pgname, self.VUSG['CNDS']), self.LGWNEX)
 
-   # process parameter options to build all query strings
-   # global variables are used directly and nothing passes in and returns back
    def build_query_strings(self, usgtable):
+      """Process parameter options to build all query strings."""
       joins = having = ordernames = groupnames = ''
       self.tablenames = usgtable
       cols = self.params['C'][0]
@@ -245,8 +246,8 @@ class ViewCheckUsage(PgView):
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
       if having: self.condition += " HAVING " + having
 
-   # expand records as needed
    def expand_records(self, records):
+      """Expand records as needed."""
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("CHECK", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
       recs = self.crosshash(recs, trecs)

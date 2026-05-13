@@ -1,6 +1,6 @@
 
  View usage information of online data files staged on DSS Web Server via utility
- program 'dsrqst' from file requesting information stored in MySQL database 'RDADB'.
+ program 'dsrqst' from file requesting information stored in PostgreSQL database 'dssdb'.
 
  Usage: viewrqstusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
                      [-A RowLimit] [-c CountryCodes] [-d DataRequestDates] \

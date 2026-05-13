@@ -1,6 +1,6 @@
 
  View usage information of Thredds Data Services from information
- stored in MySQL database 'RDADB'.
+ stored in PostgreSQL database 'dssdb'.
 
  Usage: viewtdsusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
                      [-A RowLimit] [-c CountryCodes] [-d DateList] \
