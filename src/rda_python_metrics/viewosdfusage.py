@@ -19,8 +19,8 @@ class ViewOSDFUsage(PgView):
    def __init__(self):
       super().__init__()
       self.VUSG = {
-         'SNMS' : "ABCDEHIKMNOPQRSTUWY",           # all available short field names in %FLDS
-         'OPTS' : 'AabcCdDeEhHikLmMnoOqsStTUwyz',  # all available options, used for %params
+         'SNMS' : "ABCDEHIKMNOPQRSTUWY",           # all available short field names in FLDS
+         'OPTS' : 'AabcCdDeEhHikLmMnoOqsStTUwyz',  # all available options, used for params
          'NOPT' : 'abhnwz',                        # stand alone option without inputs
          'ACND' : 'cdeiIkmMoqSty',                 # available array condition options
          'RCND' : 'DEsT',                          # available range condition options
@@ -30,7 +30,7 @@ class ViewOSDFUsage(PgView):
          'UFLD' : 'NO',                            # string fields must be in upper case
          'LFLD' : 'EMPT'                           # string fields must be in lower case
       }
-      # keys %FLDS - short field names
+      # keys FLDS - short field names
       # column 0   - column title showing in usage view
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
@@ -62,7 +62,7 @@ class ViewOSDFUsage(PgView):
          'H' : ['#ACCESS',   "sum(fcount)",                    'H',          'osdfusage',  -8,  -1,  'S'],
          'X' : ['INDEX',     "",                               'X',          '',          -6,   0,  ' ']
       }
-      # keys %EXPAND - short field names allow zero usage
+      # keys EXPAND - short field names allow zero usage
       # column 0   - expand ID for group of fields
       # column 1   - field name shown in where condition query string
       # column 2   - field name in format as shown in select clauses
@@ -82,7 +82,7 @@ class ViewOSDFUsage(PgView):
          'P' : ["DSID",   "StT", "specialist",     "dsowner"],
          'W' : ["METHOD", "fM",      "method",       "osdfusage"]
       }
-      # valid options for %params, a hash array of command line parameters
+      # valid options for params, a hash array of command line parameters
       #   a -- 1 to view all usage info available
       #   A -- number or records to return
       #   c -- array of specified country codes
@@ -112,7 +112,7 @@ class ViewOSDFUsage(PgView):
       #   z -- generate view including entries without usage
       self.params = {}
       # relationship between parameter options and short field names, A option is not
-      # related to a field name if it is not in keys %SNS 
+      # related to a field name if it is not in keys SNS 
       self.SNS = {
          'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'i' : 'I', 'k' : 'K', 'm' : 'M',
          'M' : 'W', 'o' : 'O', 'q' : 'Q', 's' : 'S', 'S' : 'P', 't' : 'T', 'T' : 'T', 'y' : 'Y'

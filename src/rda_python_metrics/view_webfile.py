@@ -22,8 +22,8 @@ from rda_python_common import PgDBI
 from . import PgView
 
 FILE = {
-   'SNMS' : "BCDEFGHIJKLMNOPQRSTUVWYZ",    # all available short field names in %FLDS
-   'OPTS' : 'AabCdDefFgGHijJlLmMnNoOprsStTuUvwyYzZ',  # all available options, used for %params
+   'SNMS' : "BCDEFGHIJKLMNOPQRSTUVWYZ",    # all available short field names in FLDS
+   'OPTS' : 'AabCdDefFgGHijJlLmMnNoOprsStTuUvwyYzZ',  # all available options, used for params
    'NOPT' : 'abjJw',                       # stand alone option without inputs
    'ACND' : 'defgGilmMnopStuvyYz',         # available array condition options
    'RCND' : 'DFNrsTZ',                     # available range condition options
@@ -34,7 +34,7 @@ FILE = {
    'LFLD' : 'EQTU'                         # string fields must be in lower case
 }
 
-# keys %FLDS - short field names
+# keys FLDS - short field names
 # column 0   - column title showing in mss file view
 # column 1   - field name in format as shown in select clauses
 # column 2   - field name shown in where condition query string
@@ -73,7 +73,7 @@ FLDS = {
    'X' : ['INDEX',        "",                                    'X',             '',       -6,  0,  ' ']
 }
 
-# valid options for %params, a hash array of command line parameters
+# valid options for params, a hash array of command line parameters
 #   a -- 1 to view all usage info available
 #   A -- number or records to return
 #   C -- a string of short field names for viewing usages
@@ -113,7 +113,7 @@ FLDS = {
 params = {}
 
 # relationship between parameter options and short field names, A option is not
-# related to a field name if it is not in keys %SNS
+# related to a field name if it is not in keys SNS
 SNS = {
    'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'F' : 'F', 'g' : 'G', 'i' : 'I',
    'l' : 'L', 'm' : 'M', 'M' : 'H', 'N' : 'N', 'o' : 'O', 'p' : 'P', 'r' : 'G',

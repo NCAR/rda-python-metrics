@@ -20,7 +20,7 @@ class ViewORDUsage(PgView):
       super().__init__()
       self.VUSG = {
          'SNMS' : "ABCDEFGHIJKLMNOPQRSTVWYZ",          # all available short field names in self.FLDS
-         'OPTS' : 'AabcCdDeEghHijklLmMnNoOqsStTUvwyz', # all available options, used for %params
+         'OPTS' : 'AabcCdDeEghHijklLmMnNoOqsStTUvwyz', # all available options, used for params
          'NOPT' : 'abhwz',                             # stand alone option without inputs
          'ACND' : 'cdegijlkmMnoqStvy',                 # available array condition options
          'RCND' : 'DsNT',                              # available range condition options
@@ -68,7 +68,7 @@ class ViewORDUsage(PgView):
          'Z' : ['COST()',       "sum(amount)",                         'Z',           'ousage', -12, -1,  'S'],
          'X' : ['INDEX',        "",                                    'X',           '',        -6,  0,  ' ']
       }
-      # keys %EXPAND - short field names allow zero usage
+      # keys EXPAND - short field names allow zero usage
       # column 0   - expand ID for group of fields
       # column 1   - field name shown in where condition query string
       # column 2   - field name in format as shown in select clauses
@@ -92,7 +92,7 @@ class ViewORDUsage(PgView):
          'U' : ["OWNER",  "u",      "dssname",        "ousage"],
          'W' : ["METHOD", "M",      "method",         "ousage"],
       }
-      # valid options for %params, a hash array of command line parameters
+      # valid options for params, a hash array of command line parameters
       #   a -- 1 to view all usage info available
       #   A -- number or records to return
       #   c -- array of specified country codes
@@ -126,7 +126,7 @@ class ViewORDUsage(PgView):
       #   z -- generate view including entries without usage
       self.params = {}
       # relationship between parameter options and short field names, A option is not
-      # related to a field name if it is not in keys %SNS
+      # related to a field name if it is not in keys SNS
       self.SNS = {
          'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'g' : 'G', 'i' : 'I', 'j' : 'J',
          'k' : 'K', 'l' : 'L', 'm' : 'M', 'M' : 'W', 'n' : 'V', 'N' : 'H', 'o' : 'O',

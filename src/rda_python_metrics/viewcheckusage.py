@@ -22,8 +22,8 @@ class ViewCheckUsage(PgView):
    def __init__(self):
       super().__init__()
       self.VUSG = {
-         'SNMS' : "ABCDEFGHIJKLMNPQRSTUVWZ",   # all available short field names in %FLDS
-         'OPTS' : 'aABcCdDhHilLmnOqrsStTwyz',  # all available options, used for %params
+         'SNMS' : "ABCDEFGHIJKLMNPQRSTUVWZ",   # all available short field names in FLDS
+         'OPTS' : 'aABcCdDhHilLmnOqrsStTwyz',  # all available options, used for params
          'NOPT' : 'abwz',                      # stand alone option without inputs
          'ACND' : 'cdhilLmnsSty',              # available array condition options
          'RCND' : 'BDqrT',                     # available range condition options
@@ -34,7 +34,7 @@ class ViewCheckUsage(PgView):
          'UFLD' : 'NW',                        # string fields must be in upper case
          'LFLD' : 'ST',                        # string fields must be in lower case
       }
-      # keys %FLDS - short field names
+      # keys FLDS - short field names
       # column 0   - column title showing in usage view
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
@@ -71,7 +71,7 @@ class ViewCheckUsage(PgView):
          'Z' : ['#CHECKS',      "count(cindex)",                  'Z',           'dschkhist', -8, -1,  'S'],
          'X' : ['INDEX',        "",                               'X',           '',          -6,  0,  ' ']
       }
-      # keys %EXPAND - short field names allow zero usage
+      # keys EXPAND - short field names allow zero usage
       # column 0   - expand ID for group of fields
       # column 1   - field name shown in where condition query string
       # column 2   - field name in format as shown in select clauses
@@ -85,7 +85,7 @@ class ViewCheckUsage(PgView):
          'S' : ["CHECK",  "csS",     "status",      "dschkhist"],
          'W' : ["CHECK",  "csS",     "specialist",  "dschkhist"],
       }
-      # valid options for %params, a hash array of command line parameters
+      # valid options for params, a hash array of command line parameters
       #   a -- 1 to view all usage info available
       #   A -- number or records to return
       #   b -- array of batch ids
@@ -112,7 +112,7 @@ class ViewCheckUsage(PgView):
       #   z -- generate view including entries with zero usage
       self.params = {}
       # relationship between parameter options and short field names, A option is not
-      # related to a field name if it is not in keys %SNS 
+      # related to a field name if it is not in keys SNS 
       self.SNS = {
          'b' : 'L', 'B' : 'L', 'c' : 'C', 'd' : 'D', 'D' : 'D', 'h' : 'H', 'i' : 'I', 'm' : 'M', 'n' : 'N',
          'q' : 'Q', 'r' : 'R', 'q' : 'Q', 's' : 'W', 'S' : 'S', 't' : 'T', 'T' : 'T', 'y' : 'Y'

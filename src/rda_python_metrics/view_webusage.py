@@ -22,8 +22,8 @@ from rda_python_common import PgUtil
 from . import PgView
 
 VUSG = {
-   'SNMS' : "ABCDEFGHIJKLMNOPQRTUVWYZ",   # all available short field names in %FLDS
-   'OPTS' : 'AabcCdDeEfFhHiIklLmMNoOStTUvVwyz',  # all available options, used for %params
+   'SNMS' : "ABCDEFGHIJKLMNOPQRTUVWYZ",   # all available short field names in FLDS
+   'OPTS' : 'AabcCdDeEfFhHiIklLmMNoOStTUvVwyz',  # all available options, used for params
    'NOPT' : 'abhRwz',                     # stand alone option without inputs
    'ACND' : 'cdefiklmMoStvy',             # available array condition options
    'RCND' : 'DFNTV',                      # available range condition options
@@ -74,7 +74,7 @@ FLDS = {
    'X' : ['INDEX',        "",                                    'X',           '',        -6,  0,  ' ']
 }
 
-# keys %EXPAND - short field names allow zero usage
+# keys EXPAND - short field names allow zero usage
 # column 0   - expand ID for group of fields
 # column 1   - field name shown in where condition query string
 # column 2   - field name in format as shown in select clauses
@@ -101,7 +101,7 @@ EXPAND = {
    'W' : ["METHOD", "M",      "method",       "wusage"],
 }
 
-# valid options for %params, a hash array of command line parameters
+# valid options for params, a hash array of command line parameters
 #   a -- 1 to view all usage info available
 #   A -- number or records to return
 #   c -- array of specified country codes
@@ -137,7 +137,7 @@ EXPAND = {
 params = {}
 
 # relationship between parameter options and short field names, A option is not
-# related to a field name if it is not in keys %SNS 
+# related to a field name if it is not in keys SNS 
 SNS = {
    'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'F' : 'F', 'i' : 'I',
    'k' : 'K', 'l' : 'L', 'm' : 'M', 'M' : 'W', 'N' : 'H', 'o' : 'O', 'q' : 'Q',
