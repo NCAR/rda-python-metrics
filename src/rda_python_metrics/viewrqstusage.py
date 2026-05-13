@@ -17,7 +17,7 @@ from .pg_view import PgView
 
 class ViewRQSTUsage(PgView):
    
-   """View web online file request usage statistics from PostgreSQL database dssdb."""
+   """View web online file request usage statistics from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

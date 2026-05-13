@@ -5,7 +5,7 @@
 #      Date : 2025-04-14
 #             2025-12-16 convert to class FillCDGUsage
 #   Purpose : python program to retrieve info from GDEX Postgres database for GDS 
-#             file accesses and backup fill table tdsusage in PostgreSQL database dssdb.
+#             file accesses and backup fill table tdsusage in PostgreSQL database rdadb.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
@@ -18,7 +18,7 @@ from .pg_ipinfo import PgIPInfo
 
 class FillCDGUsage(PgSplit, PgIPInfo):
 
-   """Retrieve info from GDEX Postgres database for CDG file accesses and fill tables tdsusage and wusage in PostgreSQL database dssdb."""
+   """Retrieve info from GDEX Postgres database for CDG file accesses and fill tables tdsusage and wusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

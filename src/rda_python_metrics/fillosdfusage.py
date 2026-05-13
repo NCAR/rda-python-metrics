@@ -17,7 +17,7 @@ from .pg_ipinfo import PgIPInfo
 
 class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
 
-   """Retrieve info from weekly OSDF logs and fill table osdfusage in PostgreSQL database dssdb."""
+   """Retrieve info from weekly OSDF logs and fill table osdfusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

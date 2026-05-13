@@ -17,7 +17,7 @@ from .pg_view import PgView
 
 class ViewWEBUsage(PgView):
    
-   """View web usage statistics from PostgreSQL database dssdb."""
+   """View web usage statistics from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

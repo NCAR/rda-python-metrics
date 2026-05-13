@@ -7,7 +7,7 @@
 #             https://github.com/NCAR/rda-database.git
 #             2025-12-17 convert to FillGlobusUsage
 #   Purpose : python program to retrieve info from Globus logs 
-#             and fill table wusages in PostgreSQL database dssdb.
+#             and fill table wusages in PostgreSQL database rdadb.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
@@ -20,7 +20,7 @@ from .pg_ipinfo import PgIPInfo
 
 class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
 
-   """Retrieve info from Globus logs and fill table wusage in PostgreSQL database dssdb."""
+   """Retrieve info from Globus logs and fill table wusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

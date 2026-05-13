@@ -16,7 +16,7 @@ from .pg_ipinfo import PgIPInfo
 
 class FillIPInfo(PgIPInfo):
 
-   """Retrieve IP geolocation info and fill table ipinfo in PostgreSQL database dssdb."""
+   """Retrieve IP geolocation info and fill table ipinfo in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

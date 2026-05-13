@@ -14,7 +14,7 @@ from .pg_view import PgView
 
 class ViewOSDFUsage(PgView):
    
-   """View OSDF usage statistics from PostgreSQL database dssdb."""
+   """View OSDF usage statistics from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

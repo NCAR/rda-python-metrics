@@ -8,7 +8,7 @@
 #             2025-03-26 transferred to package rda_python_metrics from
 #             https://github.com/NCAR/rda-database.git
 #   Purpose : python program to retrieve info from TDS logs 
-#             and fill table tdsusage in PostgreSQL database dssdb.
+#             and fill table tdsusage in PostgreSQL database rdadb.
 # 
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 #

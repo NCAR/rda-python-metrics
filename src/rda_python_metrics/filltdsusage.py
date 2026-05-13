@@ -7,7 +7,7 @@
 #             https://github.com/NCAR/rda-database.git
 #             2025-12-17 convert to class FillTDSUsage
 #   Purpose : python program to retrieve info from TDS logs 
-#             and fill table tdsusage in PostgreSQL database dssdb.
+#             and fill table tdsusage in PostgreSQL database rdadb.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
@@ -19,7 +19,7 @@ from .pg_ipinfo import PgIPInfo
 
 class FillTDSUsage(PgIPInfo, PgFile):
 
-   """Retrieve info from TDS logs and fill table tdsusage in PostgreSQL database dssdb."""
+   """Retrieve info from TDS logs and fill table tdsusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

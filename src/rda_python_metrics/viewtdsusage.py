@@ -16,7 +16,7 @@ from .pg_view import PgView
 
 class ViewTDSUsage(PgView):
    
-   """View TDS (THREDDS) usage statistics from PostgreSQL database dssdb."""
+   """View TDS (THREDDS) usage statistics from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

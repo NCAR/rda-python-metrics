@@ -16,7 +16,7 @@ from .pg_view import PgView
 
 class ViewWEBFile(PgView):
 
-   """View web online file access records from PostgreSQL database dssdb."""
+   """View web online file access records from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

@@ -17,7 +17,7 @@ from rda_python_common.pg_dbi import PgDBI
 
 class FillRDADB(PgUtil, PgDBI):
 
-   """Retrieve info from data logs and fill tables in PostgreSQL database dssdb."""
+   """Retrieve info from data logs and fill tables in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

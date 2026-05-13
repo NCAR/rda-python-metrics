@@ -5,7 +5,7 @@
 #      Date : 2025-04-14
 #             2025-12-19 convert to class FillGDEXUsage
 #   Purpose : python program to retrieve info from GDEX Postgres database for GDEX
-#             file accesses and fill table wusage in PostgreSQL database dssdb.
+#             file accesses and fill table wusage in PostgreSQL database rdadb.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
@@ -16,7 +16,7 @@ from .pg_ipinfo import PgIPInfo
 
 class FillGDEXUsage(PgSplit, PgIPInfo):
 
-   """Retrieve info from GDEX Postgres database for GDEX file accesses and fill table wusage in PostgreSQL database dssdb."""
+   """Retrieve info from GDEX Postgres database for GDEX file accesses and fill table wusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

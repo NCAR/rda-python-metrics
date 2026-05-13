@@ -14,7 +14,7 @@ from .pg_view import PgView
 
 class ViewAWSUsage(PgView):
 
-   """View AWS S3 usage statistics from PostgreSQL database dssdb."""
+   """View AWS S3 usage statistics from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

@@ -16,7 +16,7 @@ from .pg_view import PgView
 
 class ViewALLUsage(PgView):
 
-   """View combined usage statistics from PostgreSQL database dssdb."""
+   """View combined usage statistics from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()

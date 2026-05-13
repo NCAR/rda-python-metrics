@@ -17,7 +17,7 @@ from .pg_view import PgView
 
 class ViewCheckUsage(PgView):
 
-   """View historical information of command activities from PostgreSQL database dssdb."""
+   """View historical information of command activities from PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()
