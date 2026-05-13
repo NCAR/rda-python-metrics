@@ -4,7 +4,7 @@
 
  Usage: filloneorder -e UserEmail -m DeliveryMethod -t DatasetID -v DataVolume \
                      [-a CostAmount] [-b] [-c FileCount] [-d DateOrdered] \
-                     [-i InputDataVlolume] [-o OerderID] [-p PaymentMethod] \
+                     [-i InputDataVolume] [-o OrderID] [-p PaymentMethod] \
                      [-s SpecialistLoginName] [-x DateClosed -x TimeClosed]
 
    select the Mandatory options, -e, -m, -t and -v, and any other Optional

@@ -8,7 +8,7 @@
 #             2025-12-16 converted to class FillAWSUsage
 #   Purpose : python program to retrieve info from AWS logs 
 #             and fill table wusages in PgSQL database dssdb.
-#    Github : https://github.com/NCAR/rda-pythn-metrics.git
+#    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
 import re

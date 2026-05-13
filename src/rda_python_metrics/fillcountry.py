@@ -1,4 +1,4 @@
-#!/usr/bin/env python3/
+#!/usr/bin/env python3
 ###############################################################################
 #     Title : fillcountry
 #    Author : Zaihua Ji,  zji@ucar.edu
@@ -20,8 +20,8 @@ class FillCountry(PgDBI):
       self.tables = ['allusage', 'user', 'wuser']
       self.table = None
 
-   # function to read paramters
-   def read_parameter(self):
+   # function to read parameters
+   def read_parameters(self):
       argv = sys.argv[1:]
       # check command line
       for arg in argv:

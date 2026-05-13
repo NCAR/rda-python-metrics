@@ -14,7 +14,7 @@ from rda_python_common.pg_util import PgUtil
 
 class FillEndTime(PgUtil):
 
-   def __init(self):
+   def __init__(self):
       super().__init__()
       self.DSIDS = []    # empty for all datasets
 

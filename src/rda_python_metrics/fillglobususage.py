@@ -1,4 +1,4 @@
-##!/usr/bin/env python3
+#!/usr/bin/env python3
 ###############################################################################
 #     Title : fillglobususage
 #    Author : Zaihua Ji,  zji@ucar.edu
@@ -8,7 +8,7 @@
 #             2025-12-17 convert to FillGlobusUsage
 #   Purpose : python program to retrieve info from Globus logs 
 #             and fill table wusages in PostgreSQL database dssdb.
-#    Github : https://github.com/NCAR/rda-pythn-metrics.git
+#    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
 import re
@@ -32,7 +32,7 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
       self.params = []  # array of input values
       self.option = self.cmdstr = None
 
-   # function to red paramters
+   # function to read parameters
    def read_parameters(self):
       argv = sys.argv[1:]
       for arg in argv:

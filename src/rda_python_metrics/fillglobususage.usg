@@ -1,5 +1,5 @@
 
- Retrieves usage information from GLlobus Server logs under directory
+ Retrieves usage information from Globus Server logs under directory
    /gpfs/fs1/collections/rda/work/logs/gridftp/ to fill table 'wusage' in
    database 'rdadb'.
 
