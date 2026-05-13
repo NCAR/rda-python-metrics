@@ -156,8 +156,8 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
       self.WFILES = {}
       self.params = {}
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       opt = None
       for arg in argv:
@@ -180,8 +180,8 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
          self.pglog("-(m|N|y): Missing Month, NumberDays or Year to gather ZENODO metrics", self.LGWNEX)
       self.cmdlog("fillzenodousage {}".format(' '.join(argv)))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       dranges = self.get_date_ranges(self.params)
       dsids = self.get_dataset_ids(self.params['s'])
       if dranges and dsids: self.fill_zenodo_usages(dsids, dranges)

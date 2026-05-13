@@ -36,8 +36,8 @@ class FillCODUsage(PgIPInfo):
       self.datelimit = ''
       self.params = []  # array of input values
 
-   # function to readparameters
    def read_parameters(self):
+      """Function to readparameters."""
       argv = sys.argv[1:]
       for arg in argv:
          if arg == "-b":
@@ -64,8 +64,8 @@ class FillCODUsage(PgIPInfo):
       self.dssdb_dbname()
       self.cmdlog("fillcodusage {}".format(' '.join(argv)))
 
-   # function to start actions
    def start_actions(self):   
+      """Function to start actions."""
       if self.USAGE['OPTION']&self.NDAYS:
          curdate = self.curdate()
          self.datelimit = self.adddate(curdate, 0, 0, -int(self.params[0]))
@@ -78,8 +78,8 @@ class FillCODUsage(PgIPInfo):
       self.fill_cod_usages(self.USAGE['OPTION'], self.params)
       self.pglog(None, self.LOGWRN|self.SNDEML)  # send email out if any
 
-   # Fill COD usages into table dssdb.codusage of DSS PostgreSQL database from cod access logs
    def fill_cod_usages(self, option, inputs):
+      """Fill COD usages into table dssdb.codusage of DSS PostgreSQL database from cod access logs."""
       cntall = cntadd = 0
       for input in inputs:
          # get log file names
@@ -144,8 +144,8 @@ class FillCODUsage(PgIPInfo):
       s = 's' if cntadd > 1 else ''
       self.pglog("{} COD usage records added for {} entries at {}".format(cntadd, cntall, self.current_datetime()), self.LOGWRN)
 
-   # add usage to codusage table
    def add_usage_records(self, records, date):
+      """Add usage to codusage table."""
       ms = re.match(r'(\d+)-(\d+)-', date)
       if not ms: return 0
       year = ms.group(1)
@@ -178,8 +178,8 @@ class FillCODUsage(PgIPInfo):
             cnt += self.pgadd(self.USAGE['PGTBL'], record, self.LOGWRN)
       return cnt
 
-   # add usage to allusage tables
    def add_to_allusage(self, pgrec, year):
+      """Add usage to allusage tables."""
       record = {'method' : 'COD', 'source' : 'C'}
       for fld in pgrec:
          ms = re.match(r'^(engine|count)$', fld)
@@ -187,8 +187,8 @@ class FillCODUsage(PgIPInfo):
          record[fld] = pgrec[fld]
       return self.add_yearly_allusage(year, record)   # change 1 to 0 to stop checking
 
-   # cashe user info for reuse
    def cache_users(self, aid):
+      """Cashe user info for reuse."""
       pgrec = self.pgget("metautil.custom_dap_history", "*", "ID = '{}'".format(aid), self.LGEREX)
       if pgrec:
          ms = re.search(r'dsnum=(\d+\.\d|[a-z]\d{6});', pgrec['rinfo'])
@@ -198,8 +198,8 @@ class FillCODUsage(PgIPInfo):
             return 1
       return 0
 
-   # get period
    def access_period(self, etime, btime):
+      """Get period."""
       period = 86400
       ms = re.search(r'(\d+):(\d+):(\d+)', etime)
       if ms:

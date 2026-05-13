@@ -23,8 +23,8 @@ class FillUser(PgUtil):
       self.userno = self.logname = None
       self.missed = False
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       option = None
       for arg in argv:
@@ -51,16 +51,16 @@ class FillUser(PgUtil):
          self.pglog("filluser: Cannot be executed on '{}'\n{}".format(self.PGLOG['HOSTNAME'], errmsg), self.LGWNEX)
       self.cmdlog("filluser {}".format(' '.join(argv)))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_scname()
       if self.missed: # checking and fill missed ones in user table
          self.fill_missed_users()
       else:
          self.fill_one_user()
 
-   # update users with missed info in table dssdb.user
    def fill_missed_users(self):
+      """Update users with missed info in table dssdb.user."""
       self.pglog("Getting incomplete user info", self.LOGWRN)
       pgusers = self.pgmget(self.TBNAME, "*", "stat_flag = 'M'", self.LOGWRN)
       cntall = len(pgusers['logname']) if pgusers else 0
@@ -79,8 +79,8 @@ class FillUser(PgUtil):
       self.pglog("{} User Record{} modified".format(modcnt, s), self.LOGWRN)
       return modcnt
 
-   # Fill one user for given condition userno or logname
    def fill_one_user(self):
+      """Fill one user for given condition userno or logname."""
       if self.userno:
          msg = "User ID {}: ".format(self.userno)
       else:
@@ -113,8 +113,8 @@ class FillUser(PgUtil):
 
    # local function: get_user_record(orarec: refer to oracle hush record 
    #                                 pgrecs: refer to exist, mysql hush records)
-   #         return: a reference to a new mysql record for update or add
    def get_user_record(self, orarec, pgrec = None, neworg = False):
+      """        return: a reference to a new mysql record for update or add."""
       if not orarec['email']: return None
       ms = re.match(r"^(.+@).+\.ucar\.edu$", orarec['email'], re.I)
       if ms: orarec['email'] = ms.group(1) + "ucar.edu"

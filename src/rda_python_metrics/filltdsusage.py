@@ -36,8 +36,8 @@ class FillTDSUsage(PgIPInfo, PgFile):
       self.logfiles = []
       self.cmdstr = None
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          ms = re.match(r'^-(b|d|p|N)$', arg)
@@ -59,8 +59,8 @@ class FillTDSUsage(PgIPInfo, PgFile):
       self.cmdstr = "filltdsusage {}".format(' '.join(argv))
       self.cmdlog(self.cmdstr)
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.pull_github_repo()
       self.dssdb_dbname()
       self.change_local_directory(self.USAGE['TDSDIR'])
@@ -71,8 +71,8 @@ class FillTDSUsage(PgIPInfo, PgFile):
          self.pglog("No log file found for given command: " + self.cmdstr, self.LOGWRN)
       self.pglog(None, self.LOGWRN)
 
-   # get the log file dates 
    def get_log_file_names(self):
+      """Get the log file dates."""
       if self.option == 'd':
          for pdate in self.params:
             self.logfiles.append(self.USAGE['TDSLOG'].format(pdate))
@@ -90,13 +90,13 @@ class FillTDSUsage(PgIPInfo, PgFile):
             self.logfiles.append(self.USAGE['TDSLOG'].format(pdate))
             pdate = self.adddate(pdate, 0, 0, 1)
 
-   # git pull the github repo
    def pull_github_repo(self):
+      """Git pull the github repo."""
       self.change_local_directory(self.USAGE['GITDIR'])
       self.pgsystem(self.USAGE['GITGET'], 5, self.LOGWRN)
 
-   # Fill TDS usages into table dssdb.tdsusage from tds access logs
    def fill_tds_usages(self):
+      """Fill TDS usages into table dssdb.tdsusage from tds access logs."""
       year = cntall = addall = 0
       for logfile in self.logfiles:
          linfo = self.check_local_file(logfile)
@@ -155,8 +155,8 @@ class FillTDSUsage(PgIPInfo, PgFile):
          addall += cntadd
       self.pglog("{} TDS usage records added for {} entries at {}".format(addall, cntall, self.current_datetime()), self.LOGWRN)
 
-   # get date and time from log entry
    def get_record_date_time(self, ctime):
+      """Get date and time from log entry."""
       ms = re.search(r'^(\d+)/(\w+)/(\d+):(\d+:\d+:\d+)$', ctime)
       if ms:
          d = int(ms.group(1))
@@ -168,8 +168,8 @@ class FillTDSUsage(PgIPInfo, PgFile):
          self.pglog(f"{ctime}: Invalid time format", self.LGEREX)
          return (None, None)
 
-   # add usage to table tdsusage
    def add_usage_records(self, records, date):
+      """Add usage to table tdsusage."""
       quarter = cnt = 0
       year = None
       ms = re.search(r'(\d+)-(\d+)-', date)
@@ -195,8 +195,8 @@ class FillTDSUsage(PgIPInfo, PgFile):
       self.pglog("{}: {} TDS usage records added at {}".format(date, cnt, self.current_datetime()), self.LOGWRN)
       return cnt
 
-   # add usage to table allusage
    def add_to_allusage(self, year, pgrec):
+      """Add usage to table allusage."""
       record = {'method' : 'TDS', 'source' : 'T'}
       for fld in pgrec:
          if re.match(r'^(engine|method|etype|fcount)$', fld): continue

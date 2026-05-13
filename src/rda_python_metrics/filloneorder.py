@@ -24,8 +24,8 @@ class FillONEOrder(PgUtil):
       super().__init__()
       self.params = {}
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       option = None
       argv = sys.argv[1:]
       for arg in argv:
@@ -47,14 +47,14 @@ class FillONEOrder(PgUtil):
       if not self.params: self.show_usage('filloneorder')
       self.cmdlog("filloneorder {}".format(' '.join(argv)))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       self.check_inputs()
       self.add_one_order()
 
-   # add one customized order into RDADB
    def add_one_order(self):
+      """Add one customized order into RDADB."""
       year = None
       record = {}
       record['dsid'] = self.params['t']
@@ -78,8 +78,8 @@ class FillONEOrder(PgUtil):
       else:
          self.pglog("No order added for " + self.params['e'], self.LOGWRN)
 
-   # add record into table allusage
    def add_to_allusage(self, record, year, ctime):
+      """Add record into table allusage."""
       pgrec = self.pgget("wuser",  "email, org_type, country, region",
                           "wuid = {}".format(record['wuid_request']), self.LGWNEX)
       if pgrec:
@@ -94,8 +94,8 @@ class FillONEOrder(PgUtil):
          return self.add_yearly_allusage(year, pgrec)
       return 0
 
-   # check option inputs and fill up the missing ones for default values
    def check_inputs(self):
+      """Check option inputs and fill up the missing ones for default values."""
       # mandatory inputs
       if 't' not in self.params:
          self.pglog("Missing Dataset ID per option -t", self.LGEREX)
@@ -120,8 +120,8 @@ class FillONEOrder(PgUtil):
       if self.pgget("ousage", '', ocond, self.LGEREX):
          self.pglog("Order of {} Bytes Data from {} for {} on {} recorded on {} already".format(self.params['v'], self.params['t'], self.params['e'], self.params['d'], self.params['x']), self.LGWNEX)
 
-   # return the dataset owner if specialist not given
    def check_specialist(self, dsid, specialist):
+      """Return the dataset owner if specialist not given."""
       if specialist and self.pgget("dssgrp", "", "logname = 'specialist'", self.LGEREX): return specialist
       scond = "specialist = logname AND dsid = '{}' AND priority = 1".format(dsid)
       pgrec = self.pgget("dsowner, dssgrp", "specialist", scond, self.LGEREX)

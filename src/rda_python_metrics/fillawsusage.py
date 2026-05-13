@@ -31,8 +31,8 @@ class FillAWSUsage(PgIPInfo, PgFile):
       self.option = self.cmdstr = None
       self.params = []  # array of input values
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          ms = re.match(r'^-(b|d|p|N)$', arg)
@@ -55,8 +55,8 @@ class FillAWSUsage(PgIPInfo, PgFile):
       self.cmdstr = "fillawsusage {}".format(' '.join(argv))
       self.cmdlog(self.cmdstr)
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.change_local_directory(self.USAGE['AWSDIR'])
       filenames = self.get_log_file_names()
       if filenames:
@@ -65,8 +65,8 @@ class FillAWSUsage(PgIPInfo, PgFile):
         self.pglog("No log file found for given command: " + self.cmdstr, self.LOGWRN)
       self.pglog(None, self.LOGWRN)
 
-   # get the log file dates 
    def get_log_file_names(self):
+      """Get the log file dates."""
       filenames = {}
       if self.option == 'd':
          for dt in self.params:
@@ -93,8 +93,8 @@ class FillAWSUsage(PgIPInfo, PgFile):
             pdate = self.adddate(pdate, 0, 0, 1)
       return filenames
 
-   # Fill AWS usages into table dssdb.awsusage of DSS PgSQL database from aws access logs
    def fill_aws_usages(self, filenames):
+      """Fill AWS usages into table dssdb.awsusage of DSS PgSQL database from aws access logs."""
       year = cntall = addall = 0
       for pdate in filenames:
          fnames = filenames[pdate]
@@ -147,8 +147,8 @@ class FillAWSUsage(PgIPInfo, PgFile):
             if addall > cntadd:
                self.pglog("{} AWS usage records added for {} entries at {}".format(addall, cntall, self.current_datetime()), self.LOGWRN)
 
-   # get date and time from record
    def get_record_date_time(self, ctime):
+      """Get date and time from record."""
       ms = re.search(r'^(\d+)/(\w+)/(\d+):(\d+:\d+:\d+)$', ctime)
       if ms:
          d = int(ms.group(1))
@@ -160,8 +160,8 @@ class FillAWSUsage(PgIPInfo, PgFile):
       else:
          self.pglog(ctime + ": Invalid date/time format", self.LGEREX)
 
-   # add usage records for year
    def add_usage_records(self, records, year):
+      """Add usage records for year."""
       cnt = 0
       for key in records:
          record = records[key]
@@ -171,8 +171,8 @@ class FillAWSUsage(PgIPInfo, PgFile):
             cnt += self.pgadd(self.USAGE['PGTBL'], record, self.LOGWRN)
       return cnt
 
-   # add record to allusage tables
    def add_to_allusage(self, year, pgrec):
+      """Add record to allusage tables."""
       record = {'source' : 'A'}
       flds = ['ip', 'dsid', 'date', 'time', 'quarter', 'size', 'method',
               'org_type', 'country', 'region', 'email']

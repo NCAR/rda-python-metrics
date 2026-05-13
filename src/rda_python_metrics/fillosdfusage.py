@@ -30,8 +30,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
       self.logfiles = []
       self.option = self.cmdstr = None
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          ms = re.match(r'^-(b|d|p|N)$', arg)
@@ -53,8 +53,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
       self.cmdstr = "fillosdfusage {}".format(' '.join(argv))
       self.cmdlog(self.cmdstr)
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       self.change_local_directory(self.USAGE['OSDFDIR'])
       self.get_log_file_names()
@@ -64,8 +64,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
          self.pglog("No log file found for given command: " + self.cmdstr, self.LOGWRN)
       self.pglog(None, self.LOGWRN)
 
-   # get the log file dates 
    def get_log_file_names(self):
+      """Get the log file dates."""
       if self.option == 'd':
          for pdate in self.params:
             self.logfiles.append(self.USAGE['OSDFLOG'].format(pdate))
@@ -83,8 +83,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
             self.logfiles.append(self.USAGE['OSDFLOG'].format(pdate))
             pdate = self.adddate(pdate, 0, 0, 1)
 
-   # Fill OSDF usages into table dssdb.osdfusage of DSS PgSQL database from osdf access logs
    def fill_osdf_usages(self):
+      """Fill OSDF usages into table dssdb.osdfusage of DSS PgSQL database from osdf access logs."""
       year = cntall = addall = 0
       for logfile in self.logfiles:
          linfo = self.check_local_file(logfile)
@@ -150,8 +150,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
             if addall > cntadd:
                self.pglog("{} OSDF usage records added for {} entries at {}".format(addall, cntall, self.current_datetime()), self.LOGWRN)
 
-   # get date and time from log entry
    def get_record_date_time(self, ctime):
+      """Get date and time from log entry."""
       ms = re.search(r'^(\d+)-(\d+)-(\d+)T([\d:]+)\.', ctime)
       if ms:
          y = ms.group(1)
@@ -163,8 +163,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
       else:
          self.pglog(ctime + ": Invalid date/time format", self.LGEREX)
 
-   # add usage to table osdusage
    def add_usage_records(self, records, year):
+      """Add usage to table osdusage."""
       cnt = 0
       for key in records:
          record = records[key]
@@ -174,8 +174,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
             cnt += self.pgadd(self.USAGE['OSDFTBL'], record, self.LOGWRN)
       return cnt
 
-   # add record to table allusage
    def add_to_allusage(self, year, pgrec):
+      """Add record to table allusage."""
       record = {'source' : 'P'}
       flds = ['ip', 'dsid', 'date', 'time', 'quarter', 'size', 'method',
               'org_type', 'country', 'region', 'email']

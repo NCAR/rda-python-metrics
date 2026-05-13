@@ -18,8 +18,8 @@ class FillEndTime(PgUtil):
       super().__init__()
       self.DSIDS = []    # empty for all datasets
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          if arg == "-b":
@@ -27,8 +27,8 @@ class FillEndTime(PgUtil):
          else:
             self.DSIDS.append(PgUtil.format_dataset_id(arg))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       if self.DSIDS:
          for dsid in self.DSIDS:
@@ -36,8 +36,8 @@ class FillEndTime(PgUtil):
       else:
          self.fill_endtime()
 
-   # Fill endtime in table dssdb.dlupdt
    def fill_endtime(self, dsid = None):
+      """Fill endtime in table dssdb.dlupdt."""
       cnd = "dsid = '{}' AND ".format(dsid) if dsid else ''
       cnd += 'enddate <> NULL ORDER BY dsid, lindex'
       pgrecs = self.pgmget('dlupdt', 'lindex, dsid, enddate, endhour', cnd)
