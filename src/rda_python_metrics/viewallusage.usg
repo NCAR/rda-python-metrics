@@ -1,6 +1,6 @@
 
  View all usage information of WEB and Order data from information
- stored in PostgreSQL database 'dssdb'.
+ stored in PostgreSQL database 'rdadb'.
 
  Usage: viewallusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
                      [-A RowLimit] [-c CountryCodes] [-d DateList] \

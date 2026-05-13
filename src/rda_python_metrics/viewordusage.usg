@@ -1,6 +1,6 @@
 
  View usage information of Order data from order information
- stored in PostgreSQL database 'dssdb'.
+ stored in PostgreSQL database 'rdadb'.
 
  Usage: viewordusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
                      [-A RowLimit] [-c CountryCodes] [-d DataRequestDates] \

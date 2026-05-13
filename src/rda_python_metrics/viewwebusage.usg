@@ -1,6 +1,6 @@
 
  View usage information of WEB data files on DSS Web Server from file reading
- information stored in PostgreSQL database 'dssdb'.
+ information stored in PostgreSQL database 'rdadb'.
 
  Usage: viewwebusage [-C] ColumnNames [-O OrderColumnNames] [-a] \
                      [-A RowLimit] [-c CountryCodes] [-d DataAccessDates] \
