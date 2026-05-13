@@ -1,18 +1,33 @@
 
- Retrieves GDEX usage information from GDEX metrics database to
-   fill 'webusage' in PostgreSQL database 'rdadb'.
+ fillgdexusage - Fill table 'webusage' from GDEX metrics database.
 
- Usage: fillgdexusage [-b] -s DatasetShortNames [-m MonthList] [-N NumberDays] [-y YearList]
+ Retrieves GDEX (GeoData Exchange) usage info from the GDEX metrics
+ database and inserts records into the 'webusage' table in PostgreSQL
+ database 'rdadb'.
 
-      select option -s and one of the options, -m, -N or -y each time to run
-        this application. 
+ USAGE:
+   fillgdexusage [-b] -s DatasetShortNames
+                 (-m MonthList | -N NumberDays | -y YearList)
 
-      - Option -b, log process information into logfile only;
+ OPTIONS:
 
-      - Option -s, retrieve usage info for given dataset short names; 
+   -s DatasetShortNames   (required)
+        Gather usage info for the given dataset short names.
 
-      - Option -m, retrieve usage info in given months (YYYY-MM); 
+   One of the following time-range options is required:
 
-      - Option -N, retrieve usage info in recent Number of days;
+   -m MonthList
+        Gather usage info for the given months.
+        Month format: YYYY-MM (e.g. 2024-01).
 
-      - Option -y, retrieve usage info in given years (YYYY). 
+   -N NumberDays
+        Gather usage info for the most recent NumberDays days.
+
+   -y YearList
+        Gather usage info for the given years.
+        Year format: YYYY (e.g. 2024).
+
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   fillgdexusage -s ds083.2 -y 2024

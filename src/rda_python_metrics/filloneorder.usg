@@ -1,41 +1,39 @@
 
- Fill usage information for one special order in table 'ousage' in MySQL
- database 'dssdb'.
+ filloneorder - Add a single ad-hoc order record to the 'ousage' table.
 
- Usage: filloneorder -e UserEmail -m DeliveryMethod -t DatasetID -v DataVolume \
-                     [-a CostAmount] [-b] [-c FileCount] [-d DateOrdered] \
-                     [-i InputDataVolume] [-o OrderID] [-p PaymentMethod] \
-                     [-s SpecialistLoginName] [-x DateClosed -x TimeClosed]
+ Inserts one order/usage row into the 'ousage' table in PostgreSQL
+ database 'rdadb'. Use this when an order needs to be recorded manually
+ outside the normal automated pipelines.
 
-   select the Mandatory options, -e, -m, -t and -v, and any other Optional
-   options to run this application. 
+ USAGE:
+   filloneorder -e UserEmail -m DeliveryMethod -t DatasetID -v DataVolume
+                [-a CostAmount] [-b] [-c FileCount] [-d DateOrdered]
+                [-i InputDataVolume] [-o OrderID] [-p PaymentMethod]
+                [-s SpecialistLoginName]
+                [-x DateClosed [TimeClosed]]
 
-   - Option -b, log process information into logfile only;
+ REQUIRED OPTIONS:
 
-   - Option -a, the amount of dollars if the order is not free ;
+   -e UserEmail            Email address of the user who placed the order.
+   -m DeliveryMethod       Delivery method for the ordered data.
+   -t DatasetID            Dataset the data was ordered from.
+   -v DataVolume           Final delivered data volume.
 
-   - Option -c, the number of data files for the order;
+ OPTIONAL OPTIONS:
 
-   - Option -d, date the order is opened;
+   -a CostAmount           Order cost in dollars (omit for free orders).
+   -c FileCount            Number of data files in the order.
+   -d DateOrdered          Date the order was opened.
+   -i InputDataVolume      Input data volume processed for the order.
+   -o OrderID              Order ID, up to 30 characters.
+   -p PaymentMethod        Payment method matching the -a amount.
+   -s SpecialistLoginName  Specialist who handled the order. Defaults to
+                           the current user; if invalid, defaults to the
+                           dataset owner.
+   -x DateClosed [TimeClosed]
+                           Date (and optional time) the order was closed.
+   -b                      Run in background mode (log to file only).
 
-   - option -e, user email address who ordered the data;
-
-   - option -i, the data volume involved for processing the order;
-   
-   - Option -m, the delivery method for the ordered data;
-   
-   - option -o, order ID, up to 30 characters;
-   
-   - option -p, the payment method for the amount per option -a;
-
-   - option -s, the specialist who handle the order. The login name is used
-                if it is not specified, and the default dataset owner is 
-                used if given specialist is not a valid DSS specialist;
-
-   - option -t, dataset id the data ordered from;
-
-   - option -v, the final data volume for the order;
-
-   - Option -x, date the order is closed;
-
-   - Option -y, time the order is closed.
+ EXAMPLE:
+   filloneorder -e user@example.com -m FTP -t d540001 -v 1500 \
+                -c 25 -d 2024-01-15 -o ORDER12345

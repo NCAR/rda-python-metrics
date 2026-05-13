@@ -1,21 +1,32 @@
 
- Retrieves usage information from RDA Web logs under /var/log to
-   fill table 'codusage' in database 'rdadb'.
+ fillcodusage - Fill table 'codusage' from custom OPeNDAP (COD) access logs.
 
- Usage: fillcodusage [-a] [-b] [-f LogFileNames] [-m MonthList] [-N NumberDay] [-y YearList]
+ Reads RDA Web/COD access logs under /var/log and inserts usage records
+ into the 'codusage' table in PostgreSQL database 'rdadb'.
 
-      select one of the options, -a, -f, -m, -N or -y each time to run
-        this application. 
+ USAGE:
+   fillcodusage [-b] (-a | -f LogFileNames | -m MonthList |
+                      -N NumberDays | -y YearList)
 
-      - Option -b, log process information into logfile only;
+ OPTIONS (choose exactly one of -a, -f, -m, -N, or -y):
 
-      - Option -a, retrieve usages for all available logs;
+   -a   Process all available log files.
 
-      - Option -f, retrieve usage info from given log file names; 
+   -f LogFileNames
+        Process the given log file names directly.
 
-      - Option -m, retrieve usage info in given months; 
+   -m MonthList
+        Process log files for the given months.
+        Month format: YYYY-MM (e.g. 2024-01).
 
-      - Option -N, retrieve usage info in recent NumberDay days;
+   -N NumberDays
+        Process log files covering the most recent NumberDays days.
 
-      - Option -y, retrieve usage info in given years. 
+   -y YearList
+        Process log files for the given years.
+        Year format: YYYY (e.g. 2024).
 
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   fillcodusage -m 2024-01 2024-02
