@@ -9,6 +9,7 @@
 #   Purpose : archive log files automatically
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ##################################################################################
+import os
 import sys
 import re
 from os import path as op
@@ -333,6 +334,9 @@ class LogArch(PgFile):
 
 # main function to excecute this script
 def main():
+   if os.path.basename(sys.argv[0]) == 'setuid_logarch':
+      from rda_python_metrics.metrics_setup import main as setup_main
+      setup_main()
    object = LogArch()
    object.read_parameters()
    object.start_actions()

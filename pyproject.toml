@@ -34,11 +34,15 @@ pythonpath = [
   "src"
 ]
 
+[tool.setuptools.package-data]
+"rda_python_metrics" = ["metrics_setup.usg"]
+
 [project.urls]
 "Homepage" = "https://github.com/NCAR/rda-python-metrics"
 
 [project.scripts]
-"logarch.py" = "rda_python_metrics.logarch:main"
+"setuid_logarch" = "rda_python_metrics.logarch:main"
+"metrics-setup" = "rda_python_metrics.metrics_setup:main"
 "fillawsusage" = "rda_python_metrics.fillawsusage:main"
 "fillcdgusage" = "rda_python_metrics.fillcdgusage:main"
 "fillcodusage" = "rda_python_metrics.fillcodusage:main"

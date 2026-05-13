@@ -14,7 +14,7 @@
       
       - Option -o, archive OSDF log files;
 
-      - Option -p, provide a LogPath if not the fefault one;
+      - Option -p, provide a LogPath if not the default one;
 
       - Option -s, append PBS sublog files to common log files;
 

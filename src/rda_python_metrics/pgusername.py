@@ -48,7 +48,7 @@ def main():
    object = PgUserName()
    object.read_parameters()
    object.start_actions()
-   object.pgexit(0)
+   sys.exit(0)
 
 # call main() to start program
 if __name__ == "__main__": main()
