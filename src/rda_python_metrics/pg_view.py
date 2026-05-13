@@ -5,8 +5,8 @@
 #             2025-03-27 transferred to package rda_python_metrics from
 #             https://github.com/NCAR/rda-database.git
 #             2025-12-16 convert to class PgView
-#   Purpose : python library module to help rountinely updates of new data 
-#             for one or multiple datasets
+#   Purpose : python library module to help routinely build and render usage
+#             query views from PostgreSQL database rdadb
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import os
@@ -16,14 +16,13 @@ from rda_python_common.pg_dbi import PgDBI
 
 class PgView(PgUtil, PgDBI):
 
+   """Base class for building and rendering usage query views from PostgreSQL database rdadb."""
+
    def __init__(self):
       super().__init__()  # initialize parent class
 
-   # simple_output(params: reference to parameter hush array
-   #                 flds: reference to field hush array
-   #              records: PgSQL query result)
-   # generate a simple view without header and page information by using the passed in PgSQL query result
    def simple_output(self, params, flds, records, totals = None):
+      """Generate a simple view without header and page information by using the passed in PgSQL query result."""
       cols = params['C'][0]
       ccnt = len(cols)        # get output dimensions
       sep = params['L'][0] if 'L' in params else '  '
@@ -104,11 +103,8 @@ class PgView(PgUtil, PgDBI):
                sline += str(val)
          print(sline)
 
-   # set_data_unit(fld: reference to original array of size field
-   #              unit: given unit to show data size, 'BKMGTP'
-   #             fname: the field name in RDADB, in form of SUM() if needed)
-   # change unit of data size and reset field length according to given data unit
    def set_data_unit(self, fld, unit, fname, origin = 0):
+      """Change unit of data size and reset field length according to given data unit."""
       factor = {'B' : 1, 'K' : 100, 'M' : 1000000, 'G' : 1000000000,
                 'T' : 1000000000000, 'P' : 1000000000000000}
       if unit == 'B':
@@ -138,9 +134,8 @@ class PgView(PgUtil, PgDBI):
          fld[5] = 3
       return fld
 
-   # get all available date(D)/month(M)/year(Y) for given conditions of
-   # of dates, daterange, months or years
    def expand_time(self, exps, records, params, expand):
+      """Of dates, daterange, months or years."""
       get = 0
       opts = aold = aqtr = None
       for opt in exps:
@@ -210,7 +205,7 @@ class PgView(PgUtil, PgDBI):
             else:
                for year in cond:
                   for j in range(1, 13):
-                     month = "{}={:02}".format(year, j)
+                     month = "{}-{:02}".format(year, j)
                      if qcond:
                         qtr = int(j/3) + 1
                         i = 0
@@ -277,8 +272,8 @@ class PgView(PgUtil, PgDBI):
                rets['Q'].append((int((int(ms.group(1)) - 1)/3) + 1))
       return rets
 
-   # the detail query action for expand_query()
    def query_action(self, exps, records, expand, tables, cond):
+      """The detail query action for expand_query()."""
       fields = ''
       for exp in exps:
          fields += ", " if fields else "DISTINCT "
@@ -304,8 +299,8 @@ class PgView(PgUtil, PgDBI):
             cret += 1
       return rets
 
-   #  build table name and join condition strings
    def join_query_tables(self, tblname, tablenames = '', joins = '', tbljoin = ''):
+      """Build table name and join condition strings."""
       if not tablenames:
          return (tblname, "")
       elif tablenames.find(tblname) > -1:
@@ -351,8 +346,8 @@ class PgView(PgUtil, PgDBI):
       joins += fmtstr.format(tbljoin, jfield, tblname, jfield) + cndstr
       return (tablenames, joins)
 
-   # expand reocrds via query action
    def expand_query(self, expid, records, params, expand, vusg = None, sns = None, flds = None):
+      """Expand reocrds via query action."""
       cols = params['C'][0]
       exps = []
       # gather the valid expands
@@ -381,8 +376,8 @@ class PgView(PgUtil, PgDBI):
          cond = joins
       return self.query_action(exps, records, expand, tables, cond)
 
-   # build year list for yearly tables for given temporal conditions
    def build_year_list(self, params, vusg):
+      """Build year list for yearly tables for given temporal conditions."""
       yrs = []
       tcnd = vusg['TCND'] if 'TCND' in vusg else []
       rcnd = vusg['RCND'] if 'RCND' in vusg else []
@@ -405,8 +400,8 @@ class PgView(PgUtil, PgDBI):
                   if yr and yr not in yrs: yrs.append(yr)
       return yrs
 
-   #evaluate daterange, remove/add quotes as needed; add time ranges on if dt is True
    def evaluate_daterange(self, dates, dr, dt):
+      """Evaluate daterange, remove/add quotes as needed; add time ranges on if dt is True."""
       if dates[0]:
          ms = re.match(r"^'(\w.+\w)'$", dates[0])
          if ms: dates[0] = ms.group(1)
@@ -419,8 +414,8 @@ class PgView(PgUtil, PgDBI):
       if dates[1]: dates[1] = "'{}'".format(dates[1])
       return dates
 
-   # get view condition
    def get_view_condition(self, opt, sn, fld, params, vusg, cond = ''):
+      """Get view condition."""
       cols = params['C'][0]
       if 'HCND' in vusg and vusg['HCND'].find(opt) > -1 and cols.find(sn) < 0:
          self.pglog("{}-{} Must be in FieldList: {} for Option -{}".format(sn, fld[0], cols, opt), self.LGWNEX)
@@ -466,8 +461,8 @@ class PgView(PgUtil, PgDBI):
          cond += "({} {})".format(fld[2], vcond)
       return cond
 
-   # reorder expanded result
    def order_records(self, recs, oflds, cnt = 0):
+      """Reorder expanded result."""
       if not cnt: cnt = self.hashcount(recs, 1)   
       if cnt < 2 or not oflds: return recs
       oary = []
@@ -499,22 +494,22 @@ class PgView(PgUtil, PgDBI):
             rets[oname][i] = recs[oname][j]
       return rets
 
-   # for given country info to get long country name
    def get_country_name(self, cid):
+      """For given country info to get long country name."""
       if not cid or len(cid) != 2: return cid
       pgrec = self.pgget("countries", "token", "domain_id = '{}'".format(cid), self.LGEREX)
       return (pgrec['token'] if pgrec else cid)
 
-   # get group index array from given group IDs and dataset IDs
    def get_group_indices(self, grpids, dsids, indices):
+      """Get group index array from given group IDs and dataset IDs."""
       cnd = self.get_field_condition("grpid", grpids, 1, 1)
       if dsids: cnd += self.get_field_condition("dsid", dsids, 1)
       if indices: cnd += self.get_field_condition("gindex", indices, 1)
       pgrecs = self.pgmget("dsgroup", "DISTINCT gindex", cnd, self.LGEREX)
       return (pgrecs['gindex'] if pgrecs else None)
 
-   #  expand groups to include IDs or titles or both
    def expand_groups(self, indices, dsids, igid, ititle):
+      """Expand groups to include IDs or titles or both."""
       if not indices: return None
       count = len(indices)
       sindices = []
@@ -523,15 +518,15 @@ class PgView(PgUtil, PgDBI):
          if indices[i]:
             pgrec = self.pgget("dsgroup", "grpid, title", "dsid = '{}' AND gindex = {}".format(dsids[i], indices[i]), self.LGEREX)
             if not pgrec: continue
-            if igid and pgrec['grpid']: sindices[i] += "-" . pgrec['grpid']
-            if ititle and pgrec['title']: sindices[i] += "-" . pgrec['title']
+            if igid and pgrec['grpid']: sindices[i] += "-" + pgrec['grpid']
+            if ititle and pgrec['title']: sindices[i] += "-" + pgrec['title']
          else:
             if igid: sindices[i] += "-DATASET"
             if ititle: sindices[i] += "-The WHOLE DATASET"
       return sindices
 
-   # create condition for emails of users being notified for data updates
    def notice_condition(self, dates, emids, dsid):
+      """Create condition for emails of users being notified for data updates."""
       cond = "dsid = '{}' AND ".format(dsid)
       count = len(emids) if emids else 0
       if count > 0:
@@ -566,8 +561,8 @@ class PgView(PgUtil, PgDBI):
          cond += ")"
       return cond
 
-   # get email list including historical ones
    def include_historic_emails(self, emails, opt):
+      """Get email list including historical ones."""
       elist = {}
       if not opt: opt = 3
       for email in emails:
@@ -589,8 +584,8 @@ class PgView(PgUtil, PgDBI):
       emails = list(elist)
       return emails
 
-   # combine two query dicts
    def combine_hash(self, adict, bdict, gflds, sflds):
+      """Combine two query dicts."""
       if not bdict: return adict
       if not adict: return bdict
       for fld in adict: adict[fld].extend(bdict[fld])
@@ -616,8 +611,8 @@ class PgView(PgUtil, PgDBI):
          a = b+1
       return adict
 
-   # compact a dict by group fields to get distinct count and total sum 
    def compact_hash_groups(self, adict, gflds, sflds, dflds, totals):
+      """Compact a dict by group fields to get distinct count and total sum."""
       bdict = {}
       ddict = {}
       tdict = {}
