@@ -24,15 +24,24 @@
 
    Full setuid install (runs as gdexdata; requires sudo access to gdexdata):
 
-      pywrapper-install -u gdexdata             # compile the C wrapper, once per env
-      pywrapper-install -l logarch -u gdexdata  # install logarch as setuid
+      pywrapper-install -c|--compile -n|--username gdexdata            # compile the C wrapper, once per env
+      pywrapper-install -l|--link logarch                              # install logarch as setuid
+      pywrapper-install -l|--link all                                  # or link every setuid_* at once
 
    Simple install (runs as current user; no sudo required):
 
-      pywrapper-install -l logarch -s
+      pywrapper-install -l|--link logarch -s|--simple
+      pywrapper-install -l|--link all -s|--simple                      # or link every setuid_* at once
 
       This creates bin/logarch -> bin/setuid_logarch with no privilege change.
 
- STEP 3 - Verify:
+ STEP 3 - Update existing installation (no sudo required):
+
+      pywrapper-install -u|--update
+
+      Recompiles pywrapper and reinstalls all pgstart_* setuid binaries
+      using the existing pgstart_* binaries already in bin/.
+
+ STEP 4 - Verify:
 
    Run `logarch` with no arguments to display its user guide.
