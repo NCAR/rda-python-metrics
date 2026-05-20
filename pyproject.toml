@@ -26,7 +26,10 @@ dependencies = [
   "ipinfo",
   "httplib2",
   "dnspython",
-  "unidecode"
+  "unidecode",
+  "urllib3>=2.5.0",
+  "requests>=2.33.0",
+  "idna>=3.10",
 ]
 
 [tool.pytest.ini_options]
