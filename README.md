@@ -44,32 +44,6 @@ The package provides two categories of programs:
 | `viewwebfile` | View web file access records |
 | `viewwebusage` | View web usage statistics |
 
-## Installing rda-python-common
-
-For local development, clone this repo alongside your project and install it
-in editable mode so that changes are picked up without re-installing:
-
-```bash
-git clone https://github.com/NCAR/rda-python-common.git
-cd rda-python-common
-pip install -e .
-```
-
-For a regular (non-editable) install from a checkout:
-
-```bash
-pip install /path/to/rda-python-common
-```
-
-For a production install on a system that uses the published distribution:
-
-```bash
-pip install rda_python_common
-```
-
-The package brings in its own transitive dependencies (`psycopg2-binary`,
-`rda-python-globus`, `unidecode`, `hvac`).
-
 ## Setuid Setup
 
 `logarch` runs as the common user `gdexdata` via the `rda_python_setuid`
@@ -139,3 +113,30 @@ metrics-setup
 
 The guide is also shown automatically if `setuid_logarch` is invoked directly
 before the setuid wrapper has been configured.
+
+## Installing rda-python-metrics
+
+For local development, clone this repo alongside your project and install it
+in editable mode so that changes are picked up without re-installing:
+
+```bash
+git clone https://github.com/NCAR/rda-python-metrics.git
+cd rda-python-metrics
+pip install -e .
+```
+
+For a regular (non-editable) install from a checkout:
+
+```bash
+pip install /path/to/rda-python-metrics
+```
+
+For a production install on a system that uses the published distribution:
+
+```bash
+pip install rda_python_metrics
+```
+
+The package brings in its own transitive dependencies (`rda_python_common`,
+`rda_python_setuid`, `geoip2`, `ipinfo`, `httplib2`, `dnspython`, `unidecode`,
+`urllib3>=2.5.0`, `requests>=2.33.0`, `idna>=3.10`).
