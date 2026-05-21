@@ -334,10 +334,9 @@ class LogArch(PgFile):
 
 # main function to execute this script
 def main():
+   from rda_python_setuid.setup_guide import show_setup_guide
    object = LogArch()
-   if object.get_command(sys.argv[0]) == 'setuid_logarch':
-      from rda_python_metrics.metrics_setup import main as setup_main
-      setup_main()
+   show_setup_guide(object, 'rda_python_metrics', ['logarch'])
    object.read_parameters()
    object.start_actions()
    object.pgexit(0)

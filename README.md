@@ -144,11 +144,5 @@ pywrapper-install -u|--update
 
 ### Setup guide
 
-After `pip install`, run `metrics-setup` at any time to display the setup guide:
-
-```bash
-metrics-setup
-```
-
-The guide is also shown automatically if `setuid_logarch` is invoked directly
-before the setuid wrapper has been configured.
+The shared setuid setup guide is shown automatically if `setuid_logarch` is
+invoked directly before the setuid wrapper has been configured.
