@@ -221,7 +221,7 @@ class LogArch(PgFile):
          info = self.check_local_file(file, 2)
          if(not info or info['data_size'] < 10000): continue   # skip log files small than 10KB
          self.pgsystem("cp -p -f {} backup/{}".format(file, file), self.LWEMEX, 5)
-         if info['logname'] != self.PGLOG['GDEXUSER']: self.pgsystem("rm -rf " + file)
+         if info['logname'] != self.PGLOG['COMMONUSER']: self.pgsystem("rm -rf " + file)
          self.pgsystem("cat /dev/null > " + file, 0, 1024)
          if file == 'gdexls.log': self.pgsystem("chmod 666 " + file, 0, 1024)
          if op.exists(logfile):

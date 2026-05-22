@@ -59,13 +59,13 @@ source $ENVHOME/bin/activate
 ### Option B — Conda (DAV/Casper)
 
 ```bash
-conda create -n pg-gdex python=3.12
-conda activate pg-gdex            # e.g. /glade/work/gdexdata/conda-envs/pg-gdex
+conda create --prefix $ENVHOME python=3.12   # e.g. /glade/work/gdexdata/conda-envs/pg-gdex
+conda activate $ENVHOME
 ```
 
 ## Installing rda-python-metrics
 
-Pick whichever install mode fits your workflow.  All three pull in the
+Pick whichever install mode fits your workflow.  All four pull in the
 transitive dependencies (`rda_python_common`, `rda_python_setuid`, `geoip2`,
 `ipinfo`, `httplib2`, `dnspython`, `unidecode`, `urllib3>=2.5.0`,
 `requests>=2.33.0`, `idna>=3.10`) automatically.
@@ -102,21 +102,28 @@ pip install rda_python_metrics
 
 ## Setuid Setup
 
-`logarch` runs as the common user `gdexdata` via the `rda_python_setuid`
-mechanism, which is pulled in automatically as a dependency.  After
-`pip install` above, choose one of the wiring options below.
+`logarch` runs as the common user `PGLOG['COMMONUSER']` (default `gdexdata`)
+via the `rda_python_setuid` mechanism, which is pulled in automatically as
+a dependency.  After `pip install` above, choose one of the wiring options
+below.
 
-### Full setuid install (requires sudo access to gdexdata)
+### Full setuid install (requires sudo access to COMMONUSER)
 
 Run these steps once per environment:
 
 ```bash
-# Compile the pywrapper C binary (once per environment):
+# 1. Compile the pywrapper C binary (once per environment):
 pywrapper-install -c|--compile -n|--username gdexdata
 
-# Wire up logarch as a setuid entry (or use 'all' to link every setuid_* at once):
+# 2. Wire up logarch as a setuid entry (or use 'all' to link every setuid_* at once):
 pywrapper-install -l|--link logarch
 pywrapper-install -l|--link all
+
+# 3. Optionally, install a pgstart_<loginname> binary so <loginname> (any
+#    user in the same group as PGLOG['COMMONUSER']) can run commands as
+#    themselves.  Run either by PGLOG['ADMINUSER'] (default zji, if it has
+#    'sudo -u <loginname>'), or by <loginname> directly:
+pywrapper-install -p|--pgstart -n|--username <loginname>
 ```
 
 `pywrapper-install` with no arguments displays the full user guide.
