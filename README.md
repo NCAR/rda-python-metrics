@@ -107,6 +107,11 @@ via the `rda_python_setuid` mechanism, which is pulled in automatically as
 a dependency.  After `pip install` above, choose one of the wiring options
 below.
 
+> **Note:** If `rda_python_setuid` is already installed and fully set up in
+> your environment, you can skip the compile step (`-c/--compile`) and the
+> optional `pgstart` step (`-p/--pgstart`).  The `-l/--link` step is still
+> required to wire up this package's own setuid program.
+
 ### Full setuid install (requires sudo access to COMMONUSER)
 
 Run these steps once per environment:

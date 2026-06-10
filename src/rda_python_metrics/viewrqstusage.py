@@ -140,7 +140,7 @@ class ViewRQSTUsage(PgView):
       self.sfields = []
       self.gfields = []
       self.dfields = []
-      self.pgname = 'viewallusage'
+      self.pgname = 'viewrqstusage'
       self.rsname = "size_request"
 
    def read_parameters(self):
