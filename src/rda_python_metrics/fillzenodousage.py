@@ -386,11 +386,6 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
 
       return cnt
 
-   #
-   # call main() to start program
-   #
-   if __name__ == "__main__": main()
-
 # main function to execute this script
 def main():
    object = FillZenodoUsage()
