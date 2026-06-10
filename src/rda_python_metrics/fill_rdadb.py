@@ -10,7 +10,7 @@
 #   Purpose : python program to retrieve info from data logs, and fill tables
 #             in PostgreSQL database.schema rdadb.dssdb
 #
-#    Github : https://github.com/NCAR/rda-pythn-metrics.git
+#    Github : https://github.com/NCAR/rda-python-metrics.git
 #
 ###############################################################################
 #

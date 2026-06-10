@@ -9,6 +9,7 @@
 #   Purpose : archive log files automatically
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ##################################################################################
+import os
 import sys
 import re
 from os import path as op
@@ -220,7 +221,7 @@ class LogArch(PgFile):
          info = self.check_local_file(file, 2)
          if(not info or info['data_size'] < 10000): continue   # skip log files small than 10KB
          self.pgsystem("cp -p -f {} backup/{}".format(file, file), self.LWEMEX, 5)
-         if info['logname'] != self.PGLOG['GDEXUSER']: self.pgsystem("rm -rf " + file)
+         if info['logname'] != self.PGLOG['COMMONUSER']: self.pgsystem("rm -rf " + file)
          self.pgsystem("cat /dev/null > " + file, 0, 1024)
          if file == 'gdexls.log': self.pgsystem("chmod 666 " + file, 0, 1024)
          if op.exists(logfile):
@@ -331,9 +332,11 @@ class LogArch(PgFile):
          if size > 0: self.pglog("{}: archived on {} as {}({})".format(logfile, ainfo['date_modified'], afile, size), self.LGWNEM)
       return size
 
-# main function to excecute this script
+# main function to execute this script
 def main():
+   from rda_python_setuid.setup_guide import show_setup_guide
    object = LogArch()
+   show_setup_guide(object, 'rda_python_metrics', ['logarch'])
    object.read_parameters()
    object.start_actions()
    object.pgexit(0)

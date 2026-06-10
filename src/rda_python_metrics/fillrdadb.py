@@ -8,7 +8,7 @@
 #             2025-12-17 convert to class FillRDADB
 #   Purpose : python program to retrieve info from data logs, and fill tables
 #             in PostgreSQL database.schema rdadb.dssdb
-#    Github : https://github.com/NCAR/rda-pythn-metrics.git
+#    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
 import re
@@ -16,6 +16,8 @@ from rda_python_common.pg_util import PgUtil
 from rda_python_common.pg_dbi import PgDBI
 
 class FillRDADB(PgUtil, PgDBI):
+
+   """Retrieve info from data logs and fill tables in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()
@@ -34,8 +36,8 @@ class FillRDADB(PgUtil, PgDBI):
       }
       self.params = []   # array of input values
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          if arg == "-b":
@@ -66,16 +68,16 @@ class FillRDADB(PgUtil, PgDBI):
          self.show_usage('fillrdadb')
       self.cmdlog("fillrdadb {}".format(' '.join(argv)))
    
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       if self.RDADB['OPTION']&self.CLNFL: # clean unused file only
          self.clean_unused_files()
       elif self.RDADB['OPTION']&self.MASKS:
          self.fill_rdadb(self.RDADB['OPTVAL'])
    
-   # Fill self.RDADB info for given condition
    def fill_rdadb(self, option):
+      """Fill self.RDADB info for given condition."""
       filecond = '{} {}'.format(option, ' '.join(self.params))
       self.pglog("Filling RDADB info for '{}' at {}".format(filecond, self.current_datetime()), self.LOGWRN)
       # fill available custom OPeNDAP usages
@@ -89,8 +91,8 @@ class FillRDADB(PgUtil, PgDBI):
       if self.RDADB['DOMAIL']: self.send_email_notice()
       self.pglog("End Filling RDADB info at {}".format(self.current_datetime()), self.LGWNEM)
    
-   # clean unused MSS and Web files
    def clean_unused_files(self):
+      """Clean unused MSS and Web files."""
       self.pglog("Check and clean deleted Web files that never been used at {}".format(self.current_datetime()), self.LOGWRN)
       pgrecs = self.pgmget("wfile", "wid", "status = 'D'", self.LGWNEX)
       allcnt = len(pgrecs['wid']) if pgrecs else 0
@@ -107,8 +109,8 @@ class FillRDADB(PgUtil, PgDBI):
                delcnt += self.pgdel("wfile", "wid = {}".format(fid), self.LGWNEX)
       self.pglog("{} record(s) removed from Table 'wfile' at {}".format(delcnt, self.current_datetime()), self.LOGWRN)
    
-   # email notice of job done
    def send_email_notice(self):
+      """Email notice of job done."""
       msg = ("Hi All,\n\nRDADB weekly data usage gathering is done at {}.\n\n".format(self.current_datetime()) +
              "Please Let me know if you notice any problem.\n\nThanks,\n\nHua\n")
       pgrecs = self.pgmget("dssgrp", "logname", "email_flag = 'Y'", self.LGWNEX)
@@ -119,7 +121,7 @@ class FillRDADB(PgUtil, PgDBI):
             receiver += (logname + "@ucar.edu")
          self.send_email("RDADB Weekly Data Usage Gathered on " + self.curdate(), receiver, msg)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillRDADB()
    object.read_parameters()

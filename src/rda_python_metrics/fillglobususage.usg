@@ -1,19 +1,31 @@
 
- Retrieves usage information from GLlobus Server logs under directory
-   /gpfs/fs1/collections/rda/work/logs/gridftp/ to fill table 'wusage' in
-   database 'rdadb'.
+ fillglobususage - Fill table 'wusage' from Globus GridFTP log files.
 
- Usage: fillglobususage [-b] [-d LogFileDates] [-f LogFileNames] [-N NumberDay] [-p BeginDate [Enddate]]
+ Reads Globus GridFTP access logs from /gpfs/fs1/collections/rda/work/logs/gridftp/
+ and inserts usage records into the 'wusage' table in PostgreSQL
+ database 'rdadb'.
 
-      select option, -d, -f, -N or -p to run this application.
+ USAGE:
+   fillglobususage [-b] (-d LogFileDates | -f LogFileNames |
+                         -N NumberDays | -p BeginDate [EndDate])
 
-      - Option -b, log process information into logfile only;
+ OPTIONS (choose exactly one of -d, -f, -N, or -p):
 
-      - Option -d, retrieve usage info from given log file dates; 
+   -d LogFileDates
+        Process log files for the given dates.
+        Date format: YYYY-MM-DD (e.g. 2024-01-15).
 
-      - Option -f, retrieve usage info from given log file names; 
+   -f LogFileNames
+        Process the given log file names directly.
 
-      - Option -N, retrieve usage info in recent NumberDay days;
+   -N NumberDays
+        Process log files covering the most recent NumberDays days.
 
-      - Option -p, retrieve usage info between given period. For missing EndDate,
-          it defaults to the current date.
+   -p BeginDate [EndDate]
+        Process log files between BeginDate and EndDate, inclusive.
+        EndDate defaults to today if omitted.
+
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   fillglobususage -N 7

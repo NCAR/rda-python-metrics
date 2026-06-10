@@ -16,6 +16,8 @@ from .pg_ipinfo import PgIPInfo
 
 class FillIPInfo(PgIPInfo):
 
+   """Retrieve IP geolocation info and fill table ipinfo in PostgreSQL database rdadb."""
+
    def __init__(self):
       super().__init__()
       # the define options for gathering ipinfo data
@@ -31,8 +33,8 @@ class FillIPInfo(PgIPInfo):
       self.table = None
       self.option = 0
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       topt = 0
       for arg in argv:
@@ -63,13 +65,13 @@ class FillIPInfo(PgIPInfo):
       if not (self.inputs and self.table): self.show_usage('fillipinfo')
       self.cmdlog("fillipinfo {}".format(' '.join(argv)))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       self.fill_ip_info()
 
-   # Fill ip info in table dssdb.tdsusage
    def fill_ip_info(self):
+      """Fill ip info in table dssdb.tdsusage."""
       cntall = 0
       func = getattr(self, f"fix_{self.table}_records")
       for input in self.inputs:
@@ -93,8 +95,8 @@ class FillIPInfo(PgIPInfo):
       if cntall > 2:
          self.pglog(f"{self.table}: Total {cntall} records updated", self.LOGWRN)
 
-   # get next available date
    def get_next_date(self, date, edate):
+      """Get next available date."""
       if date < edate:
          ndate = self.enddate(date, 0, 'M')
          if ndate < edate: edate = ndate
@@ -104,8 +106,8 @@ class FillIPInfo(PgIPInfo):
          cond = f"= '{date}'"
       return (edate, cond)
 
-   # fix ipinfo in table allusage
    def fix_allusage_records(self, date, cnd):
+      """Fix ipinfo in table allusage."""
       cnt = 0
       ms = re.match(r'^(\d+)-', date)
       year = ms.group(1)
@@ -122,8 +124,8 @@ class FillIPInfo(PgIPInfo):
       self.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for date {cnd}", self.LOGWRN)
       return mcnt
 
-   # fix ipinfo in table tdsusage
    def fix_tdsusage_records(self, date, cnd):
+      """Fix ipinfo in table tdsusage."""
       table = 'tdsusage'
       cond = f"date {cnd} AND region IS NULL"
       pgrecs = self.pgmget(table, 'date, time, email, ip', cond, self.LGEREX)
@@ -140,8 +142,8 @@ class FillIPInfo(PgIPInfo):
       self.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for date {cnd}", self.LOGWRN)
       return mcnt
    
-   # fix ipinfo in table codusage
    def fix_codusage_records(self, date, cnd):
+      """Fix ipinfo in table codusage."""
       table = 'codusage'
       cond = f"date {cnd} AND region IS NULL"
       pgrecs = self.pgmget(table, 'codidx, email, ip', cond, self.LGEREX)
@@ -156,8 +158,8 @@ class FillIPInfo(PgIPInfo):
       self.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for date {cnd}", self.LOGWRN)
       return mcnt
 
-   # fix ipinfo in table wuser
    def fix_wuser_records(self, date, cnd):
+      """Fix ipinfo in table wuser."""
       table = 'wuser'
       cond = f"start_date {cnd} AND region IS NULL"
       pgrecs = self.pgmget(table, 'wuid, email', cond, self.LGEREX)
@@ -173,8 +175,8 @@ class FillIPInfo(PgIPInfo):
       self.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for start_date {cnd}", self.LOGWRN)
       return mcnt
    
-   # fix ip info for table ipinfo
    def fix_ipinfo_records(self, date, cnd):
+      """Fix ip info for table ipinfo."""
       table = 'ipinfo'
       cond = f"adddate {cnd} AND stat_flag = 'M'"
       pgrecs = self.pgmget(table, 'ip', cond, self.LGEREX)
@@ -187,7 +189,7 @@ class FillIPInfo(PgIPInfo):
       self.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for adddate {cnd}", self.LOGWRN)
       return mcnt
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillIPInfo()
    object.read_parameters()

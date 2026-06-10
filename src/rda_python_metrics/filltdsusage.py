@@ -7,7 +7,7 @@
 #             https://github.com/NCAR/rda-database.git
 #             2025-12-17 convert to class FillTDSUsage
 #   Purpose : python program to retrieve info from TDS logs 
-#             and fill table tdsusage in PostgreSQL database dssdb.
+#             and fill table tdsusage in PostgreSQL database rdadb.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
@@ -18,6 +18,8 @@ from rda_python_common.pg_file import PgFile
 from .pg_ipinfo import PgIPInfo
 
 class FillTDSUsage(PgIPInfo, PgFile):
+
+   """Retrieve info from TDS logs and fill table tdsusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()
@@ -34,44 +36,45 @@ class FillTDSUsage(PgIPInfo, PgFile):
       self.params = []  # array of input values
       self.option = None
       self.logfiles = []
+      self.cmdstr = None
 
-# function to read parameters
-def read_parameters(self):
-   argv = sys.argv[1:]
-   for arg in argv:
-      ms = re.match(r'^-(b|d|p|N)$', arg)
-      if ms:
-         opt = ms.group(1)
-         if opt == 'b':
-            self.PGLOG['BCKGRND'] = 1
+   def read_parameters(self):
+      """Function to read parameters."""
+      argv = sys.argv[1:]
+      for arg in argv:
+         ms = re.match(r'^-(b|d|p|N)$', arg)
+         if ms:
+            opt = ms.group(1)
+            if opt == 'b':
+               self.PGLOG['BCKGRND'] = 1
+            elif self.option:
+               self.pglog("{}: Option -{} is present already".format(arg, self.option), self.LGWNEX)
+            else:
+               self.option = opt
+         elif re.match(r'^-', arg):
+            self.pglog(arg + ": Invalid Option", self.LGWNEX)
          elif self.option:
-            self.pglog("{}: Option -{} is present already".format(arg, self.option), self.LGWNEX)
+            self.params.append(arg)
          else:
-            self.option = opt
-      elif re.match(r'^-', arg):
-         self.pglog(arg + ": Invalid Option", self.LGWNEX)
-      elif self.option:
-         self.params.append(arg)
-      else:
-         self.pglog(arg + ": Invalid Parameter", self.LGWNEX)
-   if not (self.option and self.params): self.show_usage('filltdsusage')
-   cmdstr = "filltdsusage {}".format(' '.join(argv))
-   self.cmdlog(cmdstr)
+            self.pglog(arg + ": Invalid Parameter", self.LGWNEX)
+      if not (self.option and self.params): self.show_usage('filltdsusage')
+      self.cmdstr = "filltdsusage {}".format(' '.join(argv))
+      self.cmdlog(self.cmdstr)
 
-   # function to start actions
    def start_actions(self):
-      pull_github_repo()
+      """Function to start actions."""
+      self.pull_github_repo()
       self.dssdb_dbname()
-      PgFile.change_local_directory(self.USAGE['TDSDIR'])
-      get_log_file_names()
+      self.change_local_directory(self.USAGE['TDSDIR'])
+      self.get_log_file_names()
       if self.logfiles:
-         fill_tds_usages()
+         self.fill_tds_usages()
       else:
-         self.pglog("No log file found for given command: " + cmdstr, self.LOGWRN)
+         self.pglog("No log file found for given command: " + self.cmdstr, self.LOGWRN)
       self.pglog(None, self.LOGWRN)
 
-   # get the log file dates 
    def get_log_file_names(self):
+      """Get the log file dates."""
       if self.option == 'd':
          for pdate in self.params:
             self.logfiles.append(self.USAGE['TDSLOG'].format(pdate))
@@ -89,28 +92,28 @@ def read_parameters(self):
             self.logfiles.append(self.USAGE['TDSLOG'].format(pdate))
             pdate = self.adddate(pdate, 0, 0, 1)
 
-   # git pull the github repo
    def pull_github_repo(self):
-      PgFile.change_local_directory(self.USAGE['GITDIR'])
+      """Git pull the github repo."""
+      self.change_local_directory(self.USAGE['GITDIR'])
       self.pgsystem(self.USAGE['GITGET'], 5, self.LOGWRN)
 
-   # Fill TDS usages into table dssdb.tdsusage from tds access logs
    def fill_tds_usages(self):
+      """Fill TDS usages into table dssdb.tdsusage from tds access logs."""
       year = cntall = addall = 0
       for logfile in self.logfiles:
-         linfo = PgFile.check_local_file(logfile)
+         linfo = self.check_local_file(logfile)
          if not linfo:
             gzfile = self.USAGE['GZFILE'].format(logfile)
-            linfo = PgFile.check_local_file(gzfile)
+            linfo = self.check_local_file(gzfile)
             if not linfo:
                self.pglog("{}: Not exists for Gathering TDS usage".format(gzfile), self.LOGWRN)
                continue
             self.pgsystem(self.USAGE['TDSGET'].format(gzfile, logfile), 5, self.LOGWRN)
-            linfo = PgFile.check_local_file(logfile)
+            linfo = self.check_local_file(logfile)
             if not linfo:
                self.pglog("{}: Error gunzip TDS usage".format(gzfile), self.LGEREX)
          self.pglog("{}: Gathering TDS usage at {}".format(logfile, self.current_datetime()), self.LOGWRN)
-         tds = PgFile.open_local_file(logfile)
+         tds = self.open_local_file(logfile)
          if not tds: continue
          records = {}
          cntadd = entcnt = 0
@@ -154,8 +157,8 @@ def read_parameters(self):
          addall += cntadd
       self.pglog("{} TDS usage records added for {} entries at {}".format(addall, cntall, self.current_datetime()), self.LOGWRN)
 
-   # get date and time ffrom log entry
    def get_record_date_time(self, ctime):
+      """Get date and time from log entry."""
       ms = re.search(r'^(\d+)/(\w+)/(\d+):(\d+:\d+:\d+)$', ctime)
       if ms:
          d = int(ms.group(1))
@@ -167,8 +170,8 @@ def read_parameters(self):
          self.pglog(f"{ctime}: Invalid time format", self.LGEREX)
          return (None, None)
 
-   # add usage to table tdsusage
    def add_usage_records(self, records, date):
+      """Add usage to table tdsusage."""
       quarter = cnt = 0
       year = None
       ms = re.search(r'(\d+)-(\d+)-', date)
@@ -194,15 +197,15 @@ def read_parameters(self):
       self.pglog("{}: {} TDS usage records added at {}".format(date, cnt, self.current_datetime()), self.LOGWRN)
       return cnt
 
-   # add usage to table allusage
    def add_to_allusage(self, year, pgrec):
+      """Add usage to table allusage."""
       record = {'method' : 'TDS', 'source' : 'T'}
       for fld in pgrec:
          if re.match(r'^(engine|method|etype|fcount)$', fld): continue
          record[fld] = pgrec[fld]
       return self.add_yearly_allusage(year, record)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillTDSUsage()
    object.read_parameters()

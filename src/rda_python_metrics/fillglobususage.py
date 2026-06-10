@@ -1,4 +1,4 @@
-##!/usr/bin/env python3
+#!/usr/bin/env python3
 ###############################################################################
 #     Title : fillglobususage
 #    Author : Zaihua Ji,  zji@ucar.edu
@@ -7,8 +7,8 @@
 #             https://github.com/NCAR/rda-database.git
 #             2025-12-17 convert to FillGlobusUsage
 #   Purpose : python program to retrieve info from Globus logs 
-#             and fill table wusages in PostgreSQL database dssdb.
-#    Github : https://github.com/NCAR/rda-pythn-metrics.git
+#             and fill table wusages in PostgreSQL database rdadb.
+#    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
 import re
@@ -19,6 +19,8 @@ from rda_python_common.pg_split import PgSplit
 from .pg_ipinfo import PgIPInfo
 
 class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
+
+   """Retrieve info from Globus logs and fill table wusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()
@@ -32,8 +34,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
       self.params = []  # array of input values
       self.option = self.cmdstr = None
 
-   # function to red paramters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          ms = re.match(r'^-(b|d|f|p|N)$', arg)
@@ -55,8 +57,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
       self.cmdstr = "fillglobususage {}".format(' '.join(argv))
       self.cmdlog(self.cmdstr)
    
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       self.change_local_directory(self.USAGE['GBSDIR'])
       self.get_log_file_names()
@@ -66,8 +68,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
          self.pglog("No log file found for given command: " + self.cmdstr, self.LOGWRN)
       self.pglog(None, self.LOGWRN)
    
-   # get the log file dates 
    def get_log_file_names(self):
+      """Get the log file dates."""
       if self.option == 'f':
          self.logfiles = self.params
       elif self.option == 'd':
@@ -93,8 +95,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
             if fnames: self.logfiles.extend(sorted(fnames))
             pdate = self.adddate(pdate, 0, 0, 1)
    
-   # Fill Globus usages into table dssdb.globususage of DSS PostgreSQL database from globus access logs
    def fill_globus_usages(self):
+      """Fill Globus usages into table dssdb.globususage of DSS PostgreSQL database from globus access logs."""
       cntall = addall = 0
       fcnt = len(self.logfiles)
       for logfile in self.logfiles:
@@ -155,8 +157,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
          addall += cntadd
          self.pglog("{} Globus usage records added for {} entries at {}".format(addall, cntall, self.current_datetime()), self.LOGWRN)
    
-   # get date and time from log entry
    def get_record_date_time(self, ctime):
+      """Get date and time from log entry."""
       ms = re.search(r'^(\d+)/(\w+)/(\d+):(\d+:\d+:\d+)$', ctime)
       if ms:
          d = int(ms.group(1))
@@ -168,8 +170,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
       else:
          self.pglog(ctime + ": Invalid date/time format", self.LGEREX)
    
-   # Fill usage of a single online data file into table dssdb.wusage of DSS PostgreSQL database
    def add_file_usage(self, year, logrec):
+      """Fill usage of a single online data file into table dssdb.wusage of DSS PostgreSQL database."""
       pgrec = self.get_wfile_wid(logrec['dsid'], logrec['wfile'])
       if not pgrec: return 0
       table = "{}_{}".format(self.USAGE['PGTBL'], year)
@@ -191,8 +193,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
       else:
          return 0
 
-   # add usage to allusage tables   
    def add_to_allusage(self, year, logrec, wurec):
+      """Add usage to allusage tables."""
       pgrec = {'email' : wurec['email'], 'org_type' : wurec['org_type'],
                'country' : wurec['country'], 'region' : wurec['region']}
       pgrec['dsid'] = logrec['dsid']
@@ -205,8 +207,8 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
       pgrec['source'] = 'W'
       return self.add_yearly_allusage(year, pgrec)
 
-   # return wfile.wid upon success, 0 otherwise
    def get_wfile_wid(self, dsid, wfile):
+      """Return wfile.wid upon success, 0 otherwise."""
       wfcond = "wfile = '{}'".format(wfile) 
       pgrec = self.pgget_wfile(dsid, "*", wfcond)
       if pgrec:
@@ -220,7 +222,7 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
                if pgrec: pgrec['dsid'] = dsid
       return pgrec
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillGlobusUsage()
    object.read_parameters()

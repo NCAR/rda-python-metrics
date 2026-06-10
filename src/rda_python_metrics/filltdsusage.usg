@@ -1,16 +1,27 @@
 
- Retrieves usage information from RDA TDS Server logs on github to
-   fill table 'tdsusage' in MySQL database 'dssdb'.
+ filltdsusage - Fill table 'tdsusage' from RDA THREDDS Server log files.
 
- Usage: filltdsusage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
+ Pulls RDA THREDDS access logs from the configured GitHub repository
+ and inserts usage records into the 'tdsusage' table in PostgreSQL
+ database 'rdadb'.
 
-      select option, -d, -N or -p to run this application.
+ USAGE:
+   filltdsusage [-b] (-d LogFileDates | -N NumberDays | -p BeginDate [EndDate])
 
-      - Option -b, log process information into logfile only;
+ OPTIONS (choose exactly one of -d, -N, or -p):
 
-      - Option -d, retrieve usage info from given log file dates; 
+   -d LogFileDates
+        Process log files for the given dates.
+        Date format: YYYY-MM-DD (e.g. 2024-01-15).
 
-      - Option -N, retrieve usage info in recent NumberDay days;
+   -N NumberDays
+        Process log files covering the most recent NumberDays days.
 
-      - Option -p, retrieve usage info between given period. For missing EndDate,
-          it defaults to the current date.
+   -p BeginDate [EndDate]
+        Process log files between BeginDate and EndDate, inclusive.
+        EndDate defaults to today if omitted.
+
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   filltdsusage -d 2024-01-15

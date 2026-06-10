@@ -20,6 +20,8 @@ from rda_python_common.pg_util import PgUtil
 
 class PgIPInfo(PgUtil, PgDBI):
 
+   """Retrieve and manage IP geolocation info using ipinfo and geoip2 modules."""
+
    def __init__(self):
       super().__init__()  # initialize parent class
 
@@ -38,13 +40,13 @@ class PgIPInfo(PgUtil, PgDBI):
       self.DMRECS = {}
       self.COUNTRIES = {}
 
-   # get save a global dns.resolver.Resolver object
    def get_dns_resolver(self, forceget = False):
+      """Get save a global dns.resolver.Resolver object."""
       if forceget or not self.IPDNS: self.IPDNS = dns.resolver.Resolver()
       return self.IPDNS
 
-   # Resolve a domain name to an IP address (A record)
    def dns_to_ip(self, dmname, type = 'A'):
+      """Resolve a domain name to an IP address (A record)."""
       if dmname in self.DMRECS: return self.DMRECS[dmname]
       ipdns = self.get_dns_resolver()
       dm = None
@@ -60,35 +62,35 @@ class PgIPInfo(PgUtil, PgDBI):
       self.DMRECS[dmname] = dm
       return dm
 
-   # Get country token name for given two-character domain id
    def get_country_name_code(self, dm):
+      """Get country token name for given two-character domain id."""
       if dm not in self.COUNTRIES:
          pgrec = self.pgget('countries', 'token', "domain_id = '{}'".format(dm))
          self.COUNTRIES[dm] = pgrec['token'] if pgrec else 'Unknown'
       return self.COUNTRIES[dm]
 
-   # get country code from name
    def get_country_record_code(self, cname, kname = None):
+      """Get country code from name."""
       name = cname[kname] if kname else cname
       name = name.replace(' ', '.').upper() if name else 'UNITED.STATES'
       if name == 'CHINA': name = 'P.R.CHINA'
       return name
 
-   # setup ipinfo database
    def set_ipinfo_database(self):
+      """Setup ipinfo database."""
       try:
          self.IPDB = ipinfo.getHandler(self.IPINFO['TOKEN'])
       except Exception as e:
          self.pglog('ipinfo: ' + str(e), self.LGEREX)
 
-   # get a ipinfo record for given domain
    def domain_ipinfo_record(self, dmname):
+      """Get a ipinfo record for given domain."""
       ips = self.dns_to_ip(dmname)
       if ips: return self.set_ipinfo(ips[0])
       return None
 
-   # try to get hostname via socket for given ip address
    def get_ip_hostname(self, ip, iprec, record):
+      """Try to get hostname via socket for given ip address."""
       record['hostname'] = ip
       if iprec:
          if 'hostname' in iprec and iprec['hostname']:
@@ -106,8 +108,8 @@ class PgIPInfo(PgUtil, PgDBI):
       except Exception as e:
          self.pglog("socket: {} - {}".format(ip, str(e)), self.LOGWRN)
 
-   # get a ipinfo record for given ip address
    def get_ipinfo_record(self, ip):
+      """Get a ipinfo record for given ip address."""
       if not self.IPDB: self.set_ipinfo_database()
       try:
          iprec = self.IPDB.getDetails(ip).all
@@ -131,15 +133,15 @@ class PgIPInfo(PgUtil, PgDBI):
       record['ipinfo'] = json.dumps(iprec)
       return record
 
-   # setup geoip2 database
    def set_geoip2_database(self):
+      """Setup geoip2 database."""
       try:
          self.G2DB = geodb.Reader(self.IPINFO['DBFILE'])
       except Exception as e:
          self.pglog("geoip2: " + str(e), self.LGEREX)
 
-   # get a geoip2 record for given ip address
    def get_geoip2_record(self, ip):
+      """Get a geoip2 record for given ip address."""
       if not self.G2DB: self.set_geoip2_database()
       try:
          city = self.G2DB.city(ip)
@@ -158,25 +160,25 @@ class PgIPInfo(PgUtil, PgDBI):
       record['ipinfo'] = json.dumps(self.object_to_dict(city))
       return record
 
-   # change an object to dict recursively
    def object_to_dict(self, obj):
-       if hasattr(obj, "__dict__"):
-           result = {}
-           for key, value in obj.__dict__.items():
-               result[key] = self.object_to_dict(value)
-           return result
-       elif isinstance(obj, list):
-           return [self.object_to_dict(item) for item in obj]
-       else:
-           return obj
+      """Change an object to dict recursively."""
+      if hasattr(obj, "__dict__"):
+         result = {}
+         for key, value in obj.__dict__.items():
+            result[key] = self.object_to_dict(value)
+         return result
+      elif isinstance(obj, list):
+         return [self.object_to_dict(item) for item in obj]
+      else:
+         return obj
 
-   # update wuser.email for hostname changed
    def update_wuser_email(self, nhost, ohost):
+      """Update wuser.email for hostname changed."""
       pgrec = self.pgget('wuser', 'wuid', "email = 'unknown@{}'".format(ohost))
       if pgrec: self.pgexec("UPDATE wuser SET email = 'unknown@{}' WHERE wuid = {}".format(nhost, pgrec['wuid']))
 
-   # update a ipinfo record; add a new one if not exists yet
    def update_ipinfo_record(self, record, pgrec = None):
+      """Update a ipinfo record; add a new one if not exists yet."""
       tname = 'ipinfo'
       cnd = "ip = '{}'".format(record['ip'])
       if not pgrec: pgrec = self.pgget(tname, '*', cnd)
@@ -191,9 +193,8 @@ class PgIPInfo(PgUtil, PgDBI):
          self.IPINFO['IPADD'] += ret
       return ret
 
-   # set ip info into table ipinfo from python module ipinfo
-   # if ipopt is True; otherwise, use module geoip2 
    def set_ipinfo(self, ip, ipopt = True):
+      """If ipopt is True; otherwise, use module geoip2."""
       if ip in self.IPRECS: return self.IPRECS[ip]
       pgrec = self.pgget('ipinfo', '*', "ip = '{}'".format(ip))
       if not pgrec or ipopt and pgrec['stat_flag'] == 'M':
@@ -205,16 +206,16 @@ class PgIPInfo(PgUtil, PgDBI):
       self.IPRECS[ip] = pgrec
       return pgrec
 
-   # compare and return a new record holding fields with different values only
    def get_update_record(self, nrec, orec):
+      """Compare and return a new record holding fields with different values only."""
       record = {}   
       for fld in nrec:
          if nrec[fld] != orec[fld]:
             record[fld] = nrec[fld]
       return record
 
-   # fill the missing info for given ip
    def get_missing_ipinfo(self, ip, email = None, gethost = False):
+      """Fill the missing info for given ip."""
       if not ip:
          if email and '@' in email: ip = self.dns_to_ip(email.split('@')[1])
          if not ip: return None
@@ -235,8 +236,8 @@ class PgIPInfo(PgUtil, PgDBI):
       else:
          return None
 
-   # return wuser record upon success, None otherwise
    def get_wuser_record(self, ip, date, email = None):
+      """Return wuser record upon success, None otherwise."""
       record = self.get_missing_ipinfo(ip, email)
       if not record: return None
       emcond = "email = '{}'".format(record['email'])
@@ -255,8 +256,8 @@ class PgIPInfo(PgUtil, PgDBI):
          return record
       return None
 
-   # create a new wuser record   
    def new_wuser_record(self, iprec, date, nuser = True):
+      """Create a new wuser record."""
       wurec = {'start_date' : date}
       wurec['org_type'] = iprec['org_type']
       wurec['country'] = iprec['country']

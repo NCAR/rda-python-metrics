@@ -14,12 +14,14 @@ from rda_python_common.pg_util import PgUtil
 
 class FillEndTime(PgUtil):
 
-   def __init(self):
+   """Fill field dlupdt.endtime from enddate/endhour in PostgreSQL database rdadb."""
+
+   def __init__(self):
       super().__init__()
       self.DSIDS = []    # empty for all datasets
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          if arg == "-b":
@@ -27,8 +29,8 @@ class FillEndTime(PgUtil):
          else:
             self.DSIDS.append(PgUtil.format_dataset_id(arg))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       if self.DSIDS:
          for dsid in self.DSIDS:
@@ -36,8 +38,8 @@ class FillEndTime(PgUtil):
       else:
          self.fill_endtime()
 
-   # Fill endtime in table dssdb.dlupdt
    def fill_endtime(self, dsid = None):
+      """Fill endtime in table dssdb.dlupdt."""
       cnd = "dsid = '{}' AND ".format(dsid) if dsid else ''
       cnd += 'enddate <> NULL ORDER BY dsid, lindex'
       pgrecs = self.pgmget('dlupdt', 'lindex, dsid, enddate, endhour', cnd)
@@ -57,7 +59,7 @@ class FillEndTime(PgUtil):
       dsstr = dsids[0] if dscnt == 1 else '{} datasets'.format(dscnt)
       self.pglog("{}: {} records updated for dssdb.dlupdt.endtime".format(dsstr, cnt, s), self.LOGWRN)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillEndTime()
    object.read_parameters()

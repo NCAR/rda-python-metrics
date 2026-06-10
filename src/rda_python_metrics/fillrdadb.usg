@@ -1,32 +1,36 @@
 
- Collect MSS information from ORACLE server and online file information
-   from DSS Web Server logs, and fill tables in MySQL database 'RDADB'.
+ fillrdadb - Run the standard data-usage fill pipeline.
 
- Backup the records in the tables and compress them, and archive the compressed
-   table files to MSS according to the options chosen on the command line.
+ Wrapper that fills usage tables in PostgreSQL database 'rdadb' for the
+ selected time range by invoking, in order:
+   fillcodusage, fillglobususage, fillawsusage, fillosdfusage.
 
+ USAGE:
+   fillrdadb [-b] [-n]
+             (-c | -d DateList | -m MonthList | -N NumberDays | -y YearList)
 
- Usage: fillrdadb [-b] [-c] [-d DateList] [-m MonthList]
-                  [-n] [-N NumberDay] [-S] [-y YearList]
+ OPTIONS (choose exactly one of -c, -d, -m, -N, or -y):
 
-      Select options, -c, -d, -m, -N, or -y, to run this application. 
+   -c   Clean unused file records only (do not fill new usages).
 
-      - Option -b, log process information into logfile only;
+   -d DateList
+        Process usages recorded on the given dates.
+        Date format: YYYY-MM-DD (e.g. 2024-01-15).
 
-      - Option -c, clean unused file names only;
+   -m MonthList
+        Process usages recorded in the given months.
+        Month format: YYYY-MM (e.g. 2024-01).
 
-      - Option -d, get file info recorded on given dates. Date format is
-           YYYY-MM-DD, for example, 2004-01-01;
+   -N NumberDays
+        Process usages recorded in the most recent NumberDays days.
 
-      - Option -m, get file info recorded in given months. Month format is
-           YYYY-MM, for example, 2004-1;
+   -y YearList
+        Process usages recorded in the given years.
+        Year format: YYYY (e.g. 2024).
 
-      - Option -n, do not send email notification after filling info
+   -b   Run in background mode (log to file only, no terminal output).
 
-      - Option -N, get file info recorded in recent NumberDay days;
+   -n   Do not send email notification when filling is complete.
 
-      - Option -y, get file info recorded in given years. Year format is YYYY,
-           for example, 2004;
-
-      This is a wrapping funtion. Internally it calls 'fillcodusage', 'fillawsusage',
-      and 'fillglobususage' with selected options.
+ EXAMPLE:
+   fillrdadb -N 7

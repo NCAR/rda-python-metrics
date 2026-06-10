@@ -1,4 +1,4 @@
-#!/usr/bin/env python3/
+#!/usr/bin/env python3
 ###############################################################################
 #     Title : fillcountry
 #    Author : Zaihua Ji,  zji@ucar.edu
@@ -15,13 +15,15 @@ import re
 from rda_python_common.pg_dbi import PgDBI
 
 class FillCountry(PgDBI):
+   """Fill missing country field from email info for a given table name."""
+
    def __init__(self):
       super().__init__()
       self.tables = ['allusage', 'user', 'wuser']
       self.table = None
 
-   # function to read paramters
-   def read_parameter(self):
+   def read_parameters(self):
+      """Function to read parameters."""
       argv = sys.argv[1:]
       # check command line
       for arg in argv:
@@ -40,13 +42,13 @@ class FillCountry(PgDBI):
          self.pglog("{}: table name must be ({})".format(self.table, '|'.join(self.tables)), self.LGEREX)
       self.cmdlog("fillcountry {}".format(' '.join(argv)))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       self.dssdb_dbname()
       self.process_countries()
 
-   # fill country info
    def process_countries(self):
+      """Fill country info."""
       pgrecs = self.pgmget(self.table, "email", "country IS NULL", self.LOGWRN)
       cntall = len(pgrecs['email']) if pgrecs else 0
       self.pglog("Set {} record(s) for missing country in table {}".format(cntall, self.table), self.LOGWRN)
@@ -60,7 +62,7 @@ class FillCountry(PgDBI):
          cntmod += self.pgupdt(self.table, record, "email = '{}' AND country IS NULL".format(email), self.LOGWRN)
       self.pglog("{} Record(s) modified in table '{}'".format(cntmod, self.table), self.LOGWRN)
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillCountry()
    object.read_parameters()

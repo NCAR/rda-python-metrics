@@ -1,20 +1,38 @@
 
- Check data usage IP related information to fill in usage tables.
+ fillipinfo - Fix IP-related fields (org, country, region, hostname, email)
+              in a usage or user table.
 
- Usage: fillipinfo [-b] -t TableName [-N NumberDay] [-m YearMonths] [-y Years]
+ Looks up missing or stale IP-related info using the ipinfo and geoip2
+ modules and updates records in the chosen table.
 
-      select option, -t and -d, -m, -N or -y to run this application.
+ USAGE:
+   fillipinfo [-b] -t TableName
+              (-d Dates | -m YearMonths | -N NumberDays | -y Years)
 
-      - Option -b, log process information into logfile only;
+ OPTIONS:
 
-      - Option -t, table name, ipinfo, wuser, allusage, codusage or tdsusage,
-                   to fix IP related information, such organization names/types,
-                   emails and country names; 
+   -t TableName   (required)
+        Table to fix. One of:
+           ipinfo, wuser, allusage, codusage, tdsusage
 
-      - Option -N, fix usage info in recent NumberDay days;
+   One of the following time-range options is required:
 
-      - Option -d, fix usage info in given dates;
+   -d Dates
+        Fix records for the given dates.
+        Date format: YYYY-MM-DD (e.g. 2024-01-15).
 
-      - Option -m, fix usage info in given months;
+   -m YearMonths
+        Fix records for the given months.
+        Month format: YYYY-MM (e.g. 2024-01).
 
-      - Option -y, fix usage info in given years.
+   -N NumberDays
+        Fix records from the most recent NumberDays days.
+
+   -y Years
+        Fix records for the given years.
+        Year format: YYYY (e.g. 2024).
+
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   fillipinfo -t wuser -y 2024

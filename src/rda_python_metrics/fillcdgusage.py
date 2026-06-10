@@ -5,7 +5,7 @@
 #      Date : 2025-04-14
 #             2025-12-16 convert to class FillCDGUsage
 #   Purpose : python program to retrieve info from GDEX Postgres database for GDS 
-#             file accesses and backup fill table tdsusage in PostgreSQL database dssdb.
+#             file accesses and backup fill table tdsusage in PostgreSQL database rdadb.
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 ###############################################################################
 import sys
@@ -17,6 +17,8 @@ from rda_python_common.pg_split import PgSplit
 from .pg_ipinfo import PgIPInfo
 
 class FillCDGUsage(PgSplit, PgIPInfo):
+
+   """Retrieve info from GDEX Postgres database for CDG file accesses and fill tables tdsusage and wusage in PostgreSQL database rdadb."""
 
    def __init__(self):
       super().__init__()
@@ -92,8 +94,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       self.WFILES = {}
       self.params = {}  # array of input values
 
-   # function to run this program
    def read_parameters(self):
+      """Function to run this program."""
       argv = sys.argv[1:]
       opt = None
       for arg in argv:
@@ -116,19 +118,19 @@ class FillCDGUsage(PgSplit, PgIPInfo):
          self.pglog("-(m|N|y): Missing Month, NumberDays or Year to gather CDG metrics", self.LGWNEX)   
       self.cmdlog("fillcdgusage {}".format(' '.join(argv)))
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       dranges = self.get_date_ranges(self.params)
       dsids = self.get_dataset_ids(self.params['s'])
       if dranges and dsids: self.fill_cdg_usages(dsids, dranges)
       self.pglog(None, self.LOGWRN|self.SNDEML)  # send email out if any
 
-   # connect to the gdex database esg-production
    def gdex_dbname(self):
+      """Connect to the gdex database esg-production."""
       self.set_scname('esg-production', 'metrics', 'gateway-reader', None, 'sagedbprodalma.ucar.edu')
 
-   # get datasets
    def get_dataset_ids(self, dsnames):
+      """Get datasets."""
       self.gdex_dbname()
       dsids = []
       tbname = 'metadata.dataset'
@@ -152,8 +154,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       if not dsids: self.pglog("No Dataset Id identified to gather CDG metrics", self.LOGWRN)
       return dsids
 
-   # get cdgids recursivley
    def recursive_dataset_ids(self, pcdgid, cdgids):
+      """Get cdgids recursively."""
       tbname = 'metadata.dataset'
       pgrecs = self.pgmget(tbname, 'id', "parent_dataset_id = '{}'".format(pcdgid))
       if not pgrecs: return 0
@@ -165,8 +167,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
          ccnt += self.recursive_dataset_ids(cdgid, cdgids)
       return ccnt
 
-   # get the date ranges for given condition
    def get_date_ranges(self, inputs):
+      """Get the date ranges for given condition."""
       dranges = []
       for opt in inputs:
          for input in inputs[opt]:
@@ -185,8 +187,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
             if dates: dranges.append(dates)
       return dranges
 
-   # get file download records for given dsid
    def get_dsid_records(self, cdgids, dates, strids):
+      """Get file download records for given dsid."""
       self.gdex_dbname()
       tbname = 'metrics.file_download'
       fields = ('date_completed, remote_address, logical_file_size, logical_file_name, file_access_point_uri, user_agent_name, bytes_sent, '
@@ -204,8 +206,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       self.dssdb_dbname()
       return pgrecs
 
-   # Fill TDS usages into table dssdb.tdsusage from cdg access records
    def fill_cdg_usages(self, dsids, dranges):
+      """Fill TDS usages into table dssdb.tdsusage from cdg access records."""
       allcnt = awcnt = atcnt = lcnt = 0
       for dates in dranges:
          for adsid in dsids:
@@ -305,8 +307,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
             rmsg = self.seconds_to_string_time(tm() - bt)
             self.pglog("{}: {}/{} TDS/WEB usage records added for {} CDG entries in {}".format(strids, atcnt, awcnt, allcnt, rmsg), self.LOGWRN)
 
-   # get date and time from log record
    def get_record_date_time(self, ctime):
+      """Get date and time from log record."""
       ms = re.search(r'^(\d+)-(\d+)-(\d+) (\d\d:\d\d:\d\d)', str(ctime))
       if ms:
          y = ms.group(1)
@@ -318,8 +320,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       else:
          self.pglog(str(ctime) + ": Invalid time format", self.LGEREX)
 
-   # add to tds usage records
    def add_tdsusage_records(self, year, records, date):
+      """Add to tds usage records."""
       cnt = 0
       for key in records:
          record = records[key]
@@ -345,8 +347,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       pgrec['ip'] = logrec['ip']
       return self.add_yearly_allusage(year, pgrec)
 
-   # Fill usage of a single online data file into table dssdb.wusage of DSS PgSQL database
    def add_webfile_usage(self, year, logrec):
+      """Fill usage of a single online data file into table dssdb.wusage of DSS PgSQL database."""
       table = "{}_{}".format(self.USAGE['WEBTBL'], year)
       cdate = logrec['date']
       ip = logrec['ip']
@@ -368,8 +370,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       else:
          return 0
 
-   # add web record to allusage
    def add_web_allusage(self, year, logrec, wurec):
+      """Add web record to allusage."""
       pgrec = {'source' : 'C'}
       pgrec['email'] = wurec['email']
       pgrec['org_type'] = wurec['org_type']
@@ -384,8 +386,8 @@ class FillCDGUsage(PgSplit, PgIPInfo):
       pgrec['ip'] = logrec['ip']
       return self.add_yearly_allusage(year, pgrec)
 
-   # return wfile.wid upon success, 0 otherwise
    def get_wfile_record(self, dsids, wfile):
+      """Return wfile.wid upon success, 0 otherwise."""
       for dsid in dsids:
          wkey = "{}{}".format(dsid, wfile)
          if wkey in self.WFILES: return self.WFILES[wkey]
@@ -410,7 +412,7 @@ class FillCDGUsage(PgSplit, PgIPInfo):
          self.WFILES[wkey] = pgrec
       return pgrec
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = FillCDGUsage()
    object.read_parameters()

@@ -6,7 +6,7 @@
 #    Author : Zaihua Ji,  zji@ucar.edu
 #      Date : 2025-04-14
 #   Purpose : python program to retrieve info from GDEX Postgres database for GDS 
-#             file accesses and backup fill table tdsusage in PostgreSQL database dssdb.
+#             file accesses and backup fill table tdsusage in PostgreSQL database rdadb.
 # 
 #    Github : https://github.com/NCAR/rda-python-metrics.git
 #
@@ -173,7 +173,7 @@ def get_dataset_ids(dsnames):
    return dsids
 
 #
-# get cdgids recursivley
+# get cdgids recursively
 #
 def recursive_dataset_ids(pcdgid, cdgids):
 

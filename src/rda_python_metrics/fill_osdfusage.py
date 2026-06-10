@@ -8,7 +8,7 @@
 #   Purpose : python program to retrieve info from weekly OSDF logs 
 #             and fill table wusages in PgSQL database dssdb.
 # 
-#    Github : https://github.com/NCAR/rda-pythn-metrics.git
+#    Github : https://github.com/NCAR/rda-python-metrics.git
 #
 ###############################################################################
 #

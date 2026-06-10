@@ -1,16 +1,24 @@
 
- Retrieves user information from ORACLE SERVER and fill 
- table 'user' in MySQL database 'dssdb'.
+ filluser - Fill or refresh records in the 'user' table from an Oracle source.
 
- Usage: filluser [-b] [-i] [-n UserNumber] [-u UserLonginName]
+ Retrieves user information from the NCAR ORACLE server and inserts or
+ updates records in the 'user' table of PostgreSQL database 'rdadb'.
 
-      select one of the options, -i, -n or -u each time to run this application. 
+ USAGE:
+   filluser [-b] (-i | -n UserNumbers | -u UserLoginNames)
 
-      - Option -b, log process information into logfile only;
+ OPTIONS (choose exactly one of -i, -n, or -u):
 
-      - Option -i, get users with incomplete information in 'dssdb.user';
+   -i   Refresh users that currently have incomplete information in the
+        'user' table.
 
-      - Option -n, get users by their user numbers on NCAR system;
+   -n UserNumbers
+        Look up users by their NCAR system user numbers.
 
-      - Option -u, get users by their login names on NCAR system;
+   -u UserLoginNames
+        Look up users by their NCAR system login names.
 
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   filluser -u zji

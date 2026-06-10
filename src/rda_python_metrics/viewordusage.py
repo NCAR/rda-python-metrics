@@ -14,11 +14,13 @@ from .pg_view import PgView
 
 class ViewORDUsage(PgView):
    
+   """View order usage statistics from PostgreSQL database rdadb."""
+
    def __init__(self):
       super().__init__()
       self.VUSG = {
          'SNMS' : "ABCDEFGHIJKLMNOPQRSTVWYZ",          # all available short field names in self.FLDS
-         'OPTS' : 'AabcCdDeEghHijklLmMnNoOqsStTUvwyz', # all available options, used for %params
+         'OPTS' : 'AabcCdDeEghHijklLmMnNoOqsStTUvwyz', # all available options, used for params
          'NOPT' : 'abhwz',                             # stand alone option without inputs
          'ACND' : 'cdegijlkmMnoqStvy',                 # available array condition options
          'RCND' : 'DsNT',                              # available range condition options
@@ -34,12 +36,12 @@ class ViewORDUsage(PgView):
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
       # column 3   - table name that the field belongs to
-      # column 4   - output field length, the longer one of data size and comlun title, determine
+      # column 4   - output field length, the longer one of data size and column title, determine
       #              dynamically if it is 0. Negative values indicate right justification
       # column 5   - precision for floating point value if positive and show total value if not zero
       # column 6   - field flag to indicate it is a group, distinct or sum field
       self.FLDS = {
-      # SHRTNM COLUMNNANE      FIELDNAME                              CNDNAME        TBLNAM      Size Prc Grp/Sum
+      # SHRTNM COLUMNNAME      FIELDNAME                              CNDNAME        TBLNAM      Size Prc Grp/Sum
          'D' : ['DATE',         "date_request",                        'date_request','ousage',  10,  0,  'G'],
          'E' : ['EMAIL',        "wuser.email",                   'wuser.email',       'wuser',    0,  0,  'G'],
          'G' : ['ORGNAME',      "org_name",                            'org_name',    'wuser',    0,  0,  'G'],
@@ -66,7 +68,7 @@ class ViewORDUsage(PgView):
          'Z' : ['COST()',       "sum(amount)",                         'Z',           'ousage', -12, -1,  'S'],
          'X' : ['INDEX',        "",                                    'X',           '',        -6,  0,  ' ']
       }
-      # keys %EXPAND - short field names allow zero usage
+      # keys EXPAND - short field names allow zero usage
       # column 0   - expand ID for group of fields
       # column 1   - field name shown in where condition query string
       # column 2   - field name in format as shown in select clauses
@@ -90,7 +92,7 @@ class ViewORDUsage(PgView):
          'U' : ["OWNER",  "u",      "dssname",        "ousage"],
          'W' : ["METHOD", "M",      "method",         "ousage"],
       }
-      # valid options for %params, a hash array of command line parameters
+      # valid options for params, a hash array of command line parameters
       #   a -- 1 to view all usage info available
       #   A -- number or records to return
       #   c -- array of specified country codes
@@ -99,8 +101,8 @@ class ViewORDUsage(PgView):
       #   D -- dates range, array of 1 or 2 dates in format of YYYY-MM-DD
       #   e -- array of specified email addresses
       #   E -- use given date or date range for email notice of data update
-      #   g -- array of specified orginization names
-      #   h -- for give emails, include their histical emails registered before
+      #   g -- array of specified organization names
+      #   h -- for give emails, include their historical emails registered before
       #   H -- a string of report title to replace the default one
       #   i -- array of specified first names
       #   j -- array of specified projects
@@ -110,21 +112,21 @@ class ViewORDUsage(PgView):
       #   m -- array of specified months
       #   M -- array of specified download methods
       #   n -- array of specified order numbers
-      #   N -- number request range, arrage of 1 or 2 integers
-      #   o -- array of specified orginization types
+      #   N -- number request range, range of 1 or 2 integers
+      #   o -- array of specified organization types
       #   O -- a string of short field names for sorting on
-      #   s -- output data size range, arrage of 1 or 2 sizes in unit of MByte
+      #   s -- output data size range, range of 1 or 2 sizes in unit of MByte
       #   S -- array of login names of specialists who processed the orders
       #   t -- array of specified dataset names
       #   T -- dataset range, array of 1 or 2 dataset names
       #   U -- use given unit for file or data sizes
-      #   v -- aray of specified roder numbers
+      #   v -- array of specified order numbers
       #   w -- generate view without totals
       #   y -- array of specified years
       #   z -- generate view including entries without usage
       self.params = {}
       # relationship between parameter options and short field names, A option is not
-      # related to a field name if it is not in keys %SNS
+      # related to a field name if it is not in keys SNS
       self.SNS = {
          'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'g' : 'G', 'i' : 'I', 'j' : 'J',
          'k' : 'K', 'l' : 'L', 'm' : 'M', 'M' : 'W', 'n' : 'V', 'N' : 'H', 'o' : 'O',
@@ -136,8 +138,8 @@ class ViewORDUsage(PgView):
       self.dfields = []
       self.pgname = 'viewordusage'
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       self.view_dbinfo()
       argv = sys.argv[1:]
       inputs = []
@@ -187,8 +189,8 @@ class ViewORDUsage(PgView):
       elif self.params['o'][0] == "'ALL'":
          del self.params['o']
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       usgtable = "ousage"
       self.build_query_strings(usgtable)  # build tablenames, fieldnames, and conditions
       records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
@@ -201,8 +203,8 @@ class ViewORDUsage(PgView):
       records = self.order_records(records, ostr.replace('X', ''))
       self.simple_output(self.params, self.FLDS, records, totals)
 
-   # cehck if enough information entered on command line for generate view/report, exit if not
    def check_enough_options(self):
+      """Check if enough information entered on command line to generate view/report, exit if not."""
       cols = self.params['C'][0] if 'C' in self.params else 'X'
       if cols == 'X': self.pglog("{}: miss field names '{}'".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
       if cols.find('Q') > -1 and cols.find('Y') < 0:   # add Y if Q included
@@ -225,9 +227,8 @@ class ViewORDUsage(PgView):
          if self.VUSG['CNDS'].find(opt) > -1: return
       self.pglog("{}: miss condition options '{}'".format(self.pgname, self.VUSG['CNDS']), self.LGWNEX)
 
-   # process parameter options to build all query strings
-   # global variables are used directly and nothing passes in and returns back
    def build_query_strings(self, usgtable):
+      """Process parameter options to build all query strings."""
       # initialize query strings
       joins = having = groupnames = ''
       self.tablenames = usgtable
@@ -259,7 +260,7 @@ class ViewORDUsage(PgView):
             if self.VUSG['NOPT'].find(opt) > -1: continue
             sn = self.SNS[opt]
             fld = self.FLDS[sn]
-            # build having and where conditon strings
+            # build having and where condition strings
             cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
             if cnd:
                if self.VUSG['HCND'].find(opt) > -1:
@@ -282,8 +283,8 @@ class ViewORDUsage(PgView):
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
       if having: self.condition += " HAVING " + having
 
-   # expand records as needed
    def expand_records(self, records):
+      """Expand records as needed."""
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("USER", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
       if trecs: self.crosshash(recs, trecs)

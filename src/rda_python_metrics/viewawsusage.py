@@ -14,11 +14,13 @@ from .pg_view import PgView
 
 class ViewAWSUsage(PgView):
 
+   """View AWS S3 usage statistics from PostgreSQL database rdadb."""
+
    def __init__(self):
       super().__init__()
       self.VUSG = {
-         'SNMS' : "ABCDEHIKMNOPQRSTUWY",           # all available short field names in %FLDS
-         'OPTS' : 'AabcCdDeEhHikLmMnoOqsStTUwyz',  # all available options, used for %params
+         'SNMS' : "ABCDEHIKMNOPQRSTUWY",           # all available short field names in FLDS
+         'OPTS' : 'AabcCdDeEhHikLmMnoOqsStTUwyz',  # all available options, used for params
          'NOPT' : 'abhnwz',                        # stand alone option without inputs
          'ACND' : 'cdeiIkmMoqSty',                 # available array condition options
          'RCND' : 'DEsT',                          # available range condition options
@@ -28,17 +30,17 @@ class ViewAWSUsage(PgView):
          'UFLD' : 'NO',                            # string fields must be in upper case
          'LFLD' : 'EMPT'                           # string fields must be in lower case
       }
-      # keys %FLDS - short field names
+      # keys FLDS - short field names
       # column 0   - column title showing in usage view
       # column 1   - field name in format as shown in select clauses
       # column 2   - field name shown in where condition query string
       # column 3   - table name that the field belongs to 
-      # column 4   - output field length, the longer one of data size and comlun title, determine
+      # column 4   - output field length, the longer one of data size and column title, determine
       #              dynamically if it is 0. Negative values indicate right justification
       # column 5   - precision for floating point value if positive and show total value if not zero
       # column 6   - field flag to indicate it is a group, distinct or sum field
       self.FLDS = {
-      # SHRTNM COLUMNNANE   FIELDNAME                         CNDNAME       TBLNAM        Size Prc Grp/Sum
+      # SHRTNM COLUMNNAME   FIELDNAME                         CNDNAME       TBLNAM        Size Prc Grp/Sum
          'D' : ['DATE',      "date",                           'date',       'awsusage',  10,   0,  'G'],
          'E' : ['EMAIL',     "awsusage.email",        'awsusage.email',      'awsusage',   0,   0,  'G'],
          'I' : ['IP',        "ip",                             'ip',         'awsusage',   0,   0,  'G'],
@@ -60,7 +62,7 @@ class ViewAWSUsage(PgView):
          'H' : ['#ACCESS',   "sum(fcount)",                    'H',          'awsusage',  -8,  -1,  'S'],
          'X' : ['INDEX',     "",                               'X',          '',          -6,   0,  ' ']
       }
-      # keys %EXPAND - short field names allow zero usage
+      # keys EXPAND - short field names allow zero usage
       # column 0   - expand ID for group of fields
       # column 1   - field name shown in where condition query string
       # column 2   - field name in format as shown in select clauses
@@ -80,7 +82,7 @@ class ViewAWSUsage(PgView):
          'P' : ["DSID",   "StT", "specialist",     "dsowner"],
          'W' : ["METHOD", "M",      "method",       "awsusage"]
       }
-      # valid options for %params, a hash array of command line parameters
+      # valid options for params, a hash array of command line parameters
       #   a -- 1 to view all usage info available
       #   A -- number or records to return
       #   c -- array of specified country codes
@@ -89,7 +91,7 @@ class ViewAWSUsage(PgView):
       #   D -- dates range, array of 1 or 2 dates in format of YYYY-MM-DD
       #   e -- array of specified email addresses
       #   E -- use given date or date range for email notice of data update
-      #   h -- for give emails, include their histical emails registered before
+      #   h -- for give emails, include their historical emails registered before
       #   H -- a string of report title to replace the default one
       #   i -- array of specified IP addresses
       #   I -- use given email IDs for email notice of data update
@@ -97,10 +99,10 @@ class ViewAWSUsage(PgView):
       #   L -- column delimiter for output
       #   m -- array of specified months 
       #   M -- array of specified download methods 
-      #   o -- array of specified orginization types
+      #   o -- array of specified organization types
       #   O -- a string of short field names for sorting on
       #   q -- array of the specified quarters, normally combined with years
-      #   s -- size range, arrage of 1 or 2 sizes in unit of MByte
+      #   s -- size range, range of 1 or 2 sizes in unit of MByte
       #   S -- array of login names of specialists who owns the datasets
       #   t -- array of specified dataset names
       #   T -- dataset range, array of 1 or 2 dataset names
@@ -110,7 +112,7 @@ class ViewAWSUsage(PgView):
       #   z -- generate view including entries without usage
       self.params = {}
       # relationship between parameter options and short field names, A option is not
-      # related to a field name if it is not in keys %SNS 
+      # related to a field name if it is not in keys SNS 
       self.SNS = {
          'c' : 'N', 'd' : 'D', 'D' : 'D', 'e' : 'E', 'i' : 'I', 'k' : 'K', 'm' : 'M',
          'M' : 'W', 'o' : 'O', 'q' : 'Q', 's' : 'S', 'S' : 'P', 't' : 'T', 'T' : 'T', 'y' : 'Y'
@@ -121,8 +123,8 @@ class ViewAWSUsage(PgView):
       self.dfields = []
       self.pgname = 'viewawsusage'
 
-   # function to read parameters
    def read_parameters(self):
+      """Function to read parameters."""
       self.view_dbinfo()
       argv = sys.argv[1:]
       inputs = []
@@ -172,8 +174,8 @@ class ViewAWSUsage(PgView):
       elif self.params['o'][0] == "'ALL'":
          del self.params['o']
 
-   # function to start actions
    def start_actions(self):
+      """Function to start actions."""
       usgtable = "awsusage"
       self.build_query_strings(usgtable)  # build tablenames, fieldnames, and conditions
       records = self.pgmget(self.tablenames, self.fieldnames, self.condition, self.UCLWEX)
@@ -186,8 +188,8 @@ class ViewAWSUsage(PgView):
       records = self.order_records(records, ostr.replace('X', ''))
       self.simple_output(self.params, self.FLDS, records, totals)
    
-   # cehck if enough information entered on command line for generate view/report, exit if not
    def check_enough_options(self):
+      """Check if enough information entered on command line to generate view/report, exit if not."""
       cols = self.params['C'][0] if 'C' in self.params else 'X'
       if cols == 'X': self.pglog("{}: miss field names '{}'".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
       if cols.find('Q') > -1 and cols.find('Y') < 0:   # add Y if Q included
@@ -212,9 +214,8 @@ class ViewAWSUsage(PgView):
          if self.VUSG['CNDS'].find(opt) > -1: return
       self.pglog("{}: miss condition options '{}'".format(self.pgname, self.VUSG['CNDS']), self.LGWNEX)
 
-   # process parameter options to build aws query strings
-   # global variables are used directly and nothing passes in and returns back
    def build_query_strings(self, usgtable):
+      """Process parameter options to build aws query strings."""
       # initialize query strings
       joins = groupnames = ''
       self.tablenames = usgtable
@@ -246,7 +247,7 @@ class ViewAWSUsage(PgView):
             if self.VUSG['NOPT'].find(opt) > -1: continue
             sn = self.SNS[opt]
             fld = self.FLDS[sn]
-            # build having and where conditon strings
+            # build having and where condition strings
             cnd = self.get_view_condition(opt, sn, fld, self.params, self.VUSG)
             if cnd:
                if self.condition: self.condition += ' AND '
@@ -268,8 +269,8 @@ class ViewAWSUsage(PgView):
          )
       if groupnames and self.sfields: self.condition += " GROUP BY " + groupnames
 
-   # expand records as needed
    def expand_records(self, records):
+      """Expand records as needed."""
       recs = self.expand_query("TIME", records, self.params, self.EXPAND)
       trecs = self.expand_query("USER", records, self.params, self.EXPAND, self.VUSG, self.SNS, self.FLDS)
       recs = self.crosshash(recs, trecs)

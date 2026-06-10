@@ -1,16 +1,27 @@
 
- Retrieves usage information from AWS Server logs under directory
-   ../rda/transer/AWSera5log/ to fill table 'awsusage' in database 'rdadb'.
+ fillawsusage - Fill table 'awsusage' from AWS Server log files.
 
- Usage: fillawsusage [-b] [-d LogFileDates] [-N NumberDay] [-p BeginDate [Enddate]]
+ Reads AWS access logs from /gpfs/fs1/collections/rda/transer/AWSera5log/
+ and inserts usage records into the 'awsusage' table in PostgreSQL
+ database 'rdadb'.
 
-      select option, -d, -N or -p to run this application.
+ USAGE:
+   fillawsusage [-b] (-d LogFileDates | -N NumberDays | -p BeginDate [EndDate])
 
-      - Option -b, log process information into logfile only;
+ OPTIONS (choose exactly one of -d, -N, or -p):
 
-      - Option -d, retrieve usage info from given log file dates; 
+   -d LogFileDates
+        Process log files for the given dates.
+        Date format: YYYY-MM-DD (e.g. 2024-01-15).
 
-      - Option -N, retrieve usage info in recent NumberDay days;
+   -N NumberDays
+        Process log files covering the most recent NumberDays days.
 
-      - Option -p, retrieve usage info between given period. For missing EndDate,
-          it defaults to the current date.
+   -p BeginDate [EndDate]
+        Process log files between BeginDate and EndDate, inclusive.
+        EndDate defaults to today if omitted.
+
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   fillawsusage -p 2024-01-01 2024-01-31

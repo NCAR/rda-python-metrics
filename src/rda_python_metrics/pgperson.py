@@ -42,9 +42,9 @@ class PgPerson:
          elif arg[0] == '-':
             self.option = arg[1:]
             if self.option not in self.PERSON:
-               print("{}: unknown option, must be -({})".format(arg, optstr), sys.stderr)
+               print("{}: unknown option, must be -({})".format(arg, optstr), file=sys.stderr)
          else:
-            print("{}: Value passed in without leading option -({})".format(arg, optstr), sys.stderr)
+            print("{}: Value passed in without leading option -({})".format(arg, optstr), file=sys.stderr)
 
    # function to start actions
    def start_actions(self):
@@ -63,12 +63,12 @@ class PgPerson:
       elif status == 500:
          print('Server error')
 
-# main function to excecute this script
+# main function to execute this script
 def main():
    object = PgPerson()
    object.read_parameters()
    object.start_actions()
-   object.pgexit(0)
+   sys.exit(0)
 
 # call main() to start program
 if __name__ == "__main__": main()
