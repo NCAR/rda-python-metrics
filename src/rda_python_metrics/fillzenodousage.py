@@ -197,12 +197,12 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
    #
    def get_dataset_ids(self, dsnames):
 
-      gdex_dbname()
+      self.gdex_dbname()
       dsids = []
       tbname = 'metadata.dataset'
       for dsname in dsnames:
-         if re.match(r'^all$', dsname, re.I): return get_dataset_ids(self.ALLIDS)
-         if dsname not in DSIDS:
+         if re.match(r'^all$', dsname, re.I): return self.get_dataset_ids(self.ALLIDS)
+         if dsname not in self.DSIDS:
             self.pglog(dsname + ": Unknown ZENODO dataset short name", self.LOGWRN)
             continue
          bt = tm()
@@ -213,7 +213,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
          gdexid = pgrec['id']
          gdexids = [gdexid]
          ccnt = 1
-         ccnt += recursive_dataset_ids(gdexid, gdexids)
+         ccnt += self.recursive_dataset_ids(gdexid, gdexids)
          dsids.append([dsname, zndid, gdexids, strids])
          rmsg = self.seconds_to_string_time(tm() - bt)
          self.pglog("{}: Found {} GDEX dsid/subdsids in {} at {}".format(strids, ccnt, rmsg, self.current_datetime()), self.LOGWRN)
@@ -236,7 +236,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
          if gdexid in gdexids: continue
          gdexids.append(gdexid)
          ccnt += 1
-         ccnt += recursive_dataset_ids(gdexid, gdexids)
+         ccnt += self.recursive_dataset_ids(gdexid, gdexids)
 
       return ccnt
 
@@ -269,7 +269,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
    #
    def get_dsid_records(self, gdexids, dates, strids):
 
-      gdex_dbname()
+      self.gdex_dbname()
       tbname = 'metrics.file_download'
       fields = ('date_completed, remote_address, logical_file_size, logical_file_name, file_access_point_uri, user_agent_name, bytes_sent, '
                 'subset_file_size, range_request, dataset_file_size, dataset_file_name, dataset_file_file_access_point_uri')
@@ -301,7 +301,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
             gdexids = dsid[2]
             strids = dsid[3]
             bt = tm()
-            pgrecs = get_dsid_records(gdexids, dates, strids)
+            pgrecs = self.get_dsid_records(gdexids, dates, strids)
             pgcnt = len(pgrecs['dataset_file_name']) if pgrecs else 0
             if pgcnt == 0:
                self.pglog("{}: No record found to gather GDEX usage between {} and {}".format(strids, dates[0], dates[1]), self.LOGWRN)
@@ -319,7 +319,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
                pgrec = self.onerecord(pgrecs, i)
                dsize = pgrec['bytes_sent']
                if not dsize: continue
-               (year, quarter, date, time) = get_record_date_time(pgrec['date_completed'])
+               (year, quarter, date, time) = self.get_record_date_time(pgrec['date_completed'])
                url = pgrec['dataset_file_file_access_point_uri']
                if not url: url = pgrec['file_access_point_uri']
                ip = pgrec['remote_address']
@@ -340,7 +340,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
 
                if date != cdate:
                   if zrecs:
-                     zcnt += add_zusage_records(zrecs, cdate)
+                     zcnt += self.add_zusage_records(zrecs, cdate)
                      zrecs = {}
                   cdate = date
                zkey = "{}:{}:{}".format(ip, zndid, method)
@@ -353,7 +353,7 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
                   zrecs[zkey] = {'ip' : ip, 'zdsid' : zndid, 'date' : cdate, 'time' : time, 'quarter' : quarter,
                                  'size' : dsize, 'fcount' : 1, 'method' : method}
 
-            if zrecs: zcnt += add_zusage_records(zrecs, cdate)
+            if zrecs: zcnt += self.add_zusage_records(zrecs, cdate)
             azcnt += zcnt
             allcnt += pgcnt
             rmsg = self.seconds_to_string_time(tm() - bt)

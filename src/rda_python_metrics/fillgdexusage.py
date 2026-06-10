@@ -770,12 +770,12 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
    #
    def get_dataset_ids(self, dsnames):
 
-      gdex_dbname()
+      self.gdex_dbname()
       dsids = []
       tbname = 'metadata.dataset'
       for dsname in dsnames:
-         if re.match(r'^all$', dsname, re.I): return get_dataset_ids(self.ALLIDS)
-         if dsname not in DSIDS:
+         if re.match(r'^all$', dsname, re.I): return self.get_dataset_ids(self.ALLIDS)
+         if dsname not in self.DSIDS:
             self.pglog(dsname + ": Unknown GDEX dataset short name", self.LOGWRN)
             continue
          bt = tm()
@@ -786,7 +786,7 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
          gdexid = pgrec['id']
          gdexids = [gdexid]
          ccnt = 1
-         ccnt += recursive_dataset_ids(gdexid, gdexids)
+         ccnt += self.recursive_dataset_ids(gdexid, gdexids)
          dsids.append([dsname, rdaid, gdexids, strids])
          rmsg = self.seconds_to_string_time(tm() - bt)
          self.pglog("{}: Found {} GDEX dsid/subdsids in {} at {}".format(strids, ccnt, rmsg, self.current_datetime()), self.LOGWRN)
@@ -809,7 +809,7 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
          if gdexid in gdexids: continue
          gdexids.append(gdexid)
          ccnt += 1
-         ccnt += recursive_dataset_ids(gdexid, gdexids)
+         ccnt += self.recursive_dataset_ids(gdexid, gdexids)
 
       return ccnt
 
@@ -842,7 +842,7 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
    #
    def get_dsid_records(self, gdexids, dates, strids):
 
-      gdex_dbname()
+      self.gdex_dbname()
       tbname = 'metrics.file_download'
       fields = ('date_completed, remote_address, logical_file_size, logical_file_name, user_agent_name, bytes_sent, '
                 'subset_file_size, range_request, dataset_file_size, dataset_file_name')
@@ -874,7 +874,7 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
             gdexids = dsid[2]
             strids = dsid[3]
             bt = tm()
-            pgrecs = get_dsid_records(gdexids, dates, strids)
+            pgrecs = self.get_dsid_records(gdexids, dates, strids)
             pgcnt = len(pgrecs['dataset_file_name']) if pgrecs else 0
             if pgcnt == 0:
                self.pglog("{}: No record found to gather GDEX usage between {} and {}".format(strids, dates[0], dates[1]), self.LOGWRN)
@@ -891,16 +891,16 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
                pgrec = self.onerecord(pgrecs, i)
                dsize = pgrec['bytes_sent']
                if not dsize: continue
-               (year, quarter, date, time) = get_record_date_time(pgrec['date_completed'])
+               (year, quarter, date, time) = self.get_record_date_time(pgrec['date_completed'])
                ip = pgrec['remote_address']
                engine = pgrec['user_agent_name']
                wfile = pgrec['dataset_file_name']
-               if not wfile: wfile = pgrec['logic_file_name']
-               wfrec = get_wfile_record(rdaid, wfile)
+               if not wfile: wfile = pgrec['logical_file_name']
+               wfrec = self.get_wfile_record(rdaid, wfile)
                if not wfrec: continue
                dsid = wfrec['dsid']
                fsize = pgrec['dataset_file_size']
-               if not fsize: fsize = pgrec['logic_file_size']
+               if not fsize: fsize = pgrec['logical_file_size']
                method = 'GDEX'
                if pgrec['subset_file_size'] or pgrec['range_request'] or dsize < fsize:
                   wkey = "{}:{}:{}".format(ip, dsid, wfile)
@@ -911,16 +911,16 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
                   if wkey == pwkey:
                      wrec['size'] += dsize
                      continue
-                  wcnt += add_webfile_usage(year, wrec)
+                  wcnt += self.add_webfile_usage(year, wrec)
                wrec = {'ip' : ip, 'dsid' : dsid, 'wid' : wfrec['wid'], 'date' : date,
                        'time' : time, 'quarter' : quarter, 'size' : dsize,
                        'locflag' : 'C', 'method' : method}
                pwkey = wkey
                if not pwkey:
-                  wcnt += add_webfile_usage(year, wrec)
+                  wcnt += self.add_webfile_usage(year, wrec)
                   wrec = None
 
-            if wrec: wcnt += add_webfile_usage(year, wrec)
+            if wrec: wcnt += self.add_webfile_usage(year, wrec)
             awcnt += wcnt
             allcnt += pgcnt
             rmsg = self.seconds_to_string_time(tm() - bt)
@@ -963,7 +963,7 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
       record['ip'] = ip
       record['quarter'] = logrec['quarter']
 
-      if add_web_allusage(year, logrec, wurec):
+      if self.add_web_allusage(year, logrec, wurec):
          return self.add_yearly_wusage(year, record)
       else:
          return 0
@@ -990,14 +990,14 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
    def get_wfile_record(self, dsid, wfile):
 
       wkey = "{}{}".format(dsid, wfile)
-      if wkey in self.WFILES: return self.self.WFILES[wkey]
+      if wkey in self.WFILES: return self.WFILES[wkey]
       wfcond = "wfile LIKE '%{}'".format(wfile)
       pgrec = None
       pgrec = self.pgget_wfile(dsid, "wid", wfcond)
       if pgrec:
          pgrec['dsid'] = dsid
          wkey = "{}{}".format(dsid, wfile)
-         self.self.WFILES[wkey] = pgrec
+         self.WFILES[wkey] = pgrec
          return pgrec
 
       pgrec = self.pgget("wfile_delete", "wid, dsid", "{} AND dsid = '{}'".format(wfcond, dsid))
@@ -1007,7 +1007,7 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
             pgrec = self.pgget_wfile(mvrec['dsid'], "wid", "wid = {}".format(pgrec['wid']))
             if pgrec: pgrec['dsid'] = mvrec['dsid']
 
-      self.self.WFILES[wkey] = pgrec
+      self.WFILES[wkey] = pgrec
       return pgrec
 
    #
