@@ -60,7 +60,6 @@ class ViewWEBFile(PgView):
          'S' : ['FILESIZE',     "data_size",                           'data_size',     'wfile', -14, -1,  'G'],
          'T' : ['DATASET',      "wfile.dsid",                          'wfile.dsid',    'wfile',   0,  0,  'G'],
          'U' : ['SPECIALIST',   "logname",                             'logname',       'user',   10,  0,  'G'],
-         'V' : ['DSARCH',       "use_rdadb",                           'use_rdadb',     'dataset', 6,  0,  'G'],
          'W' : ['DSTYPE',       "search.datasets.type",  'search.datasets.type', 'search.datasets', 6,  0,  'G'],
          'Y' : ['WYEAR',        self.fmtyr("date_modified"),          'date_modified', 'wfile',   5,  0,  'G'],
          'Z' : ['DATECREATE',   "date_created",                        'date_created',  'wfile',  10,  0,  'G'],
@@ -101,7 +100,6 @@ class ViewWEBFile(PgView):
       #   T -- dataset range, array of 1 or 2 dataset names
       #   u -- array of specified specialist user names
       #   U -- use given unit for file or data sizes
-      #   v -- array of specified use RDADB flags
       #   w -- generate view without totals
       #   y -- array of specified years of file last written
       #   Y -- array of specified years of file created
@@ -113,7 +111,7 @@ class ViewWEBFile(PgView):
       self.SNS = {
          'd' : 'D', 'D' : 'D', 'e' : 'E', 'f' : 'F', 'F' : 'F', 'g' : 'G', 'i' : 'I',
          'l' : 'L', 'm' : 'M', 'M' : 'H', 'N' : 'N', 'o' : 'O', 'p' : 'P', 'r' : 'G',
-         's' : 'S', 'S' : 'Q', 't' : 'T', 'T' : 'T', 'u' : 'U', 'v' : 'V', 'W' : 'W',
+         's' : 'S', 'S' : 'Q', 't' : 'T', 'T' : 'T', 'u' : 'U', 'W' : 'W',
          'y' : 'Y', 'Y' : 'K', 'z' : 'Z', 'Z' : 'Z'
       }
       self.tablenames = self.fieldnames = self.condition = ''
