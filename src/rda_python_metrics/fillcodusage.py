@@ -39,7 +39,7 @@ class FillCODUsage(PgIPInfo):
       self.params = []  # array of input values
 
    def read_parameters(self):
-      """Function to readparameters."""
+      """Function to read parameters."""
       argv = sys.argv[1:]
       for arg in argv:
          if arg == "-b":

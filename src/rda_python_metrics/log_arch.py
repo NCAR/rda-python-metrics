@@ -23,7 +23,7 @@ from rda_python_common import PgFile
 from rda_python_common import PgSIG
 
 # the defined options for archiving different logs
-WLOG = 0x21  # archive web log
+WLOG = 0x01  # archive web log
 TLOG = 0x02  # archive tds log
 DLOG = 0x04  # archive dssdb logs
 SLOG = 0x08  # append dssdb sub batch logs
@@ -33,8 +33,8 @@ OLOG = 0x20  # archive OSDF web log
 LOGS = {
    'OPTION' : 0,
    'AWSLOG' : PgLOG.PGLOG["TRANSFER"] + "/AWSera5log",
-   'WEBLOG' : PgLOG.PGLOG["DSSDATA"] + "/work/logs/gridftp",
-   'OSDFLOG' : PgLOG.PGLOG["DSSDATA"] + "/zji/osdflogs",
+   'WEBLOG' : PgLOG.PGLOG["GDEXWORK"] + "/logs/gridftp",
+   'OSDFLOG' : PgLOG.PGLOG["GDEXWORK"] + "/zji/osdflogs",
    'MGTLOG' : "/data/logs",
    'TDSLOG' : "/data/logs/nginx",
    'RDALOG' : PgLOG.PGLOG['LOGPATH'],
@@ -60,10 +60,10 @@ def main():
    
    option = None
    for arg in argv:
-      ms = re.match(r'^-([abdmnpstw])', arg)
+      ms = re.match(r'^-([abcdmnopstw])', arg)
       if ms:
          option = ms.group(1)
-         if option in 'mp': continue
+         if option in 'cmp': continue
          if option == "b":
             PgLOG.PGLOG['BCKGRND'] = 1
          elif option == "d":
@@ -81,6 +81,8 @@ def main():
          elif option == "n":
             LOGS['CHKLOG'] = 0
          option = None
+      elif option == 'c':
+         PgLOG.add_carbon_copy(arg, 1)
       elif option == 'm':
          smonth = arg
       elif option == 'p':
@@ -125,6 +127,9 @@ def archive_web_log(smonth):
    if op.exists(afile): PgFile.delete_local_file(afile)
 
    logfiles = sorted(glob.glob("{}/access_log_gridftp??_{}??{}".format(logpath, mn, yr)))
+   if not logfiles:
+      PgLOG.pglog("{}: NO globus web log file found for {}-{} to archive".format(logpath, yr, mn), PgLOG.LGWNEM)
+      return
    topt = '-cvf'
    tcnt = 0
    for logfile in logfiles:
@@ -164,6 +169,9 @@ def archive_osdf_log(smonth):
    if op.exists(afile): PgFile.delete_local_file(afile)
 
    logfiles = sorted(glob.glob("{}/{}-{}-??.log".format(logpath, yr, mn)))
+   if not logfiles:
+      PgLOG.pglog("{}: NO OSDF web log file found for {}-{} to archive".format(logpath, yr, mn), PgLOG.LGWNEM)
+      return
    topt = '-cvf'
    tcnt = 0
    for logfile in logfiles:
@@ -177,7 +185,7 @@ def archive_osdf_log(smonth):
       afile += '.gz'
       PgFile.move_local_file(dfile, afile, PgLOG.LGWNEM)
       s = 's' if tcnt > 1 else ''
-      PgLOG.pglog("{}: {} globus log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
+      PgLOG.pglog("{}: {} OSDF log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, PgLOG.current_datetime()), PgLOG.LGWNEM)
 
 #
 # Archive AWS web log files to LOGS['DECSLOGS']
@@ -196,6 +204,9 @@ def archive_aws_log(smonth):
    if op.exists(afile): PgFile.delete_local_file(afile)
 
    lfile = "{}/{}".format(yr, mn)
+   if not op.exists("{}/{}".format(logpath, lfile)):
+      PgLOG.pglog("{}/{}: NO AWS web log directory found to archive".format(logpath, lfile), PgLOG.LGWNEM)
+      return
    tcmd = "tar -cvf {} -C {} {}".format(afile, logpath, lfile)
    PgLOG.pgsystem(tcmd, PgLOG.LGWNEM, 5)
 
@@ -221,6 +232,9 @@ def archive_tds_log(smonth):
    if op.exists(afile): PgFile.delete_local_file(afile)
 
    logfiles = sorted(glob.glob("{}/{}-{}-??.access.log".format(logpath, yr, mn)))
+   if not logfiles:
+      PgLOG.pglog("{}: NO thredds log file found for {}-{} to archive".format(logpath, yr, mn), PgLOG.LGWNEM)
+      return
    topt = '-cvf'
    tcnt = 0
    for logfile in logfiles:
@@ -257,6 +271,9 @@ def archive_dssdb_log():
 
    # collect all the large log/err files
    files = sorted(glob.glob("*.log") + glob.glob("*.err"))
+   if not files:
+      PgLOG.pglog("{}: NO dssdb log file found to archive".format(LOGS['RDALOG']), PgLOG.LGWNEM)
+      return
    for file in files:
       info = PgFile.check_local_file(file, 2)
       if(not info or info['data_size'] < 10000): continue   # skip log files small than 10KB

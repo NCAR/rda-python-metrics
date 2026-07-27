@@ -22,15 +22,15 @@ from rda_python_common import PgDBI
 from . import PgView
 
 FILE = {
-   'SNMS' : "BCDEFGHIJKLMNOPQRSTUVWYZ",    # all available short field names in FLDS
-   'OPTS' : 'AabCdDefFgGHijJlLmMnNoOprsStTuUvwyYzZ',  # all available options, used for params
+   'SNMS' : "ABCDEFGHIJKLMNOPQRSTUWYZ",    # all available short field names in FLDS
+   'OPTS' : 'AabCdDefFgGHijJlLmMNoOprsStTuUWwyYzZ',  # all available options, used for params
    'NOPT' : 'abjJw',                       # stand alone option without inputs
-   'ACND' : 'defgGilmMnopStuvyYz',         # available array condition options
+   'ACND' : 'defgGilmMopStuWyYz',          # available array condition options
    'RCND' : 'DFNrsTZ',                     # available range condition options
-   'CNDS' : 'adDefFgGilmMnNoprstTuvyYzZ',  # condition options, ACND, RCND and 'a'
+   'CNDS' : 'adDefFgGilmMNoprstTuWyYzZ',   # condition options, ACND, RCND and 'a'
    'ECND' : 'mMyY',                        # condition options need evaluating
-   'SFLD' : 'DEFILNOPQTUVZ',               # string fields, to be quoted in condition
-   'UFLD' : 'ILOPV',                       # string fields must be in upper case
+   'SFLD' : 'DEFILNOPQTUWZ',               # string fields, to be quoted in condition
+   'UFLD' : 'ILOPW',                        # string fields must be in upper case
    'LFLD' : 'EQTU'                         # string fields must be in lower case
 }
 
@@ -91,8 +91,7 @@ FLDS = {
 #   L -- column delimiter for output
 #   m -- array of specified months of file last written
 #   M -- array of specified months of file created
-#   n -- array of specified user numbers
-#   D -- dates range, datasets created between, array of 1 or 2 dates in format of YYYY-MM-DD
+#   N -- dataset created dates range, array of 1 or 2 dates in format of YYYY-MM-DD
 #   o -- array of specified file status
 #   O -- a string of short field names for sorting on
 #   p -- array of web file types, Data, Document, and etc.
@@ -104,6 +103,7 @@ FLDS = {
 #   u -- array of specified specialist user names
 #   U -- use given unit for file or data sizes
 #   w -- generate view without totals
+#   W -- array of specified dataset types
 #   y -- array of specified years of file last written
 #   Y -- array of specified years of file created
 #   z -- array of specified dates when files created

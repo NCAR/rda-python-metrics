@@ -247,7 +247,7 @@ class ViewWEBUsage(PgView):
          if 'z' not in self.params or sn in self.EXPAND: continue
          fld = self.FLDS[sn]
          if fld[6] != 'G': continue
-         self.pglog("{}: cannot show zero usage for unexpandable field {} - {}".formt(self.pgname, sn, fld[0]), self.LGWNEX)
+         self.pglog("{}: cannot show zero usage for unexpandable field {} - {}".format(self.pgname, sn, fld[0]), self.LGWNEX)
       if 'E' in self.params or 'I' in self.params:
          if 'z' in self.params:
             self.pglog(self.pgname + ": option -z and -E/-I can not be present at the same time", self.LGWNEX)

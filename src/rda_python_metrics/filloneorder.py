@@ -124,7 +124,7 @@ class FillONEOrder(PgUtil):
 
    def check_specialist(self, dsid, specialist):
       """Return the dataset owner if specialist not given."""
-      if specialist and self.pgget("dssgrp", "", "logname = 'specialist'", self.LGEREX): return specialist
+      if specialist and self.pgget("dssgrp", "", "logname = '{}'".format(specialist), self.LGEREX): return specialist
       scond = "specialist = logname AND dsid = '{}' AND priority = 1".format(dsid)
       pgrec = self.pgget("dsowner, dssgrp", "specialist", scond, self.LGEREX)
       return pgrec['specialist'] if pgrec else "datahelp"
