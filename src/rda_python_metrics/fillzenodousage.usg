@@ -1,0 +1,32 @@
+
+ fillzenodousage - Fill table 'gdexzenodo' from Zenodo metrics.
+
+ Retrieves Zenodo usage info for GDEX-published datasets and inserts
+ records into the 'gdexzenodo' table in PostgreSQL database 'rdadb'.
+
+ USAGE:
+   fillzenodousage [-b] -s DatasetShortNames
+                   (-m MonthList | -N NumberDays | -y YearList)
+
+ OPTIONS:
+
+   -s DatasetShortNames   (required)
+        Gather usage info for the given dataset short names.
+
+   One of the following time-range options is required:
+
+   -m MonthList
+        Gather usage info for the given months.
+        Month format: YYYY-MM (e.g. 2024-01).
+
+   -N NumberDays
+        Gather usage info for the most recent NumberDays days.
+
+   -y YearList
+        Gather usage info for the given years.
+        Year format: YYYY (e.g. 2024).
+
+   -b   Run in background mode (log to file only, no terminal output).
+
+ EXAMPLE:
+   fillzenodousage -s ds083.2 -y 2024

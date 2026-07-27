@@ -17,14 +17,14 @@
       The '-C' flag may be omitted if ColumnNames is the first argument.
 
    2. At least one condition option must be given:
-        -a -d -D -e -f -F -g -G -i -l -m -M -n -o -p -r -s -t -T
-        -u -v -W -y -Y -z -Z
+        -a -d -D -e -f -F -g -G -i -l -m -M -N -o -p -r -s -t -T
+        -u -W -y -Y -z -Z
 
    3. Negation: for any condition option except -a, prepend '!' between
       the flag and value to invert the filter, e.g. '-o ! DSS'.
 
    4. Wildcards: condition options that take strings (-e, -f, -G, -i, -l,
-      -o, -t, -u, -v) accept SQL wildcards '%' (any chars) and '_' (one
+      -o, -t, -u) accept SQL wildcards '%' (any chars) and '_' (one
       char).
 
    5. By default the output is paginated with a header, footer, and
@@ -46,35 +46,36 @@
    Column letters:
 
      Group Columns:
-       A  - CYEAR       - year the file was created
        D  - DATEWRITE   - date the file was last written
        E  - EMAIL       - email of file-written user
        F  - FILENAME    - WEB data file name
        G  - PRODUCT     - product (top group) information
        H  - CMONTH      - month the file was created
        I  - FIRSTNAME   - first name of file-written user
-       K  - TIMEWRITE   - time the file was last written
+       K  - CYEAR       - year the file was created
        L  - LASTNAME    - last name of file-written user
        M  - WMONTH      - month the file was last written
-       N  - USERNO      - account number of file-written user
+       N  - DSCREATED   - date the dataset was created
        O  - STAT        - file status: Public or Internal
        P  - TYPE        - file type: Data, Software, etc.
-       Q  - TIMECREATE  - time the file was created
+       Q  - DSOWNER     - specialist who owns the dataset
        R* - DSTITLE     - dataset title
        S  - FILESIZE    - individual file size (bytes)
        T  - DATASET     - dataset name
-       U  - USERNAME    - login name of file-written user
-       V  - DIV.        - division of file-written user
-       W  - DSTYPE      - dataset type flag: P, H, I, or W
+       U  - SPECIALIST  - login name of file-written user
+       W  - DSTYPE      - dataset type flag: D, H, I, P, or W
        Y  - WYEAR       - year the file was last written
        Z  - DATECREATE  - date the file was created
 
        (*) = column may be displayed with zero usages when -z is used.
 
      Summary Columns:
-       B - MBYTESFILES  - data size (MB) by the group
-       C - #USER        - number of users in the group
-       J - #FILE        - number of files by the group
+       B - MBYTEDATA    - data size (MB) by the group
+
+     Count Columns:
+       A - DSCOUNT      - number of distinct file names in the group
+       C - #UNIQSPLST   - number of distinct specialists in the group
+       J - #UNIQFILE    - number of distinct files in the group
 
      Index Column:
        X - INDEX        - 1-based row index (use as the first column)
@@ -97,7 +98,7 @@
    -l LastNameList                   Users with these last names.
    -m MonthList                      Last written in these months (YYYY-MM).
    -M MonthList                      Created in these months (YYYY-MM).
-   -n UserNumberList                 These user account numbers.
+   -N StartDate [EndDate]            Datasets created between two dates.
    -o FileStatus                     File status: P (Public) or I (Internal).
    -p TypeList                       File types: D (Data), I (Internal Data),
                                      O (Document), S (Software).
@@ -108,9 +109,7 @@
                                      e.g. '-T d540000 d550009'.
    -u UserNameList                   Last written by users with these
                                      login names.
-   -v DivisionList                   Last written by users from these
-                                     divisions.
-   -W DatasetTypes                   Dataset type flag: P, H, I, or W.
+   -W DatasetTypes                   Dataset type flag: D, H, I, P, or W.
    -y YearList                       Last written in these years (YYYY).
    -Y YearList                       Created in these years (YYYY).
    -z DateList                       Created on these dates.
@@ -129,8 +128,8 @@
 
  EXAMPLES:
 
-   View files last written in 2004 with columns INDEX, USERNAME, STAT,
-   #FILE, MBYTESFILES; sort by STAT ascending and MBYTESFILES descending:
+   View files last written in 2004 with columns INDEX, SPECIALIST, STAT,
+   #UNIQFILE, MBYTEDATA; sort by STAT ascending and MBYTEDATA descending:
 
       viewwebfile XUOJB -y 2004 -O Ob
 

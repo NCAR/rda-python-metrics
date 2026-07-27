@@ -22,7 +22,7 @@ class ViewCheckUsage(PgView):
    def __init__(self):
       super().__init__()
       self.VUSG = {
-         'SNMS' : "ABCDEFGHIJKLMNPQRSTUVWZ",   # all available short field names in FLDS
+         'SNMS' : "ABCDEFGHIJKLMNPQRSTUVWYZ",   # all available short field names in FLDS
          'OPTS' : 'aABcCdDhHilLmnOqrsStTwyz',  # all available options, used for params
          'NOPT' : 'abwz',                      # stand alone option without inputs
          'ACND' : 'cdhilLmnsSty',              # available array condition options
@@ -115,7 +115,7 @@ class ViewCheckUsage(PgView):
       # related to a field name if it is not in keys SNS 
       self.SNS = {
          'b' : 'L', 'B' : 'L', 'c' : 'C', 'd' : 'D', 'D' : 'D', 'h' : 'H', 'i' : 'I', 'm' : 'M', 'n' : 'N',
-         'q' : 'Q', 'r' : 'R', 'q' : 'Q', 's' : 'W', 'S' : 'S', 't' : 'T', 'T' : 'T', 'y' : 'Y'
+         'q' : 'Q', 'r' : 'R', 's' : 'W', 'S' : 'S', 't' : 'T', 'T' : 'T', 'y' : 'Y'
       }
       self.tablenames = self.fieldnames = self.condition = ''
       self.sfields = []
@@ -187,7 +187,7 @@ class ViewCheckUsage(PgView):
       for sn in flds:
          if sn == 'X': continue  # do not process INDEX field
          if self.VUSG['SNMS'].find(sn) == -1:
-            self.pglog("{}: Field sn must be in short field names: {}X".format(self.pgname, self.VUSG['SNMS']), self.LGWNEX)
+            self.pglog("{}: Field {} must be in short field names: {}X".format(self.pgname, sn, self.VUSG['SNMS']), self.LGWNEX)
          if 'z' not in self.params or sn in self.EXPAND: continue
          fld = self.FLDS[sn]
          if fld[6] != 'G': continue

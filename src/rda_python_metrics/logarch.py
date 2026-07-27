@@ -21,7 +21,7 @@ class LogArch(PgFile):
    def __init__(self):
       super().__init__()
       # the defined options for archiving different logs
-      self.WLOG = 0x21  # archive web log
+      self.WLOG = 0x01  # archive web log
       self.TLOG = 0x02  # archive tds log
       self.DLOG = 0x04  # archive dssdb logs
       self.SLOG = 0x08  # append dssdb sub batch logs
@@ -30,8 +30,8 @@ class LogArch(PgFile):
       self.LOGS = {
          'OPTION' : 0,
          'AWSLOG' : self.PGLOG["TRANSFER"] + "/AWSera5log",
-         'WEBLOG' : self.PGLOG["DSSDATA"] + "/work/logs/gridftp",
-         'OSDFLOG' : self.PGLOG["DSSDATA"] + "/zji/osdflogs",
+         'WEBLOG' : self.PGLOG["GDEXWORK"] + "/logs/gridftp",
+         'OSDFLOG' : self.PGLOG["GDEXWORK"] + "/zji/osdflogs",
          'MGTLOG' : "/data/logs",
          'TDSLOG' : "/data/logs/nginx",
          'RDALOG' : self.PGLOG['LOGPATH'],
@@ -51,10 +51,10 @@ class LogArch(PgFile):
       self.set_suid(self.PGLOG['EUID'])
       option = None
       for arg in argv:
-         ms = re.match(r'^-([abdmnpstw])', arg)
+         ms = re.match(r'^-([abcdmnopstw])', arg)
          if ms:
             option = ms.group(1)
-            if option in 'mp': continue
+            if option in 'cmp': continue
             if option == "b":
                self.PGLOG['BCKGRND'] = 1
             elif option == "d":
@@ -72,6 +72,8 @@ class LogArch(PgFile):
             elif option == "n":
                self.LOGS['CHKLOG'] = 0
             option = None
+         elif option == 'c':
+            self.add_carbon_copy(arg, 1)
          elif option == 'm':
             self.smonth = arg
          elif option == 'p':
@@ -110,6 +112,9 @@ class LogArch(PgFile):
          return
       if op.exists(afile): self.delete_local_file(afile)
       logfiles = sorted(glob.glob("{}/access_log_gridftp??_{}??{}".format(logpath, mn, yr)))
+      if not logfiles:
+         self.pglog("{}: NO globus web log file found for {}-{} to archive".format(logpath, yr, mn), self.LGWNEM)
+         return
       topt = '-cvf'
       tcnt = 0
       for logfile in logfiles:
@@ -122,7 +127,7 @@ class LogArch(PgFile):
          lfile = op.basename(logfile)
          tcmd = "tar {} {} -C {} {}".format(topt, afile, logpath, lfile)
          tcnt += self.pgsystem(tcmd, self.LGWNEM, 5)
-         topt = '-uvf'   
+         topt = '-uvf'
       if tcnt > 0:
          self.pgsystem("gzip " + afile, self.LGWNEM, 5)
          afile += '.gz'
@@ -142,6 +147,9 @@ class LogArch(PgFile):
          return
       if op.exists(afile): self.delete_local_file(afile)
       logfiles = sorted(glob.glob("{}/{}-{}-??.log".format(logpath, yr, mn)))
+      if not logfiles:
+         self.pglog("{}: NO OSDF web log file found for {}-{} to archive".format(logpath, yr, mn), self.LGWNEM)
+         return
       topt = '-cvf'
       tcnt = 0
       for logfile in logfiles:
@@ -154,7 +162,7 @@ class LogArch(PgFile):
          afile += '.gz'
          self.move_local_file(dfile, afile, self.LGWNEM)
          s = 's' if tcnt > 1 else ''
-         self.pglog("{}: {} globus log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, self.current_datetime()), self.LGWNEM)
+         self.pglog("{}: {} OSDF log{} tarred, gzipped and archived at {}".format(afile, tcnt, s, self.current_datetime()), self.LGWNEM)
 
    # Archive AWS web log files to self.LOGS['DECSLOGS']
    def archive_aws_log(self):
@@ -168,6 +176,9 @@ class LogArch(PgFile):
          return
       if op.exists(afile): self.delete_local_file(afile)
       lfile = "{}/{}".format(yr, mn)
+      if not op.exists("{}/{}".format(logpath, lfile)):
+         self.pglog("{}/{}: NO AWS web log directory found to archive".format(logpath, lfile), self.LGWNEM)
+         return
       tcmd = "tar -cvf {} -C {} {}".format(afile, logpath, lfile)
       self.pgsystem(tcmd, self.LGWNEM, 5)
       self.pgsystem("gzip " + afile, self.LGWNEM, 5)
@@ -187,6 +198,9 @@ class LogArch(PgFile):
          return
       if op.exists(afile): self.delete_local_file(afile)
       logfiles = sorted(glob.glob("{}/{}-{}-??.access.log".format(logpath, yr, mn)))
+      if not logfiles:
+         self.pglog("{}: NO thredds log file found for {}-{} to archive".format(logpath, yr, mn), self.LGWNEM)
+         return
       topt = '-cvf'
       tcnt = 0
       for logfile in logfiles:
@@ -217,6 +231,9 @@ class LogArch(PgFile):
       self.change_local_directory(self.LOGS['RDALOG'], self.LWEMEX)
       # collect all the large log/err files
       files = sorted(glob.glob("*.log") + glob.glob("*.err"))
+      if not files:
+         self.pglog("{}: NO dssdb log file found to archive".format(self.LOGS['RDALOG']), self.LGWNEM)
+         return
       for file in files:
          info = self.check_local_file(file, 2)
          if(not info or info['data_size'] < 10000): continue   # skip log files small than 10KB

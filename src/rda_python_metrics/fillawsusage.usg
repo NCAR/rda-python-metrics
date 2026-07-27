@@ -1,7 +1,7 @@
 
  fillawsusage - Fill table 'awsusage' from AWS Server log files.
 
- Reads AWS access logs from /gpfs/fs1/collections/rda/transer/AWSera5log/
+ Reads AWS access logs from /gpfs/fs1/collections/rda/transfer/AWSera5log/
  and inserts usage records into the 'awsusage' table in PostgreSQL
  database 'rdadb'.
 

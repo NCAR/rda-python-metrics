@@ -86,7 +86,7 @@ EXPAND = {
    'T' : ["DSID",   "StT", "dataset.dsid",   "dataset"],
    'P' : ["DSID",   "StT", "specialist",     "dsowner"],
 
-   'W' : ["METHOD", "fM",      "method",       "osdfusage"]
+   'W' : ["METHOD", "M",       "method",       "osdfusage"]
 }
 
 # valid options for params, a hash array of command line parameters
@@ -224,7 +224,7 @@ def check_enough_options():
       if 'z' not in params or sn in EXPAND: continue
       fld = FLDS[sn]
       if fld[6] != 'G': continue
-      PgLOG.pglog("{}: cannot show zero usage for unexpandable field {} - {}".formt(pgname, sn, fld[0]), PgLOG.LGWNEX)
+      PgLOG.pglog("{}: cannot show zero usage for unexpandable field {} - {}".format(pgname, sn, fld[0]), PgLOG.LGWNEX)
 
    if 'E' in params or 'I' in params:
       if 'z' in params:

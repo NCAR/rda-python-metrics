@@ -23,7 +23,7 @@ from rda_python_common import PgDBI
 from . import PgView
 
 VUSG = {
-   'SNMS' : "ABCDEFGHIJKLMNPQRSTUVWZ",   # all available short field names in FLDS
+   'SNMS' : "ABCDEFGHIJKLMNPQRSTUVWYZ",   # all available short field names in FLDS
    'OPTS' : 'aABcCdDhHilLmnOqrsStTwyz',  # all available options, used for params
    'NOPT' : 'abwz',                      # stand alone option without inputs
    'ACND' : 'cdhilLmnsSty',              # available array condition options
@@ -120,7 +120,7 @@ params = {}
 # related to a field name if it is not in keys SNS 
 SNS = {
    'b' : 'L', 'B' : 'L', 'c' : 'C', 'd' : 'D', 'D' : 'D', 'h' : 'H', 'i' : 'I', 'm' : 'M', 'n' : 'N',
-   'q' : 'Q', 'r' : 'R', 'q' : 'Q', 's' : 'W', 'S' : 'S', 't' : 'T', 'T' : 'T', 'y' : 'Y'
+   'q' : 'Q', 'r' : 'R', 's' : 'W', 'S' : 'S', 't' : 'T', 'T' : 'T', 'y' : 'Y'
 }
 
 tablenames = fieldnames = condition = ''
@@ -203,7 +203,7 @@ def check_enough_options():
    for sn in flds:
       if sn == 'X': continue  # do not process INDEX field
       if VUSG['SNMS'].find(sn) == -1:
-         PgLOG.pglog("{}: Field sn must be in short field names: {}X".format(pgname, VUSG['SNMS']), PgLOG.LGWNEX)
+         PgLOG.pglog("{}: Field {} must be in short field names: {}X".format(pgname, sn, VUSG['SNMS']), PgLOG.LGWNEX)
 
       if 'z' not in params or sn in EXPAND: continue
       fld = FLDS[sn]

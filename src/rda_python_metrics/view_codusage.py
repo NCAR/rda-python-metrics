@@ -225,7 +225,7 @@ def check_enough_options():
       if 'z' not in params or sn in EXPAND: continue
       fld = FLDS[sn]
       if fld[6] != 'G': continue
-      PgLOG.pglog("{}: cannot show zero usage for unexpandable field {} - {}".formt(pgname, sn, fld[0]), PgLOG.LGWNEX)
+      PgLOG.pglog("{}: cannot show zero usage for unexpandable field {} - {}".format(pgname, sn, fld[0]), PgLOG.LGWNEX)
 
    if 'E' in params or 'I' in params:
       if 'z' in params:

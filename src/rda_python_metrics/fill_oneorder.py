@@ -143,7 +143,7 @@ def check_inputs(params):
 #
 def check_specialist(dsid, specialist):
 
-   if specialist and PgDBI.pgget("dssgrp", "", "logname = 'specialist'", PgLOG.LGEREX): return specialist
+   if specialist and PgDBI.pgget("dssgrp", "", "logname = '{}'".format(specialist), PgLOG.LGEREX): return specialist
    scond = "specialist = logname AND dsid = '{}' AND priority = 1".format(dsid)
    pgrec = PgDBI.pgget("dsowner, dssgrp", "specialist", scond, PgLOG.LGEREX)
    return pgrec['specialist'] if pgrec else "datahelp"

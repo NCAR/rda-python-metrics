@@ -5,7 +5,7 @@
  detected and skipped (unless -n is given).
 
  USAGE:
-   logarch [-b] [-n] [-s] [-p LogPath] [-m YearMonth]
+   logarch [-b] [-n] [-s] [-c CcAddress] [-p LogPath] [-m YearMonth]
            (-a | -d | -o | -t | -w) [more archive-type flags]
 
  ARCHIVE TYPES (at least one required):
@@ -20,6 +20,10 @@
 
    -m YearMonth
         Archive logs for the given YYYY-MM (e.g. 2024-01) only.
+
+   -c CcAddress
+        Carbon-copy the email notice to one or more additional specialists
+        (comma/space-separated). May be given more than once.
 
    -p LogPath
         Use LogPath instead of the default log directory.
