@@ -53,15 +53,13 @@ class PgPerson:
       url = self.urlfmt.format(self.option, self.optval)
       response, content = http.request(url, 'GET', headers=headers)
       status = response.status
-      if status == 200:
-         persons=json.loads(content)
-         for person in persons:
-            for key, value in person.items():
-               print("{}<=>{}".format(key, value))
-      elif status == 399:
-         print(content)
-      elif status == 500:
-         print('Server error')
+      if status != 200:
+         print("pgperson: HTTP {} from {}\n{}".format(status, url, content.decode(errors='replace')), file=sys.stderr)
+         sys.exit(1)
+      persons=json.loads(content)
+      for person in persons:
+         for key, value in person.items():
+            print("{}<=>{}".format(key, value))
 
 # main function to execute this script
 def main():

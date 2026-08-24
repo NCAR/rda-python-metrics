@@ -11,11 +11,10 @@
 ###############################################################################
 import sys
 import re
-import time
-from os import path as op
 from rda_python_common.pg_util import PgUtil
+from rda_python_common.pg_dbi import PgDBI
 
-class FillUser(PgUtil):
+class FillUser(PgUtil, PgDBI):
 
    """Retrieve user info from the UCAR People API and fill table user in PostgreSQL database rdadb."""
 
@@ -131,7 +130,7 @@ class FillUser(PgUtil):
             if neworg: return 0
             newrec['org_name'] = orarec['org_name']
          if orarec['country'] and (not pgrec['country'] or orarec['country'] and pgrec['country'] != orarec['country']):
-            orarec['country'] = self.set_country_code(orarec)
+            orarec['country'] = self.set_country_code(orarec['email'], orarec['country'])
             if not pgrec['country'] or pgrec['country'] != orarec['country']:
                if neworg: return 0
                newrec['country'] = orarec['country']
