@@ -15,12 +15,9 @@ def test_metrics():
     import rda_python_metrics.fillosdfusage
     import rda_python_metrics.fillrdadb
     import rda_python_metrics.filltdsusage
-    import rda_python_metrics.filluser
     import rda_python_metrics.logarch
     import rda_python_metrics.PgIPInfo
     import rda_python_metrics.pg_ipinfo
-    import rda_python_metrics.pgperson
-    import rda_python_metrics.pgusername
     import rda_python_metrics.PgView
     import rda_python_metrics.pg_view
     import rda_python_metrics.viewallusage
