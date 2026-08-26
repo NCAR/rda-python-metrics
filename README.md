@@ -29,10 +29,7 @@ The package provides two categories of programs:
 | `fillosdfusage` | Fill OSDF usage metrics into the database |
 | `fillrdadb` | Fill RDA database usage metrics |
 | `filltdsusage` | Fill TDS (THREDDS) usage metrics into the database |
-| `filluser` | Fill user information into the database |
 | `fillzenodousage` | Fill Zenodo usage metrics into the database |
-| `pgperson` | Retrieve user info from the UCAR People API by field |
-| `pgusername` | Retrieve user info from the UCAR People API by username |
 | `viewallusage` | View combined usage statistics |
 | `viewawsusage` | View AWS usage statistics |
 | `viewcheckusage` | View usage check results |
