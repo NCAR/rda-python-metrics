@@ -113,7 +113,8 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
             if entcnt%20000 == 0:
                dcnt = len(records)
                self.pglog("{}: {}/{} OSDF log entries processed/records added".format(logfile, entcnt, dcnt), self.WARNLG)
-            ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/rda\/([a-z]\d{6})\/\S+\].* \[Site:(\S+)\].* \[Host:(\S+)\].* \[AppInfo:(\S*)\].* \[Read:(\d+)\]', line)
+            # the OSDF namespace was renamed from /ncar/rda to /ncar/gdex
+            ms = re.match(r'^\[(\S+)\] \[Objectname:\/ncar\/(?:rda|gdex)\/([a-z]\d{6})\/\S+\].* \[Site:(\S+)\].* \[Host:(\S+)\].* \[AppInfo:(\S*)\].* \[Read:(\d+)\]', line)
             if not ms: continue
             dt = ms.group(1)
             dsid = ms.group(2)
