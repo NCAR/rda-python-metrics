@@ -116,9 +116,11 @@ class FillCODUsage(PgIPInfo):
                size = int(ms.group(2))
                engine = ms.group(3)
                if not (aid in self.USERS or self.cache_users(aid)): continue
-               ms = re.match(r'^([\d\.]+).+\[(\d+)/(\w+)/(\d+):([\d:]+)', line)
+               # the ip field holds an IPv6 address as well as an IPv4 one
+               ms = re.match(r'^([\da-fA-F.:]+).+\[(\d+)/(\w+)/(\d+):([\d:]+)', line)
                if not ms: continue
-               ip = ms.group(1)
+               ip = self.normalize_ip(ms.group(1))
+               if not ip: continue
                ctime = ms.group(5)
                cdate = "{}-{:02}-{:02}".format(ms.group(4), self.get_month(ms.group(3)), int(ms.group(2)))
                if pdate != cdate:
@@ -153,6 +155,7 @@ class FillCODUsage(PgIPInfo):
       year = ms.group(1)
       quarter = 1 + int((int(ms.group(2)) - 1) / 3)
       cnt = 0
+      self.preset_ip_hostnames([records[aid]['ip'] for aid in records])
       for aid in records:
          if self.pgget(self.USAGE['PGTBL'], '', "aid = '{}' AND date = '{}'".format(aid, date), self.LGEREX): continue
          record = records[aid]
@@ -162,7 +165,7 @@ class FillCODUsage(PgIPInfo):
             record['org_type'] = wurec['org_type']
             record['country'] = wurec['country']
             record['region'] = wurec['region']
-            record['email'] = 'unknown@' + wurec['hostname']
+            record['email'] = wurec['email']   # already 'unknown@<hostname>' for a generic ip
          else:
             wuid = self.check_wuser_wuid(record['email'], date)
             if not wuid: continue

@@ -107,6 +107,7 @@ class FillAWSUsage(PgIPInfo, PgFile):
          for logfile in fnames:
             aws = self.open_local_file(logfile)
             if not aws: continue
+            self.prescan_ips(aws, r'^\w+ [\w-]+ \[[^\]]*\] ([\da-fA-F.:]+) ')
             while True:
                line = aws.readline()
                if not line: break
@@ -114,13 +115,15 @@ class FillAWSUsage(PgIPInfo, PgFile):
                if entcnt%20000 == 0:
                   dcnt = len(records)
                   self.pglog("{}: {}/{} AWS log entries processed/records to add".format(pdate, entcnt, dcnt), self.WARNLG)
-               ms = re.match(r'^\w+ ([\w-]+) \[(\S+).*\] ([\d\.]+) .+ REST\.GET\.OBJECT \S+ "GET.+" \d+ - (\d+) \d+ .* ".+" "(.+)" ', line)
+               # the ip field holds an IPv6 address as well as an IPv4 one
+               ms = re.match(r'^\w+ ([\w-]+) \[(\S+).*\] ([\da-fA-F.:]+) .+ REST\.GET\.OBJECT \S+ "GET.+" \d+ - (\d+) \d+ .* ".+" "(.+)" ', line)
                if not ms: continue
                values = list(ms.groups())
                if values[0] not in self.DSIDS: continue
                dsid = self.DSIDS[values[0]]
                size = int(values[3])
-               ip = values[2]
+               ip = self.normalize_ip(values[2])
+               if not ip: continue
                engine = values[4]
                moff = engine.find('/')
                if moff > 0:

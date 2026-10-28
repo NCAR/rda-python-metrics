@@ -117,6 +117,7 @@ class FillIPInfo(PgIPInfo):
       if not pgrecs: return 0
       cnt = len(pgrecs['ip']) if pgrecs else 0
       mcnt = 0
+      self.preset_ip_hostnames(pgrecs['ip'])
       for i in range(cnt):
          record = self.get_missing_ipinfo(pgrecs['ip'][i], pgrecs['email'][i])
          if record: mcnt += self.pgupdt(table, record, "aidx = '{}'".format(pgrecs['aidx'][i]))
@@ -132,6 +133,7 @@ class FillIPInfo(PgIPInfo):
       if not pgrecs: return 0
       cnt = len(pgrecs['ip']) if pgrecs else 0
       mcnt = 0
+      self.preset_ip_hostnames(pgrecs['ip'])
       for i in range(cnt):
          ip = pgrecs['ip'][i]
          record = self.get_missing_ipinfo(ip, pgrecs['email'][i])
@@ -150,6 +152,7 @@ class FillIPInfo(PgIPInfo):
       if not pgrecs: return 0
       cnt = len(pgrecs['ip']) if pgrecs else 0
       mcnt = 0
+      self.preset_ip_hostnames(pgrecs['ip'])
       for i in range(cnt):
          record = self.get_missing_ipinfo(pgrecs['ip'][i], pgrecs['email'][i])
          if record:
@@ -183,6 +186,7 @@ class FillIPInfo(PgIPInfo):
       if not pgrecs: return 0
       cnt = len(pgrecs['ip']) if pgrecs else 0
       mcnt = 0
+      self.preset_ip_hostnames(pgrecs['ip'])
       for i in range(cnt):
          if self.set_ipinfo(pgrecs['ip'][i]): mcnt +=1
       s = 's' if cnt > 1 else ''

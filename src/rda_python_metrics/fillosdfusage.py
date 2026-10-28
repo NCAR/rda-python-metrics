@@ -105,6 +105,7 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
          osdf = self.open_local_file(logfile)
          if not osdf: continue
          records = {}
+         ips = {}
          cntadd = entcnt = 0
          while True:
             line = osdf.readline()
@@ -119,8 +120,10 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
             dt = ms.group(1)
             dsid = ms.group(2)
             site = ms.group(3)
-            ip = ms.group(4)
-            if ip == 'N/A': ip = self.GIP
+            # normalize before keying on it, so one address spelled two ways in the
+            # log aggregates into one usage record rather than two
+            ip = self.GIP if ms.group(4) == 'N/A' else self.normalize_ip(ms.group(4))
+            if not ip: continue
             engine = ms.group(5)
             size = int(ms.group(6))
             if re.match(r'^N/A', engine, re.I):
@@ -138,13 +141,13 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
                records[key]['fcount'] += 1
             else:
                (year, quarter, date, time) = self.get_record_date_time(dt)
-               iprec =  self.get_missing_ipinfo(ip)
-               if not iprec: continue
-               records[key] = {'ip' : iprec['ip'], 'dsid' : dsid, 'date' : date, 'time' : time, 'quarter' : quarter,
-                               'size' : size, 'fcount' : 1, 'method' : method, 'engine' : engine,
-                               'org_type' : iprec['org_type'], 'country' : iprec['country'],
-                               'region' : iprec['region'], 'email' : iprec['email'], 'site' : site}
+               ips[ip] = 1
+               records[key] = {'ip' : ip, 'dsid' : dsid, 'date' : date, 'time' : time, 'quarter' : quarter,
+                               'size' : size, 'fcount' : 1, 'method' : method, 'engine' : engine, 'site' : site}
          osdf.close()
+         if records:
+            self.preset_ip_hostnames(list(ips))
+            records = self.fill_ipinfo_records(records)
          if records: cntadd = self.add_usage_records(records, year)
          self.pglog("{}: {} OSDF usage records added for {} entries at {}".format(logfile, cntadd, entcnt, self.current_datetime()), self.LOGWRN)
          cntall += entcnt
@@ -165,6 +168,21 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
          return (y, q, "{}-{:02}-{:02}".format(y, m, d), t)
       else:
          self.pglog(ctime + ": Invalid date/time format", self.LGEREX)
+
+   def fill_ipinfo_records(self, records):
+      """Add the ip info fields to the usage records; drop the ones without ip info."""
+      for key in list(records):
+         record = records[key]
+         iprec = self.get_missing_ipinfo(record['ip'])
+         if not iprec:
+            del records[key]
+            continue
+         record['ip'] = iprec['ip']
+         record['org_type'] = iprec['org_type']
+         record['country'] = iprec['country']
+         record['region'] = iprec['region']
+         record['email'] = iprec['email']
+      return records
 
    def add_usage_records(self, records, year):
       """Add usage to table osdfusage."""

@@ -106,6 +106,7 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
          self.pglog("Gathering usage info from {} at {}".format(logfile, self.current_datetime()), self.LOGWRN)
          globus = self.open_local_file(logfile)
          if not globus: continue
+         self.prescan_ips(globus, r'^([\da-fA-F.:]+)\s')
          ptime = ''
          record = {}
          cntadd = entcnt = 0
@@ -116,11 +117,13 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
             entcnt += 1
             if entcnt%10000 == 0:
                self.pglog("{}: {}/{} Globus log entries processed/records added".format(logfile, entcnt, cntadd), self.WARNLG)
-            ms = re.match(r'^([\d\.]+)\s.*\s+\[(\S+).*"GET\s+/(ds\d\d\d\.\d|[a-z]\d{6})/(\S+)\s.*\s(200|206)\s+(\d+)\s+"(\S+)"\s+"(.+)"$', line)
+            # the ip field holds an IPv6 address as well as an IPv4 one
+            ms = re.match(r'^([\da-fA-F.:]+)\s.*\s+\[(\S+).*"GET\s+/(ds\d\d\d\.\d|[a-z]\d{6})/(\S+)\s.*\s(200|206)\s+(\d+)\s+"(\S+)"\s+"(.+)"$', line)
             if not ms: continue
             size = int(ms.group(6))
             if size < 100: continue  # ignore small files
-            ip = ms.group(1)
+            ip = self.normalize_ip(ms.group(1))
+            if not ip: continue
             dsid = self.format_dataset_id(ms.group(3))
             wfile = ms.group(4)
             stat = ms.group(5)
