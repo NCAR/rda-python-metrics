@@ -170,8 +170,18 @@ class FillOSDFUsage(PgIPInfo, PgFile, PgSplit):
          self.pglog(ctime + ": Invalid date/time format", self.LGEREX)
 
    def fill_ipinfo_records(self, records):
-      """Add the ip info fields to the usage records; drop the ones without ip info."""
+      """Add the ip info fields to the usage records; drop the ones without ip info.
+
+      Looking an unknown ip up costs an ipinfo request, so this pass is the slowest
+      part of a log file holding many new addresses. Say how far along it is, or a
+      run that is merely slow here looks hung from the outside.
+      """
+      allcnt = len(records)
+      procnt = 0
       for key in list(records):
+         procnt += 1
+         if procnt%2000 == 0:
+            self.pglog("{}/{} OSDF usage records ip info filled".format(procnt, allcnt), self.WARNLG)
          record = records[key]
          iprec = self.get_missing_ipinfo(record['ip'])
          if not iprec:

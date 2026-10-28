@@ -37,7 +37,11 @@ class PgIPInfo(PgUtil, PgDBI):
          'QUOTA'  : 1,   # unset when the ipinfo monthly request quota is used up
          'DNSTMO' : 1,   # seconds to wait on a single name server
          'DNSLTM' : 2,   # seconds to spend on one name resolution in total
-         'DNSTHD' : 8    # number of threads used to presolve a list of ip addresses
+         'DNSTHD' : 8,   # number of threads used to presolve a list of ip addresses
+         'IPFAIL' : 0,   # ipinfo calls that failed in a row
+         'MAXFAIL' : 5,  # give ipinfo up for the run after this many in a row
+         'ALLFAIL' : 0,  # ipinfo calls that failed at all in this run
+         'MAXALL' : 50   # give ipinfo up for the run after this many altogether
       }
       self.GIP = '0.0.0.0'
       self.IPDNS = None
@@ -214,11 +218,11 @@ class PgIPInfo(PgUtil, PgDBI):
          record['hostname'] = dm
          record['org_type'] = self.get_org_type(None, dm)
 
-   def unset_ipinfo_quota(self):
-      """Stop calling ipinfo for the rest of the run once its quota is used up."""
+   def unset_ipinfo_quota(self, reason = 'monthly request quota used up'):
+      """Stop calling ipinfo for the rest of the run, naming why."""
       if self.IPINFO['QUOTA']:
          self.IPINFO['QUOTA'] = 0
-         self.pglog("ipinfo: monthly request quota used up, use geoip2 for the rest of the run", self.LOGWRN)
+         self.pglog("ipinfo: {}, use geoip2 for the rest of the run".format(reason), self.LOGWRN)
 
    def get_ipinfo_record(self, ip):
       """Get a ipinfo record for given ip address."""
@@ -235,7 +239,19 @@ class PgIPInfo(PgUtil, PgDBI):
             self.unset_ipinfo_quota()
          else:
             self.pglog("ipinfo: {} - {}".format(ip, estr), self.LOGWRN)
+            # a host that cannot reach ipinfo.io fails the same way for every
+            # address, and each try costs the full request timeout, so stop
+            # asking rather than spend the run timing out one ip at a time
+            self.IPINFO['IPFAIL'] += 1
+            self.IPINFO['ALLFAIL'] += 1
+            if self.IPINFO['IPFAIL'] >= self.IPINFO['MAXFAIL']:
+               self.unset_ipinfo_quota("{} calls in a row failed".format(self.IPINFO['IPFAIL']))
+            elif self.IPINFO['ALLFAIL'] >= self.IPINFO['MAXALL']:
+               # ipinfo answering some calls and timing out on others keeps resetting
+               # the in-a-row count above, so cap what the whole run may waste too
+               self.unset_ipinfo_quota("{} calls failed".format(self.IPINFO['ALLFAIL']))
          return None
+      self.IPINFO['IPFAIL'] = 0   # reachable again, so an odd failure does not add up
       if 'bogon' in iprec and iprec['bogon']:
          self.pglog(f"ipinfo: {ip} - bogon, use {self.GIP}", self.LOGWRN)
          self.IPRECS[ip] = self.pgget('ipinfo', '*', f"ip = '{self.GIP}'", self.LGEREX)
