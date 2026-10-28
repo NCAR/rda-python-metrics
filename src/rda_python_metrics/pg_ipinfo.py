@@ -102,7 +102,7 @@ class PgIPInfo(PgUtil, PgDBI):
 
    def get_country_record_code(self, cname, kname = None):
       """Get country code from name."""
-      name = cname[kname] if kname else cname
+      name = cname.get(kname) if kname else cname
       name = name.replace(' ', '.').upper() if name else 'UNITED.STATES'
       if name == 'CHINA': name = 'P.R.CHINA'
       return name
@@ -241,16 +241,24 @@ class PgIPInfo(PgUtil, PgDBI):
          self.IPRECS[ip] = self.pgget('ipinfo', '*', f"ip = '{self.GIP}'", self.LGEREX)
          return self.IPRECS[ip]
       record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip, 'org_type' : '-'}
-      self.get_ip_hostname(ip, iprec, record)
-      record['lat'] = float(iprec['latitude']) if iprec['latitude'] else 0
-      record['lon'] = float(iprec['longitude']) if iprec['longitude'] else 0
-      if 'org' in iprec: record['org_name'] = iprec['org']
-      record['country'] = self.get_country_record_code(iprec, 'country_name')
-      record['region'] = self.convert_chars(iprec['region']) if 'region' in iprec else None
-      if 'city' in iprec: record['city'] = self.convert_chars(iprec['city'])
-      if 'postal' in iprec: record['postal'] =  iprec['postal']
-      record['timezone'] = iprec['timezone']
-      record['ipinfo'] = json.dumps(iprec)
+      try:
+         self.get_ip_hostname(ip, iprec, record)
+         # latitude and longitude are derived from 'loc', which a sparse ipinfo
+         # answer leaves out altogether, as it does timezone and country name
+         record['lat'] = float(iprec['latitude']) if iprec.get('latitude') else 0
+         record['lon'] = float(iprec['longitude']) if iprec.get('longitude') else 0
+         if 'org' in iprec: record['org_name'] = iprec['org']
+         record['country'] = self.get_country_record_code(iprec, 'country_name')
+         record['region'] = self.convert_chars(iprec['region']) if 'region' in iprec else None
+         if 'city' in iprec: record['city'] = self.convert_chars(iprec['city'])
+         if 'postal' in iprec: record['postal'] =  iprec['postal']
+         record['timezone'] = iprec.get('timezone')
+         record['ipinfo'] = json.dumps(iprec)
+      except (KeyError, TypeError, ValueError) as e:
+         # an ipinfo answer shaped differently again must not end the whole run;
+         # returning None lets set_ipinfo() fall back to the local geoip2 database
+         self.pglog("ipinfo: {} - unusable record ({}: {}), use geoip2".format(ip, type(e).__name__, e), self.LOGWRN)
+         return None
       return record
 
    def set_geoip2_database(self):
