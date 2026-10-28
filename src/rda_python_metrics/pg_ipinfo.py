@@ -47,6 +47,7 @@ class PgIPInfo(PgUtil, PgDBI):
       self.DMRECS = {}
       self.IPDMS = {}
       self.IPNRM = {}
+      self.IPSKP = {}
       self.COUNTRIES = {}
 
    def normalize_ip(self, ip):
@@ -176,11 +177,14 @@ class PgIPInfo(PgUtil, PgDBI):
       log file. Doing the new ones up front, several at a time, leaves the host names
       in self.IPDMS for get_ip_hostname() to pick up without waiting again.
       """
-      ips = [ip for ip in {self.normalize_ip(ip) for ip in ips} if ip and ip not in self.IPDMS]
+      ips = [ip for ip in {self.normalize_ip(ip) for ip in ips}
+             if ip and ip not in self.IPDMS and ip not in self.IPSKP]
       if not ips: return 0
       # ips on file are either reused as is or refreshed by ipinfo, which carries its
-      # own host name, so only the ones not on file are worth resolving ahead of time
+      # own host name, so only the ones not on file are worth resolving ahead of time.
+      # remember which ones those were, or every later log file queries them again
       recorded = self.get_recorded_ips(ips)
+      self.IPSKP.update(recorded)
       newips = [ip for ip in ips if ip not in recorded]
       if not newips: return 0
       self.get_dns_resolver()   # create the shared resolver before starting the threads
