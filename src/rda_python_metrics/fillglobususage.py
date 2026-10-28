@@ -28,9 +28,11 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
          'PGTBL'  : "wusage",
          'GBSDIR' : self.PGLOG["GDEXWORK"] + "/logs/gridftp/",
          'GBSLOG' : "access_log_gridftp0{}_{}",
+         'GBSDAYS' : 7,   # a log file is named for its first date and holds a week
       }
       self.logfiles = []
       self.datelimits = [None, None]
+      self.filldates = None   # the exact log entry dates to keep, for -d
       self.params = []  # array of input values
       self.option = self.cmdstr = None
 
@@ -73,11 +75,12 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
       if self.option == 'f':
          self.logfiles = self.params
       elif self.option == 'd':
-         for pdate in self.params:
-            fdate = self.format_date(pdate, 'MMDDYYYY')
-            fname = self.USAGE['GBSLOG'].format('?', fdate)
-            fnames = glob.glob(fname)
-            if fnames: self.logfiles.extend(sorted(fnames))
+         # a log file is named for its first date and holds a week, so the file
+         # covering a date is found by looking back, not by its own name
+         self.filldates = {self.format_date(pdate) for pdate in self.params}
+         for pdate in sorted(self.filldates):
+            for fname in self.get_covering_logfiles(pdate):
+               if fname not in self.logfiles: self.logfiles.append(fname)
       else:
          if self.option == 'N':
             edate = self.curdate()
@@ -88,13 +91,33 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
                edate = self.datelimits[1] = self.params[1]
             else:
                edate = self.curdate()
-         while pdate <= edate:
-            fdate = self.format_date(pdate, 'MMDDYYYY')
+         # start a week early so the file covering the first dates is picked up;
+         # its entries before datelimits[0] are skipped as they are read
+         gdate = self.adddate(pdate, 0, 0, -self.USAGE['GBSDAYS'])
+         while gdate <= edate:
+            fdate = self.format_date(gdate, 'MMDDYYYY')
             fname = self.USAGE['GBSLOG'].format('?', fdate)
-            fnames = glob.glob(fname)
-            if fnames: self.logfiles.extend(sorted(fnames))
-            pdate = self.adddate(pdate, 0, 0, 1)
+            for gname in sorted(glob.glob(fname)):
+               if gname not in self.logfiles: self.logfiles.append(gname)
+            gdate = self.adddate(gdate, 0, 0, 1)
    
+   def get_covering_logfiles(self, pdate):
+      """Get the log files holding pdate, searching back over a week of names."""
+      gdate = pdate
+      for i in range(self.USAGE['GBSDAYS']):
+         fname = self.USAGE['GBSLOG'].format('?', self.format_date(gdate, 'MMDDYYYY'))
+         fnames = sorted(glob.glob(fname))
+         if fnames: return fnames
+         gdate = self.adddate(gdate, 0, 0, -1)
+      return []
+
+   def skip_log_date(self, date):
+      """Tell whether a log entry date falls outside what was asked for."""
+      if self.filldates is not None: return date not in self.filldates
+      if self.datelimits[0] and date < self.datelimits[0]: return True
+      if self.datelimits[1] and date > self.datelimits[1]: return True
+      return False
+
    def fill_globus_usages(self):
       """Fill Globus usages into table dssdb.globususage of DSS PostgreSQL database from globus access logs."""
       cntall = addall = 0
@@ -130,8 +153,7 @@ class FillGlobusUsage(PgIPInfo, PgSplit, PgFile):
             sline = ms.group(7)
             engine = ms.group(8)
             (year, quarter, date, time) = self.get_record_date_time(ms.group(2))
-            if self.datelimits[0] and date < self.datelimits[0]: continue
-            if self.datelimits[1] and date > self.datelimits[1]: continue
+            if self.skip_log_date(date): continue
             locflag = 'O' if re.match(r'^https://stratus\.', sline) else 'G'
             idx = wfile.find('?')
             if idx > -1: wfile = wfile[:idx]

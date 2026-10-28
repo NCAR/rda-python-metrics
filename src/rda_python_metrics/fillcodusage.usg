@@ -5,12 +5,17 @@
  into the 'codusage' table in PostgreSQL database 'rdadb'.
 
  USAGE:
-   fillcodusage [-b] (-a | -f LogFileNames | -m MonthList |
-                      -N NumberDays | -y YearList)
+   fillcodusage [-b] (-a | -d LogEntryDates | -f LogFileNames | -m MonthList |
+                      -N NumberDays | -p BeginDate [EndDate] | -y YearList)
 
- OPTIONS (choose exactly one of -a, -f, -m, -N, or -y):
+ OPTIONS (choose exactly one of -a, -d, -f, -m, -N, -p, or -y):
 
    -a   Process all available log files.
+
+   -d LogEntryDates
+        Process the given dates. Date format: YYYY-MM-DD (e.g. 2024-01-15).
+        A log file holds a whole month, so the months holding these dates are
+        read and only entries falling on the given dates are recorded.
 
    -f LogFileNames
         Process the given log file names directly.
@@ -22,6 +27,11 @@
    -N NumberDays
         Process log files covering the most recent NumberDays days.
 
+   -p BeginDate [EndDate]
+        Process log entries between BeginDate and EndDate, inclusive.
+        EndDate defaults to today if omitted. As with -d, whole months are
+        read and the entries outside the range are skipped.
+
    -y YearList
         Process log files for the given years.
         Year format: YYYY (e.g. 2024).
@@ -30,3 +40,4 @@
 
  EXAMPLE:
    fillcodusage -m 2024-01 2024-02
+   fillcodusage -d 2024-01-15 2024-02-03

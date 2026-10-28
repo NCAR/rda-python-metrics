@@ -6,7 +6,7 @@
    fillcodusage, fillglobususage, fillawsusage, fillosdfusage.
 
  USAGE:
-   fillrdadb [-b] [-n]
+   fillrdadb [-b] [-n] [-B NumberDaysBack]
              (-c | -d DateList | -m MonthList | -N NumberDays | -y YearList)
 
  OPTIONS (choose exactly one of -c, -d, -m, -N, or -y):
@@ -32,5 +32,23 @@
 
    -n   Do not send email notification when filling is complete.
 
+   -B NumberDaysBack
+        After the -N pass, reprocess any date between NumberDaysBack days ago
+        and the start of the -N window that still holds no usage record.
+
+        A log file is sometimes published after its date has slid out of the
+        -N window, and nothing reaches for it again, so that date stays empty
+        however often the job runs. Each usage table is asked which dates it
+        is missing, and only those dates are reprocessed, so a late log is
+        picked up however late it arrives.
+
+        A date whose log holds no usable entry keeps being offered until it
+        ages past NumberDaysBack. That is deliberate: treating an already
+        processed log as proof of coverage would silently write off the dates
+        left empty by a run that died partway.
+
+        Needs -N, and is ignored with a warning otherwise.
+
  EXAMPLE:
    fillrdadb -N 7
+   fillrdadb -N 14 -B 60     # weekly fill, reaching back two months
