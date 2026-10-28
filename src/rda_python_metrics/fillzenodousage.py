@@ -284,6 +284,8 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
       self.pglog("{}: Query for {} GDEX dsid/subdsids between {} and {} at {}".format(strids, dscnt, dates[0], dates[1], self.current_datetime()), self.LOGWRN)
       pgrecs = self.pgmget(tbname, fields, cond)
       self.dssdb_dbname()
+      # back on dssdb, where table ipinfo is, before presolving the host names
+      if pgrecs: self.preset_ip_hostnames(pgrecs['remote_address'])
 
       return pgrecs
 
@@ -322,7 +324,8 @@ class FillZenodoUsage(PgSplit, PgIPInfo):
                (year, quarter, date, time) = self.get_record_date_time(pgrec['date_completed'])
                url = pgrec['dataset_file_file_access_point_uri']
                if not url: url = pgrec['file_access_point_uri']
-               ip = pgrec['remote_address']
+               ip = self.normalize_ip(pgrec['remote_address'])
+               if not ip: continue
                engine = pgrec['user_agent_name']
                ms = re.search(r'^https*://tds.ucar.edu/thredds/(\w+)/', url)
                if ms:

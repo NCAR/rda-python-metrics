@@ -12,9 +12,12 @@
 import re
 import geoip2.database as geodb
 import ipinfo
-import socket
+from ipinfo.exceptions import RequestQuotaExceededError
 import dns.resolver
+import dns.reversename
 import json
+import ipaddress
+from concurrent.futures import ThreadPoolExecutor
 from rda_python_common.pg_dbi import PgDBI
 from rda_python_common.pg_util import PgUtil
 
@@ -30,7 +33,11 @@ class PgIPInfo(PgUtil, PgDBI):
          'DBFILE' : self.PGLOG['DSSHOME'] + '/dssdb/GeoLite2-City.mmdb',
          'CDATE' : self.curdate(),
          'IPUPDT' : 0,
-         'IPADD'  : 0
+         'IPADD'  : 0,
+         'QUOTA'  : 1,   # unset when the ipinfo monthly request quota is used up
+         'DNSTMO' : 1,   # seconds to wait on a single name server
+         'DNSLTM' : 2,   # seconds to spend on one name resolution in total
+         'DNSTHD' : 8    # number of threads used to presolve a list of ip addresses
       }
       self.GIP = '0.0.0.0'
       self.IPDNS = None
@@ -38,11 +45,34 @@ class PgIPInfo(PgUtil, PgDBI):
       self.G2DB = None
       self.IPRECS = {}
       self.DMRECS = {}
+      self.IPDMS = {}
+      self.IPNRM = {}
       self.COUNTRIES = {}
+
+   def normalize_ip(self, ip):
+      """Return the canonical form of an ip address; empty string if it is not valid.
+
+      One IPv6 address can be written several ways, upper or lower case and with the
+      zero groups spelled out or collapsed, and the IPv4-embedded form is longer than
+      the 39 characters ipinfo.ip holds. Canonicalizing on the way in keeps one row
+      and one set of usage records per address whichever way a log spells it.
+      """
+      if ip in self.IPNRM: return self.IPNRM[ip]
+      try:
+         nip = ipaddress.ip_address(ip).compressed
+      except ValueError:
+         self.pglog("{}: invalid ip address".format(ip), self.LOGWRN)
+         nip = ''
+      self.IPNRM[ip] = nip
+      return nip
 
    def get_dns_resolver(self, forceget = False):
       """Get save a global dns.resolver.Resolver object."""
-      if forceget or not self.IPDNS: self.IPDNS = dns.resolver.Resolver()
+      if forceget or not self.IPDNS:
+         self.IPDNS = dns.resolver.Resolver()
+         self.IPDNS.timeout = self.IPINFO['DNSTMO']
+         self.IPDNS.lifetime = self.IPINFO['DNSLTM']
+         self.IPDNS.cache = dns.resolver.Cache()
       return self.IPDNS
 
    def dns_to_ip(self, dmname, type = 'A'):
@@ -89,32 +119,118 @@ class PgIPInfo(PgUtil, PgDBI):
       if ips: return self.set_ipinfo(ips[0])
       return None
 
+   def reverse_resolve_ip(self, ip):
+      """Reverse resolve one ip address without logging; called from worker threads too.
+
+      Returns tuple (ip, hostname, errmsg); hostname is empty if the ip has no PTR record.
+      """
+      try:
+         answers = self.IPDNS.resolve(dns.reversename.from_address(ip), 'PTR')
+         # an ip may have several PTR records, answered in varying order; always pick
+         # the same one so the host name on file does not flip between runs
+         if answers: return (ip, min([str(a).rstrip('.') for a in answers]), None)
+      except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+         pass   # no PTR record on file for the ip, too common to be worth logging
+      except dns.exception.DNSException as e:
+         return (ip, '', "{}: error reverse domain name request: {}".format(ip, e))
+      return (ip, '', None)
+
+   def ip_to_dns(self, ip):
+      """Reverse resolve an ip address to a host name; empty string if none."""
+      if ip in self.IPDMS: return self.IPDMS[ip]
+      self.get_dns_resolver()
+      (ip, dm, errmsg) = self.reverse_resolve_ip(ip)
+      if errmsg: self.pglog(errmsg, self.LOGWRN)
+      self.IPDMS[ip] = dm
+      return dm
+
+   def prescan_ips(self, fd, pattern, group = 1):
+      """Scan an open log file for ip addresses, presolve them, and rewind the file.
+
+      A fill program reads its log line by line and looks each new ip up as it goes,
+      which serializes one slow reverse DNS lookup per address. Picking the addresses
+      out in a first cheap pass lets preset_ip_hostnames() resolve them several at a
+      time, so the main loop finds the host names already cached.
+      """
+      ips = {}
+      for line in fd:
+         ms = re.match(pattern, line)
+         if ms: ips[ms.group(group)] = 1
+      fd.seek(0)
+      return self.preset_ip_hostnames(list(ips))
+
+   def get_recorded_ips(self, ips):
+      """Return a dict of the given ip addresses that have an ipinfo record on file."""
+      recorded = {}
+      for i in range(0, len(ips), 1000):
+         vals = ', '.join(["'{}'".format(ip) for ip in ips[i:i+1000]])
+         pgrecs = self.pgmget('ipinfo', 'ip', "ip IN ({})".format(vals), self.LOGWRN)
+         if pgrecs:
+            for ip in pgrecs['ip']: recorded[ip] = 1
+      return recorded
+
+   def preset_ip_hostnames(self, ips):
+      """Reverse resolve a list of ip addresses in parallel and cache the host names.
+
+      Resolving one ip at a time is the slowest part of gathering usage from a large
+      log file. Doing the new ones up front, several at a time, leaves the host names
+      in self.IPDMS for get_ip_hostname() to pick up without waiting again.
+      """
+      ips = [ip for ip in {self.normalize_ip(ip) for ip in ips} if ip and ip not in self.IPDMS]
+      if not ips: return 0
+      # ips on file are either reused as is or refreshed by ipinfo, which carries its
+      # own host name, so only the ones not on file are worth resolving ahead of time
+      recorded = self.get_recorded_ips(ips)
+      newips = [ip for ip in ips if ip not in recorded]
+      if not newips: return 0
+      self.get_dns_resolver()   # create the shared resolver before starting the threads
+      cnt = 0
+      with ThreadPoolExecutor(max_workers = self.IPINFO['DNSTHD']) as executor:
+         for (ip, dm, errmsg) in executor.map(self.reverse_resolve_ip, newips):
+            if errmsg: self.pglog(errmsg, self.LOGWRN)
+            self.IPDMS[ip] = dm
+            if dm: cnt += 1
+      self.pglog("{}/{} host names presolved for {} IP addresses".format(cnt, len(newips), len(ips)), self.LOGWRN)
+      return cnt
+
    def get_ip_hostname(self, ip, iprec, record):
-      """Try to get hostname via socket for given ip address."""
+      """Try to get hostname via reverse DNS for given ip address."""
       record['hostname'] = ip
       if iprec:
          if 'hostname' in iprec and iprec['hostname']:
-            record['hostname'] = iprec['hostname']         
+            record['hostname'] = iprec['hostname']
             record['org_type'] = self.get_org_type(None, record['hostname'])
             return
          if 'asn' in iprec and iprec['asn'] and 'domain' in iprec['asn'] and iprec['asn']['domain']:
             record['hostname'] += '.' + iprec['asn']['domain']
             record['org_type'] = self.get_org_type(None, record['hostname'])
             return
-      try:
-         hostrec = socket.gethostbyaddr(ip)
-         record['hostname'] = hostrec[1][0] if hostrec[1] else hostrec[0]
-         record['org_type'] = self.get_org_type(None, record['hostname'])
-      except Exception as e:
-         self.pglog("socket: {} - {}".format(ip, str(e)), self.LOGWRN)
+      dm = self.ip_to_dns(ip)
+      if dm:
+         record['hostname'] = dm
+         record['org_type'] = self.get_org_type(None, dm)
+
+   def unset_ipinfo_quota(self):
+      """Stop calling ipinfo for the rest of the run once its quota is used up."""
+      if self.IPINFO['QUOTA']:
+         self.IPINFO['QUOTA'] = 0
+         self.pglog("ipinfo: monthly request quota used up, use geoip2 for the rest of the run", self.LOGWRN)
 
    def get_ipinfo_record(self, ip):
       """Get a ipinfo record for given ip address."""
+      if not self.IPINFO['QUOTA']: return None
       if not self.IPDB: self.set_ipinfo_database()
       try:
          iprec = self.IPDB.getDetails(ip).all
+      except RequestQuotaExceededError:
+         self.unset_ipinfo_quota()
+         return None
       except Exception as e:
-         self.pglog("ipinfo: {} - {}".format(ip, str(e)), self.LOGWRN)
+         estr = str(e)
+         if re.search(r'(\b429\b|quota)', estr, re.I):
+            self.unset_ipinfo_quota()
+         else:
+            self.pglog("ipinfo: {} - {}".format(ip, estr), self.LOGWRN)
          return None
       if 'bogon' in iprec and iprec['bogon']:
          self.pglog(f"ipinfo: {ip} - bogon, use {self.GIP}", self.LOGWRN)
@@ -195,7 +311,10 @@ class PgIPInfo(PgUtil, PgDBI):
 
    def set_ipinfo(self, ip, ipopt = True):
       """If ipopt is True; otherwise, use module geoip2."""
+      ip = self.normalize_ip(ip)
+      if not ip: return None
       if ip in self.IPRECS: return self.IPRECS[ip]
+      if ipopt and not self.IPINFO['QUOTA']: ipopt = False   # quota used up, geoip2 only
       pgrec = self.pgget('ipinfo', '*', "ip = '{}'".format(ip))
       if not pgrec or ipopt and pgrec['stat_flag'] == 'M':
          record = self.get_ipinfo_record(ip) if ipopt else None

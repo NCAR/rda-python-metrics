@@ -115,6 +115,7 @@ class FillTDSUsage(PgIPInfo, PgFile):
          self.pglog("{}: Gathering TDS usage at {}".format(logfile, self.current_datetime()), self.LOGWRN)
          tds = self.open_local_file(logfile)
          if not tds: continue
+         self.prescan_ips(tds, r'^([\da-fA-F.:]+)\s')
          records = {}
          cntadd = entcnt = 0
          while True:
@@ -128,7 +129,8 @@ class FillTDSUsage(PgIPInfo, PgFile):
             if ms: continue
             ms = re.search(r'/thredds/\S+\.(png|jpg|gif|css|htm)', line)
             if ms: continue
-            ms = re.match(r'^([\d\.]+)\s.*\s(-|\S+@\S+)\s+\[(\S+).*/thredds/(\w+)(/|/grid/)(aggregations|files).*/(ds\d\d\d.\d|[a-z]\d{6})/.*\s200\s+(\d+)(.*)$', line)
+            # the ip field holds an IPv6 address as well as an IPv4 one
+            ms = re.match(r'^([\da-fA-F.:]+)\s.*\s(-|\S+@\S+)\s+\[(\S+).*/thredds/(\w+)(/|/grid/)(aggregations|files).*/(ds\d\d\d.\d|[a-z]\d{6})/.*\s200\s+(\d+)(.*)$', line)
             if not ms: continue
             ip = ms.group(1)
             email = ms.group(2)
@@ -178,6 +180,7 @@ class FillTDSUsage(PgIPInfo, PgFile):
       if ms:
          year = ms.group(1)
          quarter = 1 + int((int(ms.group(2)) - 1)/3)
+      self.preset_ip_hostnames([records[key]['ip'] for key in records])
       for key in records:
          record = records[key]
          cond = "date = '{}' AND time = '{}' AND ip = '{}' AND dsid = '{}'".format(date, record['time'], record['ip'], record['dsid'])
@@ -189,7 +192,7 @@ class FillTDSUsage(PgIPInfo, PgFile):
          record['org_type'] = wurec['org_type']
          record['country'] = wurec['country']
          record['region'] = wurec['region']
-         record['email'] = 'unknown@' + wurec['hostname']
+         record['email'] = wurec['email']   # already 'unknown@<hostname>' for a generic ip
          record['quarter'] = quarter
          record['date'] = date
          if self.add_to_allusage(year, record):

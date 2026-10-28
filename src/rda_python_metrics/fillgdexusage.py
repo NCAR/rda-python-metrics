@@ -857,6 +857,8 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
       self.pglog("{}: Query for {} GDEX dsid/subdsids between {} and {} at {}".format(strids, dscnt, dates[0], dates[1], self.current_datetime()), self.LOGWRN)
       pgrecs = self.pgmget(tbname, fields, cond)
       self.dssdb_dbname()
+      # back on dssdb, where table ipinfo is, before presolving the host names
+      if pgrecs: self.preset_ip_hostnames(pgrecs['remote_address'])
 
       return pgrecs
 
@@ -892,7 +894,8 @@ class FillGDEXUsage(PgSplit, PgIPInfo):
                dsize = pgrec['bytes_sent']
                if not dsize: continue
                (year, quarter, date, time) = self.get_record_date_time(pgrec['date_completed'])
-               ip = pgrec['remote_address']
+               ip = self.normalize_ip(pgrec['remote_address'])
+               if not ip: continue
                engine = pgrec['user_agent_name']
                wfile = pgrec['dataset_file_name']
                if not wfile: wfile = pgrec['logical_file_name']
