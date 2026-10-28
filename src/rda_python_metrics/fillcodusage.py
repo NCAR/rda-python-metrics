@@ -28,14 +28,18 @@ class FillCODUsage(PgIPInfo):
       self.NDAYS = 0x08  # get COD data usages in recent number of days 
       self.FILES = 0x10  # get given file names
       self.GTALL = 0x20  # get all data files of read
-      self.MASKS = (self.MONTH|self.YEARS|self.NDAYS|self.FILES)
+      self.DATES = 0x40  # get COD data usages for given dates
+      self.PERID = 0x80  # get COD data usages between two dates
+      self.MASKS = (self.MONTH|self.YEARS|self.NDAYS|self.FILES|self.DATES|self.PERID)
       self.USAGE = {
          'OPTION' : 0,
          'PGTBL'  : "codusage",
          'WEBLOG' : "/var/log/httpd",
       }
       self.USERS = {}  # cache user info for aid
-      self.datelimit = ''
+      self.datelimit = ''   # earliest log entry date to keep
+      self.endlimit = ''    # latest log entry date to keep
+      self.filldates = None # the exact log entry dates to keep, for -d
       self.params = []  # array of input values
 
    def read_parameters(self):
@@ -44,14 +48,18 @@ class FillCODUsage(PgIPInfo):
       for arg in argv:
          if arg == "-b":
             self.PGLOG['BCKGRND'] = 1
-         elif re.match(r'^-[afmNy]$', arg) and self.USAGE['OPTION'] == 0:
+         elif re.match(r'^-[adfmNpy]$', arg) and self.USAGE['OPTION'] == 0:
             if arg == "-a":
                self.USAGE['OPTION'] = self.GTALL
                self.params = ['']
+            elif arg == "-d":
+               self.USAGE['OPTION'] = self.DATES
             elif arg == "-f":
                self.USAGE['OPTION'] = self.FILES
             elif arg == "-m":
                self.USAGE['OPTION'] = self.MONTH
+            elif arg == "-p":
+               self.USAGE['OPTION'] = self.PERID
             elif arg == "-y":
                self.USAGE['OPTION'] = self.YEARS
             elif arg == "-N":
@@ -69,16 +77,39 @@ class FillCODUsage(PgIPInfo):
    def start_actions(self):   
       """Function to start actions."""
       if self.USAGE['OPTION']&self.NDAYS:
-         curdate = self.curdate()
-         self.datelimit = self.adddate(curdate, 0, 0, -int(self.params[0]))
-         self.USAGE['OPTION'] = self.MONTH
-         self.params = []
-         while curdate >= self.datelimit:
-            (year, month, day) = curdate.split('-')
-            self.params.append("{}-{}".format(year, month))
-            curdate = self.adddate(curdate, 0, 0, -int(day))
+         self.datelimit = self.adddate(self.curdate(), 0, 0, -int(self.params[0]))
+         self.set_month_params(self.datelimit, self.curdate())
+      elif self.USAGE['OPTION']&self.DATES:
+         dates = sorted(self.format_date(dt) for dt in self.params)
+         self.filldates = set(dates)
+         self.set_month_params(dates[0], dates[-1])
+      elif self.USAGE['OPTION']&self.PERID:
+         self.datelimit = self.format_date(self.params[0])
+         self.endlimit = self.format_date(self.params[1]) if len(self.params) > 1 else self.curdate()
+         self.set_month_params(self.datelimit, self.endlimit)
       self.fill_cod_usages(self.USAGE['OPTION'], self.params)
       self.pglog(None, self.LOGWRN|self.SNDEML)  # send email out if any
+
+   def set_month_params(self, bdate, edate):
+      """Replace the inputs with the months holding bdate through edate.
+
+      One COD log file holds a whole month, so a request made in dates is served
+      by reading those months and narrowing the entries in skip_log_date().
+      """
+      self.USAGE['OPTION'] = self.MONTH
+      self.params = []
+      curdate = edate
+      while curdate >= bdate:
+         (year, month, day) = curdate.split('-')
+         self.params.append("{}-{}".format(year, month))
+         curdate = self.adddate(curdate, 0, 0, -int(day))
+
+   def skip_log_date(self, cdate):
+      """Tell whether a log entry date falls outside what was asked for."""
+      if self.filldates is not None: return cdate not in self.filldates
+      if self.datelimit and cdate < self.datelimit: return True
+      if self.endlimit and cdate > self.endlimit: return True
+      return False
 
    def fill_cod_usages(self, option, inputs):
       """Fill COD usages into table dssdb.codusage of DSS PostgreSQL database from cod access logs."""
@@ -128,7 +159,7 @@ class FillCODUsage(PgIPInfo):
                      cntadd += self.add_usage_records(records, cdate)
                      records = {}            
                   pdate = cdate
-               if self.datelimit and cdate < self.datelimit: continue
+               if self.skip_log_date(cdate): continue
                if aid in records:
                   records[aid]['size'] += size
                   records[aid]['count'] += 1

@@ -32,15 +32,26 @@ class FillRDADB(PgUtil, PgDBI):
          'OPTION' : 0,
          'OPTVAL' : '',
          'DOMAIL' : 1,
-         'BCKGRND' : ''
+         'BCKGRND' : '',
+         'BACKDAYS' : 0   # days to reach back for missed dates, set by -B
+      }
+      # the usage table and its date field, per command to reprocess with -d
+      self.BACKFILL = {
+         'fillosdfusage'   : ('osdfusage', 'date'),
+         'fillawsusage'    : ('awsusage', 'date'),
+         'fillglobususage' : ('wusage', 'date_read'),
+         'fillcodusage'    : ('codusage', 'date')
       }
       self.params = []   # array of input values
 
    def read_parameters(self):
       """Function to read parameters."""
       argv = sys.argv[1:]
+      backopt = 0   # the value after -B is the number of days to reach back
       for arg in argv:
-         if arg == "-b":
+         if arg == "-B":
+            backopt = 1
+         elif arg == "-b":
             self.PGLOG['BCKGRND'] = "-b"
             self.RDADB['BCKGRND'] = " -b"
          elif arg == "-n":
@@ -60,12 +71,20 @@ class FillRDADB(PgUtil, PgDBI):
                self.RDADB['OPTION'] |= self.NDAYS
          elif re.match(r'^-.*', arg):
             self.pglog(arg + ": Invalid Option", self.LGWNEX)
+         elif backopt:
+            if not re.match(r'^\d+$', arg):
+               self.pglog(arg + ": Number of days back must be a whole number", self.LGWNEX)
+            self.RDADB['BACKDAYS'] = int(arg)
+            backopt = 0
          elif self.RDADB['OPTION']&self.MASKS:
             self.params.append(arg)
          else:
             self.pglog(arg + ": Invalid Parameter", self.LGWNEX)
+      if backopt: self.pglog("-B: Miss number of days to reach back", self.LGWNEX)
       if not self.RDADB['OPTION'] or (self.RDADB['OPTION']&self.MASKS and not self.params):
          self.show_usage('fillrdadb')
+      if self.RDADB['BACKDAYS'] and not self.RDADB['OPTION']&self.NDAYS:
+         self.pglog("-B: Ignored, reaching back for missed dates needs -N", self.LOGWRN)
       self.cmdlog("fillrdadb {}".format(' '.join(argv)))
    
    def start_actions(self):
@@ -88,9 +107,63 @@ class FillRDADB(PgUtil, PgDBI):
       self.pgsystem("fillawsusage {} {}".format(self.RDADB['BCKGRND'], filecond), self.LGWNEM, 5)
       # fill available OSDF web data usages
       self.pgsystem("fillosdfusage {} {}".format(self.RDADB['BCKGRND'], filecond), self.LGWNEM, 5)
+      # the -N window is the only thing that reaches a log file again, so one
+      # published after its date leaves the window is never asked for; -B catches those
+      if self.RDADB['BACKDAYS'] and self.RDADB['OPTION']&self.NDAYS:
+         self.backfill_missed_dates(int(self.params[0]))
       if self.RDADB['DOMAIL']: self.send_email_notice()
       self.pglog("End Filling RDADB info at {}".format(self.current_datetime()), self.LGWNEM)
    
+   def backfill_missed_dates(self, ndays):
+      """Reprocess the dates before the -N window that still hold no usage record.
+
+      Only runs when -B gave a number of days to reach back. A log file is
+      sometimes published after its date has slid out of the -N window, and
+      nothing fetches it again, so the date stays empty however often the job
+      runs. Asking each usage table which dates it is missing keeps those dates
+      being retried until their log shows up, as far back as -B allows.
+
+      A date whose log holds no usable entry simply keeps being offered until it
+      ages out past BACKDAYS. That is deliberate: the obvious alternative, taking
+      an already processed log as proof of coverage, would silently write off the
+      dates left empty by a run that died partway.
+      """
+      edate = self.adddate(self.curdate(), 0, 0, -ndays)
+      bdate = self.adddate(self.curdate(), 0, 0, -self.RDADB['BACKDAYS'])
+      if bdate >= edate: return
+      for cmd in self.BACKFILL:
+         (tbname, datefld) = self.BACKFILL[cmd]
+         dates = self.get_unfilled_dates(tbname, datefld, bdate, edate)
+         if not dates: continue
+         self.pglog("{}: {} date(s) between {} and {} hold no usage, reprocessing".format(
+                    cmd, len(dates), bdate, edate), self.LOGWRN)
+         self.pgsystem("{} {} -d {}".format(cmd, self.RDADB['BCKGRND'], ' '.join(dates)), self.LGWNEM, 5)
+
+   def get_unfilled_dates(self, tbname, datefld, bdate, edate):
+      """Get the dates in [bdate, edate) holding no record in a usage table."""
+      filled = set()
+      for table in self.get_usage_tables(tbname, bdate, edate):
+         cnd = "{} >= '{}' AND {} < '{}'".format(datefld, bdate, datefld, edate)
+         pgrecs = self.pgmget(table, 'DISTINCT ' + datefld, cnd, self.LOGWRN)
+         if pgrecs and datefld in pgrecs:
+            filled.update(str(d) for d in pgrecs[datefld])
+      dates = []
+      pdate = bdate
+      while pdate < edate:
+         if pdate not in filled: dates.append(pdate)
+         pdate = self.adddate(pdate, 0, 0, 1)
+      return dates
+
+   def get_usage_tables(self, tbname, bdate, edate):
+      """Get the existing table names for a usage table, one per year if split."""
+      tables = []
+      for year in range(int(bdate[0:4]), int(edate[0:4]) + 1):
+         table = "{}_{}".format(tbname, year)
+         if self.pgget('information_schema.tables', 'table_name',
+                       "table_name = '{}'".format(table), self.LOGWRN):
+            tables.append(table)
+      return tables if tables else [tbname]
+
    def clean_unused_files(self):
       """Clean unused MSS and Web files."""
       self.pglog("Check and clean deleted Web files that never been used at {}".format(self.current_datetime()), self.LOGWRN)
