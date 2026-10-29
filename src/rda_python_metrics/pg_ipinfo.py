@@ -38,6 +38,7 @@ class PgIPInfo(PgUtil, PgDBI):
          'DNSTMO' : 2,   # seconds to wait on a single name server
          'DNSLTM' : 5,   # seconds to spend on one name resolution in total
          'DNSTHD' : 16,  # number of threads used to presolve a list of ip addresses
+         'DNSPRG' : 2000, # say how far along a presolve is after this many addresses
          'IPFAIL' : 0,   # ipinfo calls that failed in a row
          'MAXFAIL' : 5,  # give ipinfo up for the run after this many in a row
          'ALLFAIL' : 0,  # ipinfo calls that failed at all in this run
@@ -238,7 +239,7 @@ class PgIPInfo(PgUtil, PgDBI):
          newips = [ip for ip in ips if ip not in recorded]
       if not newips: return 0
       self.get_dns_resolver()   # create the shared resolver before starting the threads
-      cnt = tmocnt = srvcnt = 0
+      cnt = tmocnt = srvcnt = procnt = 0
       with ThreadPoolExecutor(max_workers = self.IPINFO['DNSTHD']) as executor:
          for (ip, dm, errmsg) in executor.map(self.reverse_resolve_ip, newips):
             if errmsg is self.DNSTMOUT:
@@ -249,6 +250,13 @@ class PgIPInfo(PgUtil, PgDBI):
                self.pglog(errmsg, self.LOGWRN)
             self.IPDMS[ip] = dm
             if dm: cnt += 1
+            # an address that has to time out costs seconds, so a long list can be a
+            # quarter of an hour of silence before the summary below; say how far along
+            # it is now and then, or a slow presolve cannot be told from a hung one
+            procnt += 1
+            if procnt%self.IPINFO['DNSPRG'] == 0:
+               self.pglog("{}/{} IP address(es) checked/{} host name(s) found".format(
+                          procnt, len(newips), cnt), self.WARNLG)
       msg = "{}/{} host names presolved for {} IP addresses".format(cnt, len(newips), len(ips))
       # a large share timing out means the lifetime is too short for the address
       # space in this log, which DNSLTM and DNSTHD can be raised to cover
