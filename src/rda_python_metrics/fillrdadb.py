@@ -81,6 +81,12 @@ class FillRDADB(PgUtil, PgDBI):
          else:
             self.pglog(arg + ": Invalid Parameter", self.LGWNEX)
       if backopt: self.pglog("-B: Miss number of days to reach back", self.LGWNEX)
+      if self.RDADB['BACKDAYS'] and not self.RDADB['OPTION']:
+         # -B on its own asks for the missed dates and nothing else, so give it the
+         # shortest current window to reach back from rather than show the usage
+         self.RDADB['OPTION'] |= self.NDAYS
+         self.RDADB['OPTVAL'] = '-N'
+         self.params.append('1')
       if not self.RDADB['OPTION'] or (self.RDADB['OPTION']&self.MASKS and not self.params):
          self.show_usage('fillrdadb')
       if self.RDADB['BACKDAYS'] and not self.RDADB['OPTION']&self.NDAYS:

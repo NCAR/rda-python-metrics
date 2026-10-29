@@ -8,8 +8,9 @@
  USAGE:
    fillrdadb [-b] [-n] [-B NumberDaysBack]
              (-c | -d DateList | -m MonthList | -N NumberDays | -y YearList)
+   fillrdadb [-b] [-n] -B NumberDaysBack
 
- OPTIONS (choose exactly one of -c, -d, -m, -N, or -y):
+ OPTIONS (choose exactly one of -c, -d, -m, -N, or -y, or none with -B):
 
    -c   Clean unused file records only (do not fill new usages).
 
@@ -47,8 +48,11 @@
         processed log as proof of coverage would silently write off the dates
         left empty by a run that died partway.
 
-        Needs -N, and is ignored with a warning otherwise.
+        Given on its own, with none of -c, -d, -m, -N or -y, it is taken as
+        -N 1, so that the missed dates can be swept without naming a window.
+        Given with -c, -d, -m or -y, it is ignored with a warning.
 
  EXAMPLE:
    fillrdadb -N 7
    fillrdadb -N 14 -B 60     # weekly fill, reaching back two months
+   fillrdadb -B 60           # same as -N 1 -B 60: sweep the last two months
