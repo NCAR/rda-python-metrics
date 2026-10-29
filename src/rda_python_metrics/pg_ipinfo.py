@@ -199,22 +199,31 @@ class PgIPInfo(PgUtil, PgDBI):
             for ip in pgrecs['ip']: recorded[ip] = 1
       return recorded
 
-   def preset_ip_hostnames(self, ips):
+   def preset_ip_hostnames(self, ips, refresh = False):
       """Reverse resolve a list of ip addresses in parallel and cache the host names.
 
       Resolving one ip at a time is the slowest part of gathering usage from a large
       log file. Doing the new ones up front, several at a time, leaves the host names
       in self.IPDMS for get_ip_hostname() to pick up without waiting again.
+
+      Pass refresh to resolve the addresses already on file as well. Gathering usage
+      wants them skipped, their names being on file already, but a backfill works
+      through nothing else: every address it was handed came out of a table, so the
+      skip leaves it with nothing to resolve and every lookup falls back to being
+      done one at a time, which is the slow path this exists to avoid.
       """
       ips = [ip for ip in {self.normalize_ip(ip) for ip in ips}
-             if ip and ip not in self.IPDMS and ip not in self.IPSKP]
+             if ip and ip not in self.IPDMS and (refresh or ip not in self.IPSKP)]
       if not ips: return 0
-      # ips on file are either reused as is or refreshed by ipinfo, which carries its
-      # own host name, so only the ones not on file are worth resolving ahead of time.
-      # remember which ones those were, or every later log file queries them again
-      recorded = self.get_recorded_ips(ips)
-      self.IPSKP.update(recorded)
-      newips = [ip for ip in ips if ip not in recorded]
+      if refresh:
+         newips = ips
+      else:
+         # ips on file are either reused as is or refreshed by ipinfo, which carries its
+         # own host name, so only the ones not on file are worth resolving ahead of time.
+         # remember which ones those were, or every later log file queries them again
+         recorded = self.get_recorded_ips(ips)
+         self.IPSKP.update(recorded)
+         newips = [ip for ip in ips if ip not in recorded]
       if not newips: return 0
       self.get_dns_resolver()   # create the shared resolver before starting the threads
       cnt = tmocnt = 0
@@ -408,14 +417,20 @@ class PgIPInfo(PgUtil, PgDBI):
          self.IPINFO['IPADD'] += ret
       return ret
 
-   def set_ipinfo(self, ip, ipopt = True):
-      """If ipopt is True; otherwise, use module geoip2."""
+   def set_ipinfo(self, ip, ipopt = True, refresh = False):
+      """If ipopt is True; otherwise, use module geoip2.
+
+      Pass refresh to ask again for an address whose record is already complete.
+      Normally a record on file with stat_flag 'A' is taken as final, which is what
+      keeps gathering usage from asking twice about the same address; a backfill
+      correcting records written by an older version has to get past that.
+      """
       ip = self.normalize_ip(ip)
       if not ip: return None
-      if ip in self.IPRECS: return self.IPRECS[ip]
+      if ip in self.IPRECS and not refresh: return self.IPRECS[ip]
       if ipopt and not self.IPINFO['QUOTA']: ipopt = False   # quota used up, geoip2 only
       pgrec = self.pgget('ipinfo', '*', "ip = '{}'".format(ip))
-      if not pgrec or ipopt and pgrec['stat_flag'] == 'M':
+      if refresh or not pgrec or ipopt and pgrec['stat_flag'] == 'M':
          iprec = self.get_ipinfo_answer(ip) if ipopt else None
          if iprec is self.BOGONIP:
             # a bogon address is nobody's; they all share the one record on file
@@ -436,13 +451,13 @@ class PgIPInfo(PgUtil, PgDBI):
             record[fld] = nrec[fld]
       return record
 
-   def get_missing_ipinfo(self, ip, email = None, gethost = False):
+   def get_missing_ipinfo(self, ip, email = None, gethost = False, refresh = False):
       """Fill the missing info for given ip."""
       if not ip:
          if email and '@' in email: ip = self.dns_to_ip(email.split('@')[1])
          if not ip: return None
          ip = ip[0]
-      ipinfo = self.set_ipinfo(ip)
+      ipinfo = self.set_ipinfo(ip, True, refresh)
       if ipinfo:
          record = {'org_type' : ipinfo['org_type'],
                    'country' : ipinfo['country'],
