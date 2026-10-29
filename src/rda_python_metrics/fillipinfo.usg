@@ -6,14 +6,34 @@
  modules and updates records in the chosen table.
 
  USAGE:
-   fillipinfo [-b] -t TableName
+   fillipinfo [-b] [-f] -t TableName
               (-d Dates | -m YearMonths | -N NumberDays | -y Years)
 
  OPTIONS:
 
    -t TableName   (required)
         Table to fix. One of:
-           ipinfo, wuser, allusage, codusage, tdsusage
+           ipinfo, wuser, allusage, codusage, tdsusage, osdfusage, awsusage
+
+   -f   Reach the records an older version filled in, not only the ones it
+        left empty.
+
+        Without -f a usage record is taken only when it has no region at
+        all, and an ipinfo record only when it is marked incomplete
+        (stat_flag 'M'). That misses everything a version with a bug in it
+        wrote and then marked done.
+
+        With -f, a usage record is taken when its region or country is
+        missing, or its org_type is '-' (nothing was known about the host),
+        and an ipinfo record when it carries no org_name (ipinfo never
+        answered for it, that being the only source of org_name) or its
+        hostname is still the bare address (no reverse lookup ever
+        succeeded). Those records are then looked up again from scratch
+        rather than taken as final.
+
+        Fix table ipinfo FIRST. The usage tables copy country, region and
+        org_type from it, so correcting them against an ipinfo record that
+        is itself still wrong only writes the same wrong values back.
 
    One of the following time-range options is required:
 
@@ -36,3 +56,12 @@
 
  EXAMPLE:
    fillipinfo -t wuser -y 2024
+   fillipinfo -f -t ipinfo -y 2026        # first: put the ipinfo records right
+   fillipinfo -f -t osdfusage -y 2026     # then: copy them into the usage tables
+   fillipinfo -f -t allusage -y 2026
+
+ NOTE:
+   A record written while ipinfo was answering 429 was placed by geoip2 alone
+   and has no org_name. An unplaceable address was filed as UNITED.STATES
+   before version 3.0.15 and as UNKNOWN after it, so the older rows cannot be
+   told apart from the addresses genuinely there and -f will not find them.
