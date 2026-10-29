@@ -35,15 +35,16 @@ class PgIPInfo(PgUtil, PgDBI):
          'IPUPDT' : 0,
          'IPADD'  : 0,
          'QUOTA'  : 1,   # unset when the ipinfo monthly request quota is used up
-         'DNSTMO' : 1,   # seconds to wait on a single name server
-         'DNSLTM' : 2,   # seconds to spend on one name resolution in total
-         'DNSTHD' : 8,   # number of threads used to presolve a list of ip addresses
+         'DNSTMO' : 2,   # seconds to wait on a single name server
+         'DNSLTM' : 5,   # seconds to spend on one name resolution in total
+         'DNSTHD' : 16,  # number of threads used to presolve a list of ip addresses
          'IPFAIL' : 0,   # ipinfo calls that failed in a row
          'MAXFAIL' : 5,  # give ipinfo up for the run after this many in a row
          'ALLFAIL' : 0,  # ipinfo calls that failed at all in this run
          'MAXALL' : 50   # give ipinfo up for the run after this many altogether
       }
       self.GIP = '0.0.0.0'
+      self.DNSTMOUT = object()   # marks a reverse lookup that ran out of time
       self.IPDNS = None
       self.IPDB = None
       self.G2DB = None
@@ -127,7 +128,8 @@ class PgIPInfo(PgUtil, PgDBI):
    def reverse_resolve_ip(self, ip):
       """Reverse resolve one ip address without logging; called from worker threads too.
 
-      Returns tuple (ip, hostname, errmsg); hostname is empty if the ip has no PTR record.
+      Returns tuple (ip, hostname, errmsg); hostname is empty if the ip has no PTR
+      record, and errmsg is self.DNSTMOUT for a lookup that ran out of time.
       """
       try:
          answers = self.IPDNS.resolve(dns.reversename.from_address(ip), 'PTR')
@@ -136,6 +138,11 @@ class PgIPInfo(PgUtil, PgDBI):
          if answers: return (ip, min([str(a).rstrip('.') for a in answers]), None)
       except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
          pass   # no PTR record on file for the ip, too common to be worth logging
+      except dns.exception.Timeout:
+         # address space whose authoritative servers are slow, far away or gone runs
+         # out of time routinely; counted in the presolve summary rather than logged
+         # one line per address, which buried the DNS errors worth reading
+         return (ip, '', self.DNSTMOUT)
       except dns.exception.DNSException as e:
          return (ip, '', "{}: error reverse domain name request: {}".format(ip, e))
       return (ip, '', None)
@@ -145,7 +152,7 @@ class PgIPInfo(PgUtil, PgDBI):
       if ip in self.IPDMS: return self.IPDMS[ip]
       self.get_dns_resolver()
       (ip, dm, errmsg) = self.reverse_resolve_ip(ip)
-      if errmsg: self.pglog(errmsg, self.LOGWRN)
+      if errmsg and errmsg is not self.DNSTMOUT: self.pglog(errmsg, self.LOGWRN)
       self.IPDMS[ip] = dm
       return dm
 
@@ -192,13 +199,20 @@ class PgIPInfo(PgUtil, PgDBI):
       newips = [ip for ip in ips if ip not in recorded]
       if not newips: return 0
       self.get_dns_resolver()   # create the shared resolver before starting the threads
-      cnt = 0
+      cnt = tmocnt = 0
       with ThreadPoolExecutor(max_workers = self.IPINFO['DNSTHD']) as executor:
          for (ip, dm, errmsg) in executor.map(self.reverse_resolve_ip, newips):
-            if errmsg: self.pglog(errmsg, self.LOGWRN)
+            if errmsg is self.DNSTMOUT:
+               tmocnt += 1
+            elif errmsg:
+               self.pglog(errmsg, self.LOGWRN)
             self.IPDMS[ip] = dm
             if dm: cnt += 1
-      self.pglog("{}/{} host names presolved for {} IP addresses".format(cnt, len(newips), len(ips)), self.LOGWRN)
+      msg = "{}/{} host names presolved for {} IP addresses".format(cnt, len(newips), len(ips))
+      # a large share timing out means the lifetime is too short for the address
+      # space in this log, which DNSLTM and DNSTHD can be raised to cover
+      if tmocnt: msg += ", {} timed out after {}s".format(tmocnt, self.IPINFO['DNSLTM'])
+      self.pglog(msg, self.LOGWRN)
       return cnt
 
    def get_ip_hostname(self, ip, iprec, record):
