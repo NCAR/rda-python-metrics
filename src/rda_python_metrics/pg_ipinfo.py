@@ -101,15 +101,26 @@ class PgIPInfo(PgUtil, PgDBI):
 
    def get_country_name_code(self, dm):
       """Get country token name for given two-character domain id."""
+      dm = dm.lower() if dm else ''
+      if not dm: return 'Unknown'
       if dm not in self.COUNTRIES:
-         pgrec = self.pgget('countries', 'token', "domain_id = '{}'".format(dm))
+         pgrec = self.pgget('countries', 'token', "LOWER(domain_id) = '{}'".format(dm))
          self.COUNTRIES[dm] = pgrec['token'] if pgrec else 'Unknown'
       return self.COUNTRIES[dm]
 
-   def get_country_record_code(self, cname, kname = None):
-      """Get country code from name."""
+   def get_country_record_code(self, cname, kname = None, code = None):
+      """Get country code from name, falling back to a two-character country code.
+
+      An address whose country cannot be named at all is UNKNOWN, which is what
+      email_to_country() already gives for an address it cannot place. It used to
+      be UNITED.STATES: a guess rather than a default, which filed every unnamed
+      address under one country and left it indistinguishable from the addresses
+      genuinely there. A geoip2 city record and an ipinfo Lite answer both carry
+      the two character code even where the name is missing, so try that first.
+      """
       name = cname.get(kname) if kname else cname
-      name = name.replace(' ', '.').upper() if name else 'UNITED.STATES'
+      if not name and code: name = self.get_country_name_code(code)
+      name = name.replace(' ', '.').upper() if name else 'UNKNOWN'
       if name == 'CHINA': name = 'P.R.CHINA'
       return name
 
@@ -330,7 +341,7 @@ class PgIPInfo(PgUtil, PgDBI):
       self.get_ip_hostname(ip, iprec, record)
       record['lat'] = float(city.location.latitude) if city.location.latitude else 0
       record['lon'] = float(city.location.longitude) if city.location.longitude else 0
-      record['country'] = self.get_country_record_code(city.country.name)
+      record['country'] = self.get_country_record_code(city.country.name, None, city.country.iso_code)
       record['city'] = self.convert_chars(city.city.name)
       record['region'] = self.convert_chars(city.subdivisions.most_specific.name) if city.subdivisions.most_specific.name else None
       record['postal'] =  city.postal.code
@@ -349,9 +360,10 @@ class PgIPInfo(PgUtil, PgDBI):
       merge that cannot be made leaves the geoip2 record as it stands.
       """
       try:
-         if iprec.get('country_name') or iprec.get('country'):
+         if iprec.get('country_name') or iprec.get('country') or iprec.get('country_code'):
             record['country'] = self.get_country_record_code(
-               iprec, 'country_name' if iprec.get('country_name') else 'country')
+               iprec, 'country_name' if iprec.get('country_name') else 'country',
+               iprec.get('country_code'))
          orgname = iprec.get('as_name') or iprec.get('org')
          if orgname: record['org_name'] = orgname
          for fld in ('region', 'city', 'postal', 'timezone'):
