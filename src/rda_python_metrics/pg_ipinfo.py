@@ -45,6 +45,7 @@ class PgIPInfo(PgUtil, PgDBI):
       }
       self.GIP = '0.0.0.0'
       self.DNSTMOUT = object()   # marks a reverse lookup that ran out of time
+      self.DNSNOSRV = object()   # marks one no name server would answer
       self.BOGONIP = object()    # marks an address ipinfo reports as a bogon
       self.IPDNS = None
       self.IPDB = None
@@ -147,7 +148,8 @@ class PgIPInfo(PgUtil, PgDBI):
       """Reverse resolve one ip address without logging; called from worker threads too.
 
       Returns tuple (ip, hostname, errmsg); hostname is empty if the ip has no PTR
-      record, and errmsg is self.DNSTMOUT for a lookup that ran out of time.
+      record, and errmsg is self.DNSTMOUT for a lookup that ran out of time or
+      self.DNSNOSRV for one no name server would answer.
       """
       try:
          answers = self.IPDNS.resolve(dns.reversename.from_address(ip), 'PTR')
@@ -161,6 +163,14 @@ class PgIPInfo(PgUtil, PgDBI):
          # out of time routinely; counted in the presolve summary rather than logged
          # one line per address, which buried the DNS errors worth reading
          return (ip, '', self.DNSTMOUT)
+      except dns.resolver.NoNameservers:
+         # every name server answered SERVFAIL, which for a reverse zone usually means
+         # a lame delegation: the registry points at servers that refuse the query or
+         # are gone. Nothing here or at our resolvers can mend it and it never comes
+         # right on a retry, so count it like a timeout rather than log one line per
+         # address. Kept apart from the timeout count because this is also what our
+         # own resolvers being down looks like, which is worth noticing
+         return (ip, '', self.DNSNOSRV)
       except dns.exception.DNSException as e:
          return (ip, '', "{}: error reverse domain name request: {}".format(ip, e))
       return (ip, '', None)
@@ -170,7 +180,9 @@ class PgIPInfo(PgUtil, PgDBI):
       if ip in self.IPDMS: return self.IPDMS[ip]
       self.get_dns_resolver()
       (ip, dm, errmsg) = self.reverse_resolve_ip(ip)
-      if errmsg and errmsg is not self.DNSTMOUT: self.pglog(errmsg, self.LOGWRN)
+      # the sentinels stand for outcomes counted rather than logged; only a message
+      # is worth a line here
+      if isinstance(errmsg, str): self.pglog(errmsg, self.LOGWRN)
       self.IPDMS[ip] = dm
       return dm
 
@@ -226,11 +238,13 @@ class PgIPInfo(PgUtil, PgDBI):
          newips = [ip for ip in ips if ip not in recorded]
       if not newips: return 0
       self.get_dns_resolver()   # create the shared resolver before starting the threads
-      cnt = tmocnt = 0
+      cnt = tmocnt = srvcnt = 0
       with ThreadPoolExecutor(max_workers = self.IPINFO['DNSTHD']) as executor:
          for (ip, dm, errmsg) in executor.map(self.reverse_resolve_ip, newips):
             if errmsg is self.DNSTMOUT:
                tmocnt += 1
+            elif errmsg is self.DNSNOSRV:
+               srvcnt += 1
             elif errmsg:
                self.pglog(errmsg, self.LOGWRN)
             self.IPDMS[ip] = dm
@@ -239,6 +253,9 @@ class PgIPInfo(PgUtil, PgDBI):
       # a large share timing out means the lifetime is too short for the address
       # space in this log, which DNSLTM and DNSTHD can be raised to cover
       if tmocnt: msg += ", {} timed out after {}s".format(tmocnt, self.IPINFO['DNSLTM'])
+      # a handful here is the usual run of broken reverse zones, but a share of the
+      # whole list that large means our own resolvers, not theirs
+      if srvcnt: msg += ", {} had no name server answer".format(srvcnt)
       self.pglog(msg, self.LOGWRN)
       return cnt
 
