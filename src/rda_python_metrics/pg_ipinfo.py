@@ -45,6 +45,7 @@ class PgIPInfo(PgUtil, PgDBI):
       }
       self.GIP = '0.0.0.0'
       self.DNSTMOUT = object()   # marks a reverse lookup that ran out of time
+      self.BOGONIP = object()    # marks an address ipinfo reports as a bogon
       self.IPDNS = None
       self.IPDB = None
       self.G2DB = None
@@ -113,9 +114,15 @@ class PgIPInfo(PgUtil, PgDBI):
       return name
 
    def set_ipinfo_database(self):
-      """Setup ipinfo database."""
+      """Setup ipinfo database.
+
+      The account is an ipinfo Lite one, which answers on its own endpoint and is
+      not metered. getHandler() asks ipinfo.io instead, where the same token has
+      no allowance left and every call comes back 429, which tripped the quota
+      breaker on the first address of every run and left geoip2 to do all of it.
+      """
       try:
-         self.IPDB = ipinfo.getHandler(self.IPINFO['TOKEN'])
+         self.IPDB = ipinfo.getHandlerLite(self.IPINFO['TOKEN'])
       except Exception as e:
          self.pglog('ipinfo: ' + str(e), self.LGEREX)
 
@@ -215,19 +222,36 @@ class PgIPInfo(PgUtil, PgDBI):
       self.pglog(msg, self.LOGWRN)
       return cnt
 
+   def ipinfo_network_domain(self, iprec):
+      """The domain owning the ip's network, as ipinfo names it; '' if it names none.
+
+      Lite answers with a flat 'as_domain'; the standard API nests the same thing
+      under 'asn', which Lite gives as the plain AS number instead.
+      """
+      if not iprec: return ''
+      if iprec.get('as_domain'): return iprec['as_domain']
+      asn = iprec.get('asn')
+      if isinstance(asn, dict) and asn.get('domain'): return asn['domain']
+      return ''
+
    def get_ip_hostname(self, ip, iprec, record):
-      """Try to get hostname via reverse DNS for given ip address."""
+      """Try to get hostname via reverse DNS for given ip address.
+
+      A name ipinfo resolved itself is taken as is, but the network domain is only
+      a fallback: it names the operator rather than the host, so 8.8.8.8 becomes
+      8.8.8.8.google.com where a reverse lookup would have said dns.google. Trying
+      it after DNS keeps the better name wherever there is one, and still fills in
+      something usable for the addresses whose reverse lookup times out.
+      """
       record['hostname'] = ip
-      if iprec:
-         if 'hostname' in iprec and iprec['hostname']:
-            record['hostname'] = iprec['hostname']
-            record['org_type'] = self.get_org_type(None, record['hostname'])
-            return
-         if 'asn' in iprec and iprec['asn'] and 'domain' in iprec['asn'] and iprec['asn']['domain']:
-            record['hostname'] += '.' + iprec['asn']['domain']
-            record['org_type'] = self.get_org_type(None, record['hostname'])
-            return
+      if iprec and iprec.get('hostname'):
+         record['hostname'] = iprec['hostname']
+         record['org_type'] = self.get_org_type(None, record['hostname'])
+         return
       dm = self.ip_to_dns(ip)
+      if not dm:
+         dmname = self.ipinfo_network_domain(iprec)
+         if dmname: dm = "{}.{}".format(ip, dmname)
       if dm:
          record['hostname'] = dm
          record['org_type'] = self.get_org_type(None, dm)
@@ -238,8 +262,13 @@ class PgIPInfo(PgUtil, PgDBI):
          self.IPINFO['QUOTA'] = 0
          self.pglog("ipinfo: {}, use geoip2 for the rest of the run".format(reason), self.LOGWRN)
 
-   def get_ipinfo_record(self, ip):
-      """Get a ipinfo record for given ip address."""
+   def get_ipinfo_answer(self, ip):
+      """Ask ipinfo about an ip address; returns its answer, or None.
+
+      Only the call and what to do when it fails live here. The answer is laid
+      over a geoip2 record by get_geoip2_record(), an ipinfo Lite answer carrying
+      the network and the country but none of the geography.
+      """
       if not self.IPINFO['QUOTA']: return None
       if not self.IPDB: self.set_ipinfo_database()
       try:
@@ -266,30 +295,10 @@ class PgIPInfo(PgUtil, PgDBI):
                self.unset_ipinfo_quota("{} calls failed".format(self.IPINFO['ALLFAIL']))
          return None
       self.IPINFO['IPFAIL'] = 0   # reachable again, so an odd failure does not add up
-      if 'bogon' in iprec and iprec['bogon']:
+      if iprec and iprec.get('bogon'):
          self.pglog(f"ipinfo: {ip} - bogon, use {self.GIP}", self.LOGWRN)
-         self.IPRECS[ip] = self.pgget('ipinfo', '*', f"ip = '{self.GIP}'", self.LGEREX)
-         return self.IPRECS[ip]
-      record = {'ip' : ip, 'stat_flag' : 'A', 'hostname' : ip, 'org_type' : '-'}
-      try:
-         self.get_ip_hostname(ip, iprec, record)
-         # latitude and longitude are derived from 'loc', which a sparse ipinfo
-         # answer leaves out altogether, as it does timezone and country name
-         record['lat'] = float(iprec['latitude']) if iprec.get('latitude') else 0
-         record['lon'] = float(iprec['longitude']) if iprec.get('longitude') else 0
-         if 'org' in iprec: record['org_name'] = iprec['org']
-         record['country'] = self.get_country_record_code(iprec, 'country_name')
-         record['region'] = self.convert_chars(iprec['region']) if 'region' in iprec else None
-         if 'city' in iprec: record['city'] = self.convert_chars(iprec['city'])
-         if 'postal' in iprec: record['postal'] =  iprec['postal']
-         record['timezone'] = iprec.get('timezone')
-         record['ipinfo'] = json.dumps(iprec)
-      except (KeyError, TypeError, ValueError) as e:
-         # an ipinfo answer shaped differently again must not end the whole run;
-         # returning None lets set_ipinfo() fall back to the local geoip2 database
-         self.pglog("ipinfo: {} - unusable record ({}: {}), use geoip2".format(ip, type(e).__name__, e), self.LOGWRN)
-         return None
-      return record
+         return self.BOGONIP
+      return iprec
 
    def set_geoip2_database(self):
       """Setup geoip2 database."""
@@ -298,16 +307,27 @@ class PgIPInfo(PgUtil, PgDBI):
       except Exception as e:
          self.pglog("geoip2: " + str(e), self.LGEREX)
 
-   def get_geoip2_record(self, ip):
-      """Get a geoip2 record for given ip address."""
+   def get_geoip2_record(self, ip, iprec = None):
+      """Get a geoip2 record for given ip address, with any ipinfo answer laid over it.
+
+      Neither source is complete on its own. The local geoip2 city database holds
+      the geography and knows nothing about the network; an ipinfo Lite answer
+      holds the network and the country and none of the geography. So geoip2 is
+      the record and ipinfo overwrites the fields it is the better authority for,
+      which leaves the record as complete as the two together can make it.
+
+      An answer with neither city nor network beyond what geoip2 already had still
+      counts: stat_flag 'A' marks the ip as asked about, and 'M' leaves it to be
+      asked about again on a later run.
+      """
       if not self.G2DB: self.set_geoip2_database()
       try:
          city = self.G2DB.city(ip)
       except Exception as e:
          self.pglog("geoip2: {} - {}".format(ip, str(e)), self.LOGWRN)
          return None
-      record = {'ip' : ip, 'stat_flag' : 'M', 'org_type' : '-'}
-      self.get_ip_hostname(ip, None, record)
+      record = {'ip' : ip, 'stat_flag' : 'A' if iprec else 'M', 'org_type' : '-'}
+      self.get_ip_hostname(ip, iprec, record)
       record['lat'] = float(city.location.latitude) if city.location.latitude else 0
       record['lon'] = float(city.location.longitude) if city.location.longitude else 0
       record['country'] = self.get_country_record_code(city.country.name)
@@ -316,7 +336,32 @@ class PgIPInfo(PgUtil, PgDBI):
       record['postal'] =  city.postal.code
       record['timezone'] = city.location.time_zone
       record['ipinfo'] = json.dumps(self.object_to_dict(city))
+      if iprec: self.merge_ipinfo_answer(record, iprec)
       return record
+
+   def merge_ipinfo_answer(self, record, iprec):
+      """Lay an ipinfo answer over a geoip2 record, field by field.
+
+      Only the fields ipinfo is the better authority for are taken: the country it
+      names for the address, and the network operating it. Geography a Lite answer
+      does not carry is left as geoip2 gave it, so this never empties a field that
+      was filled. An answer shaped differently again must not end the run, so a
+      merge that cannot be made leaves the geoip2 record as it stands.
+      """
+      try:
+         if iprec.get('country_name') or iprec.get('country'):
+            record['country'] = self.get_country_record_code(
+               iprec, 'country_name' if iprec.get('country_name') else 'country')
+         orgname = iprec.get('as_name') or iprec.get('org')
+         if orgname: record['org_name'] = orgname
+         for fld in ('region', 'city', 'postal', 'timezone'):
+            if iprec.get(fld): record[fld] = self.convert_chars(iprec[fld])
+         if iprec.get('latitude'): record['lat'] = float(iprec['latitude'])
+         if iprec.get('longitude'): record['lon'] = float(iprec['longitude'])
+         record['ipinfo'] = json.dumps(iprec)
+      except (KeyError, TypeError, ValueError) as e:
+         self.pglog("ipinfo: {} - unusable answer ({}: {}), use geoip2".format(
+                    record['ip'], type(e).__name__, e), self.LOGWRN)
 
    def object_to_dict(self, obj):
       """Change an object to dict recursively."""
@@ -359,8 +404,12 @@ class PgIPInfo(PgUtil, PgDBI):
       if ipopt and not self.IPINFO['QUOTA']: ipopt = False   # quota used up, geoip2 only
       pgrec = self.pgget('ipinfo', '*', "ip = '{}'".format(ip))
       if not pgrec or ipopt and pgrec['stat_flag'] == 'M':
-         record = self.get_ipinfo_record(ip) if ipopt else None
-         if not record: record = self.get_geoip2_record(ip)
+         iprec = self.get_ipinfo_answer(ip) if ipopt else None
+         if iprec is self.BOGONIP:
+            # a bogon address is nobody's; they all share the one record on file
+            self.IPRECS[ip] = self.pgget('ipinfo', '*', f"ip = '{self.GIP}'", self.LGEREX)
+            return self.IPRECS[ip]
+         record = self.get_geoip2_record(ip, iprec)
          if record:
             self.update_ipinfo_record(record, pgrec)
             pgrec = record
