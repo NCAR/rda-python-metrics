@@ -52,6 +52,7 @@ class PgIPInfo(PgUtil, PgDBI):
       self.IPDB = None
       self.G2DB = None
       self.IPRECS = {}
+      self.IPRFS = {}   # addresses a refresh has already been through in this run
       self.DMRECS = {}
       self.IPDMS = {}
       self.IPNRM = {}
@@ -449,10 +450,17 @@ class PgIPInfo(PgUtil, PgDBI):
       Normally a record on file with stat_flag 'A' is taken as final, which is what
       keeps gathering usage from asking twice about the same address; a backfill
       correcting records written by an older version has to get past that.
+
+      Refreshing is worth doing once per address, not once per record naming it. A
+      backfill walks a month at a time and the same address turns up in month after
+      month and in table after table, so without this it asked ipinfo again, read
+      the record again and wrote it again every time, for an answer it already had.
       """
       ip = self.normalize_ip(ip)
       if not ip: return None
+      if refresh and ip in self.IPRFS: refresh = False
       if ip in self.IPRECS and not refresh: return self.IPRECS[ip]
+      if refresh: self.IPRFS[ip] = 1
       if ipopt and not self.IPINFO['QUOTA']: ipopt = False   # quota used up, geoip2 only
       pgrec = self.pgget('ipinfo', '*', "ip = '{}'".format(ip))
       if refresh or not pgrec or ipopt and pgrec['stat_flag'] == 'M':

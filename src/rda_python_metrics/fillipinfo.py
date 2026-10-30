@@ -33,6 +33,7 @@ class FillIPInfo(PgIPInfo):
                                'tdsusage', 'osdfusage', 'awsusage']
       # the usage tables keyed by date, time and ip rather than by a serial index
       self.DTITBL = ['tdsusage', 'osdfusage', 'awsusage']
+      self.ALLTBL = 'all'   # -t all: every table above, ipinfo first
       self.IPINFO['CDATE'] = self.curdate()
       self.inputs = []  # array of input values
       self.table = None
@@ -62,8 +63,9 @@ class FillIPInfo(PgIPInfo):
          elif re.match(r'^-', arg):
             self.pglog(arg + ": Invalid Option", self.LGWNEX)
          elif topt:
-            if arg not in self.IPINFO['USGTBL']:
-               self.pglog("{}: Invalid Table Name; must be in ({})".format(arg, ','.join(self.IPINFO['USGTBL'])), self.LGWNEX)
+            if arg != self.ALLTBL and arg not in self.IPINFO['USGTBL']:
+               self.pglog("{}: Invalid Table Name; must be {} or in ({})".format(
+                          arg, self.ALLTBL, ','.join(self.IPINFO['USGTBL'])), self.LGWNEX)
             self.table = arg
             topt = 0
          elif self.option&self.MULTI or self.option&self.SINGL and not self.inputs:
@@ -79,7 +81,24 @@ class FillIPInfo(PgIPInfo):
       self.fill_ip_info()
 
    def fill_ip_info(self):
-      """Fill ip info in table dssdb.tdsusage."""
+      """Fill ip info in the chosen table, or in every table in turn for -t all.
+
+      USGTBL is already in the order the tables have to be done in, ipinfo first,
+      the usage tables copying country, region and org_type from it afterwards. One
+      run through them all also spares the repeated work: an address refreshed for
+      the ipinfo table is not asked about again for the usage tables naming it.
+      """
+      tables = self.IPINFO['USGTBL'] if self.table == self.ALLTBL else [self.table]
+      cntall = 0
+      for table in tables:
+         self.table = table
+         cntall += self.fill_table_ip_info()
+      if len(tables) > 1:
+         self.pglog("{}: Total {} records updated in {} tables".format(
+                    self.ALLTBL, cntall, len(tables)), self.LOGWRN)
+
+   def fill_table_ip_info(self):
+      """Fill ip info in the one table named by self.table."""
       cntall = 0
       # the three date/time/ip keyed tables differ only in their name, so one
       # function serves them and the others keep one apiece
@@ -105,6 +124,7 @@ class FillIPInfo(PgIPInfo):
             date = self.adddate(ndate, 0, 0, 1)
       if cntall > 2:
          self.pglog(f"{self.table}: Total {cntall} records updated", self.LOGWRN)
+      return cntall
 
    def get_next_date(self, date, edate):
       """Get next available date."""

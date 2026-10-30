@@ -15,6 +15,12 @@
         Table to fix. One of:
            ipinfo, wuser, allusage, codusage, tdsusage, osdfusage, awsusage
 
+        Or 'all', to do every one of them in that order, which is the order
+        they have to be done in: ipinfo first, the usage tables copying
+        country, region and org_type from it afterwards. One run through all
+        of them is also cheaper than seven runs, since an address looked up
+        for one table is not looked up again for the others naming it.
+
    -f   Reach the records an older version filled in, not only the ones it
         left empty.
 
@@ -56,8 +62,10 @@
 
  EXAMPLE:
    fillipinfo -t wuser -y 2024
-   fillipinfo -f -t ipinfo -y 2026        # first: put the ipinfo records right
-   fillipinfo -f -t osdfusage -y 2026     # then: copy them into the usage tables
+   fillipinfo -f -t all -y 2026           # every table, in the order they need
+
+   fillipinfo -f -t ipinfo -y 2026        # or one at a time, ipinfo first
+   fillipinfo -f -t osdfusage -y 2026     # then the usage tables copying from it
    fillipinfo -f -t allusage -y 2026
 
  NOTE:
