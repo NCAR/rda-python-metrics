@@ -225,6 +225,8 @@ class FillIPInfo(PgIPInfo):
          email = pgrecs['email'][i]
          record = self.get_missing_ipinfo(None, email, False, self.refresh)
          if record:
+            # the record is the usage-table one; wuser has no ip column
+            del record['ip']
             mcnt += self.pgupdt(table, record, "wuid = '{}'".format(pgrecs['wuid'][i]))
       s = 's' if cnt > 1 else ''
       self.pglog(f"{table}: {mcnt} of {cnt} record{s} updated for start_date {cnd}", self.LOGWRN)
